@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="/css/animations.css" />
 <link rel="stylesheet" href="/css/components.css" />
 <link rel="stylesheet" href="/css/screens.css" />
+<link rel="stylesheet" href="/css/platform.css" />
 <link rel="stylesheet" href="/games/bingo/play.css" />
 <link rel="stylesheet" href="/games/bingo/master.css" />
 </head>
@@ -36,8 +37,55 @@
 <div id="toast-stack" class="toast-stack" aria-live="polite"></div>
 <button id="btn-sound" class="sound-toggle" type="button" aria-pressed="false" aria-label="Desligar o som" title="Som">🔊</button>
 
-<!-- ======================= HOME ======================= -->
-<section id="screen-home" class="screen screen-center active">
+<!-- ======================= LOGIN (educando) ======================= -->
+<!-- Nenhuma tela começa ativa: auth.js decide entre login e início
+     assim que sabe se o aparelho já tem alguém logado. -->
+<section id="screen-login" class="screen screen-center">
+  <div class="panel-card login-card">
+    <div class="panel-head">
+      <div data-mascot id="login-mascot"></div>
+      <p class="speech" id="login-speech" aria-live="polite">Oi! Qual é o seu nome e sobrenome? 😊</p>
+    </div>
+
+    <form class="login-step" data-step="name" id="form-login" novalidate autocomplete="off">
+      <label class="field">
+        <span class="sr-only">Seu nome e sobrenome</span>
+        <input id="input-login-name" class="input-big" type="text" maxlength="40" placeholder="Ex.: Maria Silva" autocomplete="off" autocapitalize="words" spellcheck="false" />
+      </label>
+      <button type="submit" class="btn btn-success btn-block btn-lg" id="login-next">Entrar ➜</button>
+    </form>
+
+    <div class="login-step" data-step="confirm" hidden>
+      <div class="login-who">
+        <span class="login-who-avatar" id="login-who-avatar" aria-hidden="true">🐼</span>
+        <strong class="login-who-name" id="login-who-name">Maria Silva</strong>
+      </div>
+      <button type="button" class="btn btn-success btn-block btn-lg" id="login-its-me">Sou eu! 🎉</button>
+      <button type="button" class="btn btn-ghost btn-block" id="login-not-me">Não sou eu</button>
+    </div>
+
+    <div class="login-step" data-step="new" hidden>
+      <p class="login-new-name"><strong id="login-new-name">Maria Silva</strong></p>
+      <button type="button" class="btn btn-primary btn-block btn-lg" id="login-first-time">É a minha primeira vez! ✨</button>
+      <button type="button" class="btn btn-ghost btn-block" id="login-typo">Digitei errado ✏️</button>
+    </div>
+
+    <div class="login-step" data-step="avatar" hidden>
+      <div class="avatar-grid" id="login-avatar-grid" role="radiogroup" aria-label="Escolha seu bichinho"></div>
+      <button type="button" class="btn btn-success btn-block btn-lg" id="login-create">Criar minha conta 🚀</button>
+      <button type="button" class="btn btn-ghost btn-block" id="login-avatar-back">← voltar</button>
+    </div>
+  </div>
+  <button type="button" class="link-teacher" data-go="screen-create">🧑‍🏫 Área do professor</button>
+</section>
+
+<!-- ======================= INÍCIO (educando logado) ======================= -->
+<section id="screen-home" class="screen screen-center">
+  <div class="user-bar">
+    <span class="avatar-badge" id="home-avatar">🐼</span>
+    <span>Oi, <strong id="home-first-name">amigo(a)</strong>!</span>
+    <button type="button" class="btn-mini user-logout" id="btn-logout">Não sou eu / Sair</button>
+  </div>
   <div class="brand">
     <div data-mascot></div>
     <h1 class="logo title-game" aria-label="Bingo!">
@@ -48,7 +96,6 @@
 
   <div class="home-choices">
     <button class="btn btn-primary btn-play" data-go="screen-join">🎮 JOGAR</button>
-    <button class="btn btn-violet btn-teacher" data-go="screen-create">🧑‍🏫 Sou professor(a)</button>
   </div>
 </section>
 
@@ -91,7 +138,7 @@
 
 <!-- ======================= CRIAR (mestre) ======================= -->
 <section id="screen-create" class="screen screen-center">
-  <button class="btn-back" data-go="screen-home">← voltar</button>
+  <button class="btn-back" id="create-back" type="button">← voltar</button>
   <div class="panel-card">
     <div class="panel-head">
       <div data-mascot></div>
@@ -460,6 +507,8 @@
 <script src="/js/shared/fx.js"></script>
 <script src="/js/shared/ui.js"></script>
 <!-- núcleo da plataforma -->
+<script src="/js/platform/api.js"></script>
+<script src="/js/platform/auth.js"></script>
 <script src="/js/platform/games.js"></script>
 <script src="/js/platform/app.js"></script>
 <!-- bingo (ainda carregado direto aqui; vira carregamento sob demanda na etapa D) -->

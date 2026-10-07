@@ -9,10 +9,12 @@ const path = require('path');
 const fs = require('fs');
 const Database = require('better-sqlite3');
 
-const DATA_DIR = path.join(__dirname, '..', '..', 'data');
+// DB_FILE permite usar outro arquivo (os testes usam um banco temporário).
+const DB_FILE = process.env.DB_FILE || path.join(__dirname, '..', '..', 'data', 'bingo.sqlite');
+const DATA_DIR = path.dirname(DB_FILE);
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 
-const db = new Database(path.join(DATA_DIR, 'bingo.sqlite'));
+const db = new Database(DB_FILE);
 db.pragma('journal_mode = WAL');
 
 db.exec(`

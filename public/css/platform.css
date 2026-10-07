@@ -1,0 +1,76 @@
+/* ============================================================
+   Telas do núcleo da plataforma: login do educando e barra com
+   quem está logado.
+   ============================================================ */
+
+/* ================= LOGIN ================= */
+
+.login-card { display: flex; flex-direction: column; gap: 14px; }
+.login-step { display: flex; flex-direction: column; gap: 12px; }
+.login-step[hidden] { display: none; }
+.login-step .avatar-grid { margin-bottom: 6px; }
+
+.login-who {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0 4px;
+}
+.login-who-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 108px;
+  height: 108px;
+  border-radius: 50%;
+  border: var(--stroke) solid var(--ink);
+  background: var(--yellow);
+  font-size: 3.8rem;
+  line-height: 1;
+  box-shadow: 0 6px 0 var(--ink);
+  animation: popIn .45s var(--ease-bounce);
+}
+.login-who-name,
+.login-new-name {
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  line-height: 1.15;
+  color: var(--violet-dark);
+  margin: 0;
+}
+
+.link-teacher {
+  margin-top: 22px;
+  background: none;
+  border: 0;
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1rem;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-shadow: 0 2px 0 rgba(30, 18, 64, .4);
+  cursor: pointer;
+  opacity: .9;
+}
+.link-teacher:hover { opacity: 1; }
+.link-teacher:focus-visible { outline: 3px solid var(--yellow); outline-offset: 4px; border-radius: 6px; }
+
+/* ================= QUEM ESTÁ LOGADO ================= */
+
+.user-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 18px;
+  padding: 8px 10px 8px 8px;
+  background: var(--surface);
+  border: var(--stroke) solid var(--ink);
+  border-radius: 999px;
+  box-shadow: 0 4px 0 var(--ink);
+  font-size: 1.1rem;
+  animation: bounceIn .5s var(--ease-bounce);
+}

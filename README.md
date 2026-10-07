@@ -103,10 +103,12 @@ cada uma isolada pelo seu código.
 
 ```
 jogos_igds/
-├── server.js                 # Express (estáticos, /api/games, /api/join-info, /qr.svg) + Socket.IO
+├── server.js                 # Express (estáticos, /api/auth, /api/games, /api/join-info, /qr.svg) + Socket.IO
 ├── src/
 │   ├── platform/             # Núcleo da plataforma (vale para todos os jogos)
 │   │   ├── db.js             # Persistência SQLite
+│   │   ├── accounts.js       # Contas dos educandos (login por nome e sobrenome) e sessões
+│   │   ├── routes.js         # Rotas HTTP do núcleo (/api/auth/...)
 │   │   ├── idGenerator.js    # Códigos, IDs e tokens
 │   │   └── avatars.js        # Bichinhos permitidos e filtro de nomes impróprios
 │   └── games/
@@ -118,13 +120,14 @@ jogos_igds/
 │           ├── bingoTypes.js     # Estratégias por tipo de bingo (números/palavras/emojis/custom)
 │           └── winChecker.js     # Vitória e "quase lá" (falta 1), sempre no servidor
 ├── public/
-│   ├── index.html            # Telas (home, entrar, criar, espera, jogo, professor, telão)
+│   ├── index.html            # Telas (login, início, entrar, criar, espera, jogo, professor, telão)
 │   ├── css/
 │   │   ├── tokens.css        # Cores, raios, sombras e fontes
 │   │   ├── base.css          # Reset, fundo animado, tipografia
 │   │   ├── animations.css    # Todos os @keyframes (+ prefers-reduced-motion)
 │   │   ├── components.css    # Botões 3D, cartões, campos, toasts, modal, mascote
-│   │   └── screens.css       # Home, cartela e painel do professor (base)
+│   │   ├── screens.css       # Home, cartela e painel do professor (base)
+│   │   └── platform.css      # Login do educando e barra de quem está logado
 │   ├── js/
 │   │   ├── shared/           # Usados por todos os jogos
 │   │   │   ├── socket-client.js # Conexão Socket.IO + wrapper em Promise
@@ -134,6 +137,8 @@ jogos_igds/
 │   │   │   ├── fx.js         # Confete, estrelinhas e tremida
 │   │   │   └── ui.js         # Telas, toasts, modal, ajuste de texto, quadro de números, links
 │   │   └── platform/
+│   │       ├── api.js        # Chamadas à API com o token do educando (window.PlataformaApi)
+│   │       ├── auth.js       # Login "É você?", criação de conta e sessão (window.PlataformaAuth)
 │   │       ├── games.js      # Registro e carregador de jogos sob demanda (window.Plataforma)
 │   │       └── app.js        # Som, cliques e navegação comuns a todas as telas
 │   └── games/
@@ -148,6 +153,7 @@ jogos_igds/
 │           ├── screen.js     # Modo telão (/telao?sala=CODE)
 │           └── session.js    # Sessão da sala, reconexão automática e criação de sala
 ├── test/
+│   ├── platform.test.js      # Contas e API da plataforma (sobe um servidor próprio, banco temporário)
 │   ├── integration.test.js   # Fluxo completo de uma partida
 │   ├── features.test.js      # Avatar, filtro de nome, quase lá, sorteio automático, telão, QR
 │   └── load.test.js          # Turma inteira jogando ao mesmo tempo
@@ -250,7 +256,10 @@ Com o servidor ligado (`npm start`), em outro terminal:
 npm test
 ```
 
-Roda `test/integration.test.js` (criação de sala, entrada, nomes
+Roda `test/platform.test.js` (contas: nome e sobrenome obrigatórios,
+login sem diferenciar maiúsculas, acentos e espaços, conta repetida,
+sessão, troca de bichinho e saída; ele sobe o próprio servidor na porta
+3101 com um banco temporário), `test/integration.test.js` (criação de sala, entrada, nomes
 duplicados, autenticação do professor, sorteio, marcação manual, vitória,
 pausa automática, expulsão, nova partida, reinício, reconexão e
 encerramento) e `test/features.test.js` (avatar, filtro de nomes, casa
@@ -269,6 +278,16 @@ npm run test:carga
 ---
 
 ## 7. Segurança e validação — resumo
+
+**Contas dos educandos.** O login é só o nome e o sobrenome, sem senha
+(decisão pedagógica: crianças pequenas não precisam decorar senha). A
+comparação ignora maiúsculas, acentos e espaços extras. Antes de criar uma
+conta nova, a criança confirma que é a primeira vez, para um erro de
+digitação não virar uma conta duplicada. Limite conhecido: quem souber o
+nome de um colega consegue entrar na conta dele; por isso o início tem o
+botão "Não sou eu / Sair", e a conta guarda só nome, bichinho e progresso
+nos jogos. As sessões ficam em `student_sessions` e deixam de valer depois
+de 180 dias sem uso.
 
 O servidor nunca confia no cliente. Toda ação passa por `src/games/bingo/roomManager.js`,
 que valida: código de sala, autenticação do Mestre (`masterToken`),

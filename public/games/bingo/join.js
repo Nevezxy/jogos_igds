@@ -10,7 +10,7 @@
   const { emitAsync } = window.BingoSocket;
   const { showScreen } = window.BingoUI;
   const { play } = window.BingoSound;
-  const { shake, sparkleAt } = window.BingoFx;
+  const { shake } = window.BingoFx;
 
   const CODE_LENGTH = 5;
   // mesmo alfabeto do servidor (sem 0, O, 1 e I, que confundem)
@@ -183,27 +183,8 @@
 
   // ---------------- passo 3: bichinho ----------------
 
-  function selectAvatar(btn) {
-    avatarGrid.querySelectorAll('.avatar-option').forEach((b) => b.setAttribute('aria-checked', 'false'));
-    btn.setAttribute('aria-checked', 'true');
-    chosenAvatar = btn.dataset.avatar;
-  }
-
-  window.BingoAvatars.forEach((emoji, i) => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'avatar-option';
-    btn.dataset.avatar = emoji;
-    btn.textContent = emoji;
-    btn.style.setProperty('--i', i);
-    btn.setAttribute('role', 'radio');
-    btn.setAttribute('aria-checked', 'false');
-    btn.addEventListener('click', () => {
-      selectAvatar(btn);
-      play('boing');
-      sparkleAt(btn, 8);
-    });
-    avatarGrid.appendChild(btn);
+  const avatarPicker = window.BingoUI.createAvatarPicker(avatarGrid, {
+    onPick: (emoji) => { chosenAvatar = emoji; },
   });
 
   // ---------------- enviar ----------------
@@ -237,7 +218,7 @@
   document.getElementById('join-back').addEventListener('click', () => {
     const firstStep = codeFromLink ? 2 : 1;
     if (step > firstStep) goToStep(step - 1);
-    else showScreen('screen-home');
+    else window.PlataformaAuth.goHome();
   });
 
   // Abre a entrada do zero (botão JOGAR) ou já com o código (link/QR Code).
@@ -247,8 +228,8 @@
     codeFromLink = false;
     if (!chosenAvatar) {
       // um bichinho sorteado já vem escolhido; a criança pode trocar
-      const options = avatarGrid.querySelectorAll('.avatar-option');
-      selectAvatar(options[Math.floor(Math.random() * options.length)]);
+      avatarPicker.selectRandom();
+      chosenAvatar = avatarPicker.value();
     }
     showScreen('screen-join');
     if (code) {

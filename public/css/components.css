@@ -356,3 +356,56 @@
   border-bottom: var(--stroke) solid var(--ink);
   transform: translateY(-50%) rotate(45deg);
 }
+
+/* ---------- nome em letra grande e grade de bichinhos (login e bingo) ---------- */
+
+.input-big {
+  text-align: center;
+  font-family: var(--font-display) !important;
+  font-size: 1.6rem !important;
+  padding: 14px 16px !important;
+}
+
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin: 4px 0 20px;
+}
+.avatar-option {
+  aspect-ratio: 1;
+  border: var(--stroke) solid var(--ink);
+  border-radius: 50%;
+  background: var(--surface-2);
+  font-size: clamp(1.8rem, 9vw, 2.4rem);
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 4px 0 var(--ink);
+  transition: transform .15s var(--ease-bounce), background .15s ease;
+  animation: popIn .4s var(--ease-bounce) both;
+  animation-delay: calc(var(--i, 0) * 30ms);
+}
+.avatar-option:hover { transform: translateY(-3px) rotate(-6deg); }
+.avatar-option[aria-checked="true"] {
+  background: var(--yellow);
+  transform: scale(1.12);
+  box-shadow: 0 4px 0 var(--ink), 0 0 0 4px #fff, 0 0 0 7px var(--pink);
+}
+.avatar-option:focus-visible { outline: 3px solid var(--pink); outline-offset: 3px; }
+
+/* ---------------- avatar ---------------- */
+
+.avatar-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 2px solid var(--ink);
+  background: #fff;
+  font-size: 1.6rem;
+  line-height: 1;
+  box-shadow: 0 3px 0 var(--ink);
+}

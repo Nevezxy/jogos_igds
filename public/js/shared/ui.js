@@ -120,6 +120,43 @@ function escapeHtml(text) {
   ));
 }
 
+// Grade de bichinhos (role=radio) dentro de `container`. `onPick` é chamado
+// quando a criança toca num bichinho. Devolve { select(emoji), value(), focus() }.
+function createAvatarPicker(container, { onPick } = {}) {
+  let chosen = null;
+  const buttons = window.BingoAvatars.map((emoji, i) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'avatar-option';
+    btn.dataset.avatar = emoji;
+    btn.textContent = emoji;
+    btn.style.setProperty('--i', i);
+    btn.setAttribute('role', 'radio');
+    btn.setAttribute('aria-checked', 'false');
+    btn.addEventListener('click', () => {
+      select(emoji);
+      window.BingoSound.play('boing');
+      window.BingoFx.sparkleAt(btn, 8);
+      if (onPick) onPick(emoji);
+    });
+    container.appendChild(btn);
+    return btn;
+  });
+
+  function select(emoji) {
+    chosen = window.BingoAvatars.includes(emoji) ? emoji : null;
+    buttons.forEach((b) => b.setAttribute('aria-checked', String(b.dataset.avatar === chosen)));
+  }
+
+  return {
+    select,
+    selectRandom() { select(window.BingoAvatars[Math.floor(Math.random() * window.BingoAvatars.length)]); },
+    value: () => chosen,
+    focus() { (buttons.find((b) => b.dataset.avatar === chosen) || buttons[0]).focus(); },
+  };
+}
+
 window.BingoUI = {
   showScreen, toast, confirmModal, statusLabel, escapeHtml, fitText, renderNumberBoard, getJoinUrls, qrUrl,
+  createAvatarPicker,
 };

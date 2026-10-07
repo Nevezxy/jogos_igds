@@ -12,6 +12,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 
 const registry = require('./src/games/registry');
+const { createPlatformRouter } = require('./src/platform/routes');
 
 const PORT = process.env.PORT || 3000;
 
@@ -36,6 +37,9 @@ function lanAddresses() {
     .map((i) => i.address);
   return [...ips.filter(isPrivate), ...ips.filter((ip) => !isPrivate(ip))];
 }
+
+// Contas dos educandos (login por nome e sobrenome).
+app.use('/api', createPlatformRouter());
 
 // Jogos disponíveis (painel de seleção e carregador do navegador).
 app.get('/api/games', (req, res) => {

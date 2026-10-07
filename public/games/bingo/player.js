@@ -471,7 +471,7 @@
     toast('Você foi removido da sala pelo(a) professor(a).', 'error', 6000);
     window.BingoApp.resetSession();
     stopWaitingFun();
-    showScreen('screen-home');
+    window.PlataformaAuth.goHome();
   });
 
   window.BingoPlayer = { render, renderWaiting };

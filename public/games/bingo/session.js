@@ -5,7 +5,7 @@
 
 (function () {
   const { socket, emitAsync } = window.BingoSocket;
-  const { showScreen, toast } = window.BingoUI;
+  const { toast } = window.BingoUI;
 
   const STORAGE_KEY = 'bingo_virtual_session_v1';
 
@@ -106,6 +106,11 @@
   async function tryResume() {
     // o telão não tem sessão: ele só assiste a sala (screen.js)
     if (window.BingoScreen.isScreenMode()) return;
+    // A criança precisa estar logada na plataforma para entrar ou voltar a
+    // uma sala; o professor não (ele entra pela área do professor).
+    await window.PlataformaAuth.ready;
+    const loggedIn = window.PlataformaAuth.isLoggedIn();
+    const { goHome } = window.PlataformaAuth;
     let saved = loadSession();
     // Quem chegou pelo link de outra sala começa a entrada nela, em vez de
     // voltar para a sala antiga guardada no aparelho.
@@ -117,7 +122,7 @@
     // Sem sessão salva: fica na tela atual (a criança pode estar no meio
     // da digitação do código quando a conexão volta).
     if (!saved || saved.role === 'none' || !saved.roomCode) {
-      openJoinFromUrl();
+      if (loggedIn) openJoinFromUrl();
       return;
     }
 
@@ -130,9 +135,15 @@
         return;
       } catch (e) {
         clearStoredSession();
-        if (!openJoinFromUrl()) showScreen('screen-home');
+        if (!(loggedIn && openJoinFromUrl())) goHome();
         return;
       }
+    }
+
+    if (saved.role === 'player' && !loggedIn) {
+      // sessão de sala de alguém que não está mais logado neste aparelho
+      clearStoredSession();
+      return;
     }
 
     if (saved.role === 'player' && saved.playerToken) {
@@ -150,13 +161,18 @@
         return;
       } catch (e) {
         clearStoredSession();
-        if (!openJoinFromUrl()) showScreen('screen-home');
+        if (!(loggedIn && openJoinFromUrl())) goHome();
         return;
       }
     }
 
-    showScreen('screen-home');
+    goHome();
   }
+
+  // Quem acabou de fazer login pelo link/QR de uma sala já cai na entrada dela.
+  window.PlataformaAuth.onLogin(() => openJoinFromUrl());
+  // Trocar de criança no aparelho apaga a sala da criança anterior.
+  window.PlataformaAuth.onLogout(() => { if (session.role === 'player') resetSession(); });
 
   socket.on('connect', () => {
     tryResume();
