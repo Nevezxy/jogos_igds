@@ -1,0 +1,381 @@
+/* ============================================================
+   Painel do professor (configuração visual, quadro de números,
+   convite com QR Code, participantes) e o modo Telão (projetor).
+   ============================================================ */
+
+.pill-code strong { letter-spacing: 2px; font-size: 1.1em; }
+
+/* ---------------- cartões de escolha ---------------- */
+
+.choice-tiles {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.choice-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 96px;
+  padding: 12px 8px;
+  border: var(--stroke) solid var(--ink);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: var(--ink);
+  cursor: pointer;
+  box-shadow: 0 4px 0 var(--ink);
+  transition: transform .1s ease, box-shadow .1s ease, background .15s ease;
+}
+.choice-tile small { display: block; font-family: var(--font-body); font-size: .78rem; color: var(--ink-soft); }
+.choice-tile:hover:not(:disabled) { transform: translateY(-2px); background: #fff; }
+.choice-tile:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 0 0 var(--ink); }
+.choice-tile[aria-checked="true"],
+.choice-tile[aria-checked="true"]:hover:not(:disabled) { background: var(--yellow); }
+.choice-tile[aria-checked="true"] { animation: popIn .3s var(--ease-bounce); }
+.choice-tile:focus-visible { outline: 3px solid var(--pink); outline-offset: 2px; }
+.tile-icon { font-size: 2rem; line-height: 1; }
+
+/* mini cartela desenhada só com CSS */
+.mini-grid {
+  --n: 5;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  grid-template-columns: repeat(var(--n), 1fr);
+  gap: 2px;
+  padding: 3px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 calc(100% / var(--n) - 2px), var(--ink) 0 calc(100% / var(--n))),
+    repeating-linear-gradient(0deg, transparent 0 calc(100% / var(--n) - 2px), var(--ink) 0 calc(100% / var(--n))),
+    #fff;
+  opacity: .8;
+}
+
+/* regras de vitória com desenhinho */
+.win-rules { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 6px 0 14px; }
+.rule-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 6px;
+  border: var(--stroke) solid var(--ink);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  font-family: var(--font-display);
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 0 var(--ink);
+  opacity: .7;
+  transition: background .15s ease, opacity .15s ease, transform .1s ease;
+}
+.rule-card input { position: absolute; opacity: 0; pointer-events: none; }
+.rule-card:has(input:checked) { background: var(--green); opacity: 1; }
+.rule-card:has(input:checked)::after {
+  content: "✓";
+  position: absolute;
+  top: -10px;
+  right: -8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid var(--ink);
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .9rem;
+}
+.rule-card:has(input:focus-visible) { outline: 3px solid var(--pink); outline-offset: 2px; }
+.rule-card:has(input:disabled) { cursor: not-allowed; }
+.rule-pic svg { width: 46px; height: 46px; display: block; }
+.rule-pic rect { fill: #fff; stroke: var(--ink); stroke-width: 1; }
+.rule-pic rect.on { fill: var(--pink); }
+
+.field-inline { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.field-inline > span { margin: 0; }
+.field-inline select { width: auto; flex: 1; min-width: 220px; }
+
+/* ---------------- sorteio + quadro ---------------- */
+
+.draw-layout { display: grid; grid-template-columns: auto 1fr; gap: 22px; align-items: start; }
+.draw-area { padding: 0; gap: 10px; min-width: 240px; }
+.draw-hint { margin: -4px 0 0; font-size: .85rem; }
+kbd {
+  font-family: var(--font-display);
+  font-weight: 800;
+  padding: 1px 8px;
+  border: 2px solid var(--ink);
+  border-bottom-width: 4px;
+  border-radius: 6px;
+  background: #fff;
+  color: var(--ink);
+}
+.auto-timer {
+  margin: 0;
+  padding: 4px 14px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--sky);
+  font-family: var(--font-display);
+  font-weight: 800;
+}
+.board-wrap h3 { margin-bottom: 10px; }
+
+.number-board {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(38px, 1fr));
+  gap: 5px;
+  max-height: 420px;
+  overflow-y: auto;
+  padding: 2px;
+}
+.number-board.is-long { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+.board-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 2px 4px;
+  border: 2px solid rgba(30, 18, 64, .25);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: rgba(30, 18, 64, .45);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: .95rem;
+  text-align: center;
+  line-height: 1.05;
+  overflow: hidden;
+  transition: background .3s ease, color .3s ease, transform .3s var(--ease-bounce);
+}
+.board-cell.is-drawn { background: var(--yellow); border-color: var(--ink); color: var(--ink); }
+.board-cell.is-last { background: var(--pink); color: #fff; transform: scale(1.12); animation: gentlePulse 1.2s ease-in-out infinite; }
+
+.history-details { margin-top: 16px; }
+.history-details summary { cursor: pointer; font-family: var(--font-display); font-weight: 800; margin-bottom: 10px; }
+
+/* ---------------- convite (QR Code) ---------------- */
+
+.invite-card { text-align: center; }
+.join-qr {
+  display: block;
+  width: 100%;
+  max-width: 220px;
+  aspect-ratio: 1;
+  margin: 6px auto 8px;
+  border: var(--stroke) solid var(--ink);
+  border-radius: var(--radius-md);
+  background: #fff;
+  padding: 6px;
+}
+.join-url { margin: 0 0 6px; font-weight: 800; word-break: break-all; }
+.join-url a { color: var(--violet-dark); }
+.join-url-select {
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 6px 10px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-weight: 700;
+}
+.invite-hint { font-size: .85rem; }
+
+/* ---------------- participantes ---------------- */
+
+.near-summary {
+  margin: 10px 0 0;
+  padding: 6px 12px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--orange);
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 800;
+  text-shadow: 0 1px 0 rgba(30, 18, 64, .4);
+  animation: gentlePulse 1.4s ease-in-out infinite;
+}
+.participant-row { gap: 8px; }
+.participant-row .participant-info { flex: 1; flex-direction: column; align-items: stretch; gap: 4px; }
+.participant-row.is-near { background: #FFE6D4; border-color: var(--orange-dark); }
+.participant-row.is-winner { background: #FFF4C2; }
+.avatar-sm { width: 34px; height: 34px; font-size: 1.2rem; box-shadow: 0 2px 0 var(--ink); }
+.avatar-badge.is-away { opacity: .4; filter: grayscale(1); }
+.progress-bar {
+  display: block;
+  height: 8px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: #fff;
+  overflow: hidden;
+}
+.progress-bar span { display: block; height: 100%; background: var(--green); transition: width .4s var(--ease-out); }
+.participant-flags { font-size: 1.2rem; }
+
+@media (max-width: 1100px) {
+  .draw-layout { grid-template-columns: 1fr; }
+}
+@media (max-width: 700px) {
+  .choice-tiles, .win-rules { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ================= TELÃO ================= */
+
+body.is-telao .sound-toggle { opacity: .5; }
+body.is-telao .sound-toggle:hover { opacity: 1; }
+
+.telao { min-height: 100vh; padding: 2.5vh 2.5vw; }
+.telao-missing { min-height: 90vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: #fff; gap: 12px; }
+.telao-missing .mascot { --size: 160px; }
+.telao-missing h1 { font-size: 3rem; }
+.telao-missing p { font-size: 1.4rem; font-weight: 800; }
+
+/* sala de espera */
+.telao-lobby { display: grid; grid-template-columns: 1fr 1fr; gap: 3vw; align-items: center; min-height: 92vh; }
+.telao-lobby-left { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.telao-logo { font-size: clamp(4rem, 9vw, 9rem); }
+.telao-call { color: #fff; font-family: var(--font-display); font-weight: 800; font-size: clamp(1.6rem, 3vw, 2.8rem); margin: 8px 0 12px; text-shadow: 0 3px 0 var(--ink); }
+.telao-qr {
+  width: min(34vw, 46vh);
+  aspect-ratio: 1;
+  padding: 12px;
+  background: #fff;
+  border: 5px solid var(--ink);
+  border-radius: 28px;
+  box-shadow: 0 12px 0 var(--ink);
+}
+.telao-url { color: #fff; font-weight: 800; font-size: clamp(1.1rem, 2vw, 1.8rem); margin: 18px 0 4px; text-shadow: 0 2px 0 var(--ink); word-break: break-all; }
+.telao-code { color: #fff; font-family: var(--font-display); font-weight: 800; font-size: clamp(1.4rem, 2.6vw, 2.4rem); text-shadow: 0 2px 0 var(--ink); }
+.telao-code strong {
+  display: inline-block;
+  letter-spacing: 6px;
+  color: var(--ink);
+  text-shadow: none;
+  background: var(--yellow);
+  border: 4px solid var(--ink);
+  border-radius: 14px;
+  padding: 0 16px;
+  box-shadow: 0 6px 0 var(--ink);
+}
+.telao-lobby-right {
+  background: #fff;
+  border: 4px solid var(--ink);
+  border-radius: 32px;
+  box-shadow: 0 12px 0 var(--ink);
+  padding: 24px;
+  min-height: 60vh;
+}
+.telao-mascot-row { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; }
+.telao-mascot-row .mascot { --size: 110px; }
+.telao-mascot-row .speech { font-size: 1.6rem; }
+.telao-friends { display: flex; flex-wrap: wrap; gap: 16px 12px; justify-content: center; }
+.telao-friends .friend { width: 90px; }
+.telao-friends .avatar-badge { width: 72px; height: 72px; font-size: 2.6rem; box-shadow: 0 4px 0 var(--ink); }
+.telao-friends .friend small { font-size: 1rem; max-width: 90px; }
+
+/* partida */
+.telao-game { position: relative; display: flex; flex-direction: column; gap: 2.5vh; min-height: 95vh; }
+.telao-main { display: grid; grid-template-columns: minmax(0, 40%) minmax(0, 60%); gap: 2.5vw; flex: 1; align-items: start; }
+.telao-ball-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2vh;
+  background: #fff;
+  border: 4px solid var(--ink);
+  border-radius: 32px;
+  box-shadow: 0 12px 0 var(--ink);
+  padding: 3vh 2vw;
+}
+.telao-label { margin: 0; font-family: var(--font-display); font-weight: 800; font-size: clamp(1.6rem, 2.6vw, 2.6rem); }
+.telao-ball {
+  width: min(28vw, 46vh);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 6px solid var(--ink);
+  background: radial-gradient(circle at 30% 25%, rgba(255, 255, 255, .8) 0 10%, var(--pink) 11% 100%);
+  box-shadow: 0 12px 0 var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 15%;
+}
+.telao-ball span {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #fff;
+  border: 5px solid var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 10px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  line-height: 1;
+  overflow: hidden;
+}
+.telao-recent { justify-content: center; }
+.telao-recent .chip { min-width: 60px; height: 60px; font-size: 1.4rem; max-width: 180px; }
+.telao-board-wrap {
+  background: #fff;
+  border: 4px solid var(--ink);
+  border-radius: 32px;
+  box-shadow: 0 12px 0 var(--ink);
+  padding: 2vh 1.5vw;
+}
+.telao-board { max-height: none; grid-template-columns: repeat(auto-fill, minmax(clamp(44px, 4.4vw, 80px), 1fr)); gap: 8px; }
+.telao-board.is-long { grid-template-columns: repeat(auto-fill, minmax(clamp(110px, 10vw, 180px), 1fr)); }
+.telao-board .board-cell { min-height: clamp(40px, 6vh, 70px); font-size: clamp(1rem, 1.7vw, 1.8rem); border-radius: 12px; }
+
+.telao-bottom { background: rgba(255, 255, 255, .15); border-radius: 24px; padding: 12px 16px; }
+.telao-players { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+.telao-player { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 84px; }
+.telao-player .avatar-badge { width: 58px; height: 58px; font-size: 2rem; }
+.telao-player small {
+  color: #fff;
+  font-weight: 800;
+  font-size: .95rem;
+  max-width: 84px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow: 0 2px 0 var(--ink);
+}
+.telao-player.is-near .avatar-badge { background: var(--orange); animation: nearBounce .9s ease-in-out infinite; }
+.telao-player.is-winner .avatar-badge { background: var(--yellow); box-shadow: 0 3px 0 var(--ink), 0 0 18px 6px rgba(255, 210, 63, .8); }
+.telao-player.is-away { opacity: .45; }
+@keyframes nearBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+.telao-paused {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border-radius: 32px;
+  background: rgba(30, 18, 64, .7);
+  backdrop-filter: blur(3px);
+}
+.telao-paused .mascot { --size: 200px; }
+.telao-paused p { font-size: clamp(3rem, 7vw, 6rem); margin: 0; text-align: center; }
+
+@media (max-width: 900px) {
+  .telao-lobby, .telao-main { grid-template-columns: 1fr; }
+  .telao-qr { width: min(70vw, 360px); }
+  .telao-ball { width: min(60vw, 300px); }
+}

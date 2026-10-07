@@ -15,6 +15,7 @@
 <link rel="stylesheet" href="/css/components.css" />
 <link rel="stylesheet" href="/css/screens.css" />
 <link rel="stylesheet" href="/css/play.css" />
+<link rel="stylesheet" href="/css/master.css" />
 </head>
 <body>
 
@@ -166,14 +167,15 @@
   </div>
 </section>
 
-<!-- ======================= PAINEL DO MESTRE ======================= -->
+<!-- ======================= PAINEL DO PROFESSOR ======================= -->
 <section id="screen-master" class="screen screen-top">
   <header class="game-header">
     <div class="game-header-left">
-      <span class="pill">Sala <strong id="master-room-code">----</strong></span>
+      <span class="pill pill-code">Sala <strong id="master-room-code">----</strong></span>
       <button id="btn-copy-code" class="btn-mini" type="button">copiar código</button>
-      <span class="pill pill-status" id="master-status-badge">aguardando</span>
+      <span class="pill pill-status" id="master-status-badge">esperando</span>
       <button id="btn-voice" class="btn-mini" type="button" title="A voz lê em voz alta cada item sorteado neste computador">🗣️ voz ligada</button>
+      <button id="btn-open-screen" class="btn-mini" type="button" title="Abre uma tela grande para o projetor ou TV">📺 Abrir telão</button>
     </div>
     <div class="game-header-right">
       <span id="master-player-count">0 participantes</span>
@@ -192,29 +194,19 @@
 
       <section id="master-config" class="card-block">
         <h2>Configurar partida</h2>
-        <div class="config-grid">
-          <label class="field">
-            <span>Tamanho da cartela</span>
-            <select id="cfg-grid-size">
-              <option value="3">3 × 3</option>
-              <option value="4">4 × 4</option>
-              <option value="5" selected>5 × 5</option>
-              <option value="6">6 × 6</option>
-            </select>
-          </label>
-          <label class="field field-check">
-            <input type="checkbox" id="cfg-free-space" checked />
-            <span>Casa livre no centro (Free Space)</span>
-          </label>
-          <label class="field">
-            <span>Tipo de bingo</span>
-            <select id="cfg-bingo-type">
-              <option value="numbers">🔢 Números</option>
-              <option value="words">🔤 Palavras</option>
-              <option value="emojis">😀 Emojis</option>
-              <option value="custom">🧩 Personalizado</option>
-            </select>
-          </label>
+
+        <h3 class="config-subtitle">1. Tipo de bingo</h3>
+        <select id="cfg-bingo-type" class="sr-only" tabindex="-1" aria-hidden="true">
+          <option value="numbers">Números</option>
+          <option value="words">Palavras</option>
+          <option value="emojis">Emojis</option>
+          <option value="custom">Personalizado</option>
+        </select>
+        <div class="choice-tiles" data-select="cfg-bingo-type" role="radiogroup" aria-label="Tipo de bingo">
+          <button type="button" class="choice-tile" data-value="numbers"><span class="tile-icon">🔢</span><span>Números</span></button>
+          <button type="button" class="choice-tile" data-value="words"><span class="tile-icon">🔤</span><span>Palavras</span></button>
+          <button type="button" class="choice-tile" data-value="emojis"><span class="tile-icon">😀</span><span>Emojis</span></button>
+          <button type="button" class="choice-tile" data-value="custom"><span class="tile-icon">🧩</span><span>Personalizado</span></button>
         </div>
 
         <div id="cfg-numbers-fields" class="config-subfields">
@@ -260,16 +252,47 @@
           <p class="pack-count" data-count-for="cfg-items"></p>
         </div>
 
-        <h3 class="config-subtitle">Regras de vitória</h3>
+        <h3 class="config-subtitle">2. Tamanho da cartela</h3>
+        <select id="cfg-grid-size" class="sr-only" tabindex="-1" aria-hidden="true">
+          <option value="3">3 × 3</option>
+          <option value="4">4 × 4</option>
+          <option value="5" selected>5 × 5</option>
+          <option value="6">6 × 6</option>
+        </select>
+        <div class="choice-tiles size-tiles" data-select="cfg-grid-size" role="radiogroup" aria-label="Tamanho da cartela">
+          <button type="button" class="choice-tile" data-value="3"><span class="mini-grid" style="--n:3"></span><span>3 × 3 <small>bem fácil</small></span></button>
+          <button type="button" class="choice-tile" data-value="4"><span class="mini-grid" style="--n:4"></span><span>4 × 4 <small>fácil</small></span></button>
+          <button type="button" class="choice-tile" data-value="5"><span class="mini-grid" style="--n:5"></span><span>5 × 5 <small>clássico</small></span></button>
+          <button type="button" class="choice-tile" data-value="6"><span class="mini-grid" style="--n:6"></span><span>6 × 6 <small>desafio</small></span></button>
+        </div>
+        <label class="field-check">
+          <input type="checkbox" id="cfg-free-space" checked />
+          <span>⭐ Casa livre no centro <small class="muted">(só em 3×3 e 5×5)</small></span>
+        </label>
+
+        <h3 class="config-subtitle">3. Como se ganha</h3>
         <div class="win-rules">
-          <label class="field-check"><input type="checkbox" id="cfg-win-row" checked /><span>Linha</span></label>
-          <label class="field-check"><input type="checkbox" id="cfg-win-col" checked /><span>Coluna</span></label>
-          <label class="field-check"><input type="checkbox" id="cfg-win-diag" checked /><span>Diagonal</span></label>
-          <label class="field-check"><input type="checkbox" id="cfg-win-full" /><span>Cartela completa</span></label>
+          <label class="rule-card" data-rule="row"><input type="checkbox" id="cfg-win-row" checked /><span class="rule-pic"></span><span>Linha</span></label>
+          <label class="rule-card" data-rule="column"><input type="checkbox" id="cfg-win-col" checked /><span class="rule-pic"></span><span>Coluna</span></label>
+          <label class="rule-card" data-rule="diagonal"><input type="checkbox" id="cfg-win-diag" checked /><span class="rule-pic"></span><span>Diagonal</span></label>
+          <label class="rule-card" data-rule="fullCard"><input type="checkbox" id="cfg-win-full" /><span class="rule-pic"></span><span>Cartela cheia</span></label>
         </div>
         <label class="field-check">
           <input type="checkbox" id="cfg-autopause" checked />
           <span>Pausar automaticamente quando alguém fizer Bingo</span>
+        </label>
+
+        <h3 class="config-subtitle">4. Sorteio</h3>
+        <label class="field field-inline">
+          <span>⏱️ Sorteio automático</span>
+          <select id="cfg-auto-draw">
+            <option value="0">Desligado (eu aperto SORTEAR)</option>
+            <option value="8">A cada 8 segundos</option>
+            <option value="10">A cada 10 segundos</option>
+            <option value="15">A cada 15 segundos</option>
+            <option value="20">A cada 20 segundos</option>
+            <option value="30">A cada 30 segundos</option>
+          </select>
         </label>
 
         <p id="config-error" class="form-error" role="alert"></p>
@@ -280,20 +303,27 @@
       </section>
 
       <section id="master-draw" class="card-block" hidden>
-        <h2>Sorteio</h2>
-        <div class="draw-area">
-          <div class="draw-result" id="draw-result-display">
-            <span id="draw-result-value">🎲</span>
+        <div class="draw-layout">
+          <div class="draw-area">
+            <div class="draw-result" id="draw-result-display">
+              <span id="draw-result-value">🎲</span>
+            </div>
+            <button id="btn-draw" class="btn-draw" type="button">🎰 SORTEAR</button>
+            <p class="muted draw-hint">Atalho: barra de <kbd>espaço</kbd></p>
+            <p id="auto-draw-timer" class="auto-timer" hidden></p>
+            <p id="draw-remaining" class="muted"></p>
+            <p id="draw-error" class="form-error" role="alert"></p>
+            <button id="btn-undo-draw" class="btn btn-ghost" type="button">↩️ Desfazer último</button>
           </div>
-          <button id="btn-draw" class="btn-draw" type="button">🎰 SORTEAR</button>
-          <p id="draw-remaining" class="muted"></p>
-          <p id="draw-error" class="form-error" role="alert"></p>
+          <div class="board-wrap">
+            <h3>Quadro do sorteio</h3>
+            <div id="number-board" class="number-board" aria-label="Itens já sorteados acendem no quadro"></div>
+          </div>
         </div>
-        <div class="draw-controls">
-          <button id="btn-undo-draw" class="btn btn-ghost" type="button">↩️ Desfazer último sorteio</button>
-        </div>
-        <h3 class="config-subtitle">Histórico de sorteios</h3>
-        <div id="master-history" class="history-chips history-chips-lg"></div>
+        <details class="history-details">
+          <summary>Ordem dos sorteios</summary>
+          <div id="master-history" class="history-chips"></div>
+        </details>
       </section>
 
       <section id="master-winners" class="card-block" hidden>
@@ -306,6 +336,15 @@
 
     <!-- ---- Painel lateral ---- -->
     <aside class="master-sidebar">
+
+      <div class="card-block invite-card" id="invite-card">
+        <h3>📲 Turma, entre aqui!</h3>
+        <img id="join-qr" class="join-qr" alt="QR Code para entrar na sala" />
+        <p class="join-url"><a id="join-url" href="#" target="_blank" rel="noopener"></a></p>
+        <select id="join-url-select" class="join-url-select" hidden aria-label="Endereço da rede"></select>
+        <p class="muted invite-hint">Aponte a câmera do celular ou tablet. A turma precisa estar no mesmo Wi-Fi.</p>
+        <button id="btn-copy-link" class="btn-mini" type="button">copiar link</button>
+      </div>
 
       <div class="card-block">
         <h3>Controles da partida</h3>
@@ -323,10 +362,61 @@
           <h3>Participantes</h3>
           <button id="btn-toggle-lock" class="btn-mini" type="button">🔓 sala aberta</button>
         </div>
+        <p id="near-summary" class="near-summary" hidden></p>
         <ul id="participants-list" class="participants-list"></ul>
       </div>
 
     </aside>
+  </div>
+</section>
+
+<!-- ======================= TELÃO (projetor) ======================= -->
+<section id="screen-telao" class="screen screen-top telao">
+  <div id="telao-missing" class="telao-missing" hidden>
+    <div data-mascot data-mood="wow" data-base-mood="wow"></div>
+    <h1 class="title-game">Sala não encontrada</h1>
+    <p>Abra o telão pelo botão 📺 no painel do professor.</p>
+  </div>
+
+  <div id="telao-lobby" class="telao-lobby" hidden>
+    <div class="telao-lobby-left">
+      <h1 class="logo title-game telao-logo" aria-label="Bingo!">
+        <span style="--i:0">B</span><span style="--i:1">I</span><span style="--i:2">N</span><span style="--i:3">G</span><span style="--i:4">O</span><span style="--i:5">!</span>
+      </h1>
+      <p class="telao-call">Entre no jogo! 👇</p>
+      <img id="telao-qr" class="telao-qr" alt="QR Code para entrar na sala" />
+      <p class="telao-url" id="telao-url"></p>
+      <p class="telao-code">Código: <strong id="telao-code">-----</strong></p>
+    </div>
+    <div class="telao-lobby-right">
+      <div class="telao-mascot-row"><div data-mascot></div><p class="speech" id="telao-count">Esperando a turma...</p></div>
+      <div id="telao-friends" class="telao-friends"></div>
+    </div>
+  </div>
+
+  <div id="telao-game" class="telao-game" hidden>
+    <div class="telao-main">
+      <div class="telao-ball-wrap">
+        <p class="telao-label">Saiu agora!</p>
+        <div id="telao-ball" class="telao-ball"><span id="telao-ball-value">?</span></div>
+        <div id="telao-recent" class="recent-balls telao-recent"></div>
+        <p id="telao-timer" class="auto-timer" hidden></p>
+      </div>
+      <div class="telao-board-wrap">
+        <div id="telao-board" class="number-board telao-board"></div>
+      </div>
+    </div>
+    <div class="telao-bottom">
+      <div id="telao-players" class="telao-players"></div>
+    </div>
+    <div id="telao-paused" class="telao-paused" hidden>
+      <div data-mascot data-mood="sleep" data-base-mood="sleep" id="telao-paused-mascot"></div>
+      <p class="title-game" id="telao-paused-text">Pausa!</p>
+    </div>
+    <div id="telao-ended" class="telao-paused" hidden>
+      <div data-mascot data-mood="party" data-base-mood="party"></div>
+      <p class="title-game">Fim de jogo! Valeu, turma! 💜</p>
+    </div>
   </div>
 </section>
 
@@ -373,6 +463,7 @@
 <script src="/js/master.js"></script>
 <script src="/js/player.js"></script>
 <script src="/js/join.js"></script>
+<script src="/js/screen.js"></script>
 <script src="/js/app.js"></script>
 </body>
 </html>

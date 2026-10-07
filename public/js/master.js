@@ -6,7 +6,9 @@
 
 (function () {
   const { socket, emitAsync } = window.BingoSocket;
-  const { showScreen, toast, confirmModal, statusLabel, escapeHtml, fitText } = window.BingoUI;
+  const {
+    showScreen, toast, confirmModal, statusLabel, escapeHtml, fitText, renderNumberBoard, getJoinUrls, qrUrl,
+  } = window.BingoUI;
   const { play, speak } = window.BingoSound;
   const { confetti } = window.BingoFx;
 
@@ -147,8 +149,58 @@
         fullCard: document.getElementById('cfg-win-full').checked,
       },
       autoPauseOnWin: document.getElementById('cfg-autopause').checked,
+      autoDrawSeconds: Number(document.getElementById('cfg-auto-draw').value) || 0,
     };
     return config;
+  }
+
+  // ---------------- configuração visual ----------------
+
+  // Os cartões de escolha (tipo de bingo, tamanho) controlam um <select>
+  // escondido, que continua sendo a fonte do valor lido em readConfigFromForm.
+  function syncChoiceTiles() {
+    document.querySelectorAll('.choice-tiles[data-select]').forEach((group) => {
+      const select = document.getElementById(group.dataset.select);
+      group.querySelectorAll('.choice-tile').forEach((tile) => {
+        tile.setAttribute('role', 'radio');
+        tile.setAttribute('aria-checked', String(tile.dataset.value === select.value));
+        tile.disabled = select.disabled;
+      });
+    });
+  }
+
+  function wireChoiceTiles() {
+    document.querySelectorAll('.choice-tiles[data-select]').forEach((group) => {
+      const select = document.getElementById(group.dataset.select);
+      group.querySelectorAll('.choice-tile').forEach((tile) => {
+        tile.addEventListener('click', () => {
+          if (select.value === tile.dataset.value) return;
+          select.value = tile.dataset.value;
+          select.dispatchEvent(new Event('change'));
+          syncChoiceTiles();
+        });
+      });
+    });
+  }
+
+  // Desenhinho 5×5 de cada regra de vitória (linha, coluna, diagonal, cheia).
+  function drawRulePictures() {
+    const lit = {
+      row: (r) => r === 2,
+      column: (r, c) => c === 2,
+      diagonal: (r, c) => r === c,
+      fullCard: () => true,
+    };
+    document.querySelectorAll('.rule-card[data-rule]').forEach((card) => {
+      const on = lit[card.dataset.rule];
+      let rects = '';
+      for (let r = 0; r < 5; r++) {
+        for (let c = 0; c < 5; c++) {
+          rects += `<rect x="${c * 9 + 1}" y="${r * 9 + 1}" width="7" height="7" rx="2" class="${on(r, c) ? 'on' : ''}"/>`;
+        }
+      }
+      card.querySelector('.rule-pic').innerHTML = `<svg viewBox="0 0 46 46" aria-hidden="true">${rects}</svg>`;
+    });
   }
 
   function fillFormFromConfig(config) {
@@ -165,8 +217,10 @@
     document.getElementById('cfg-win-diag').checked = !!config.winPatterns.diagonal;
     document.getElementById('cfg-win-full').checked = !!config.winPatterns.fullCard;
     document.getElementById('cfg-autopause').checked = !!config.autoPauseOnWin;
+    document.getElementById('cfg-auto-draw').value = String(config.autoDrawSeconds || 0);
     bingoTypeFields();
     refreshAllPackUis();
+    syncChoiceTiles();
   }
 
   // Mostra o item na bola do sorteio, com a letra ajustada ao tamanho dele.
@@ -195,6 +249,7 @@
     document.getElementById('master-config').hidden = !isWaiting;
     document.querySelectorAll('#master-config input, #master-config select, #master-config textarea')
       .forEach((el) => { el.disabled = !isWaiting; });
+    syncChoiceTiles();
     document.getElementById('btn-save-config').disabled = !isWaiting;
     document.getElementById('btn-start-game').hidden = !isWaiting;
 
@@ -209,10 +264,13 @@
     document.getElementById('draw-remaining').textContent =
       state.poolSize ? `${state.remainingCount} de ${state.poolSize} itens restantes` : '';
     showDrawnValue(state.lastDrawn ?? '🎲');
+    if (!isWaiting) renderNumberBoard(document.getElementById('number-board'), state.pool || [], state.drawnItems);
+    updateAutoDrawTimer();
 
     renderHistory(state.drawnItems);
     renderParticipants(state.players);
     renderWinners(state.players);
+    renderInvite(state.code);
 
     // Controles de partida
     document.getElementById('btn-pause').hidden = state.status !== 'playing';
@@ -256,23 +314,38 @@
     if (knownPlayerIds && players.some((p) => !knownPlayerIds.has(p.id))) play('join');
     knownPlayerIds = ids;
 
+    // resumo para o professor criar suspense ("tem gente quase lá, hein!")
+    const near = players.filter((p) => p.nearWin);
+    const nearSummary = document.getElementById('near-summary');
+    nearSummary.hidden = !near.length;
+    nearSummary.textContent = near.length === 1
+      ? `🔥 ${near[0].name} está quase lá!`
+      : `🔥 ${near.length} jogadores estão quase lá!`;
+
     const list = document.getElementById('participants-list');
     list.innerHTML = '';
     if (!players.length) {
-      list.innerHTML = '<li class="muted">Nenhum participante ainda.</li>';
+      list.innerHTML = '<li class="muted">Ninguém entrou ainda. Mostre o QR Code para a turma! 📲</li>';
       return;
     }
-    players.forEach((p) => {
+    // quem está mais perto de ganhar aparece primeiro
+    const sorted = players.slice().sort((a, b) =>
+      (b.hasWon - a.hasWon) || (b.nearWin - a.nearWin) || (b.markedCount - a.markedCount));
+    sorted.forEach((p) => {
       const li = document.createElement('li');
       li.className = 'participant-row';
+      if (p.nearWin) li.classList.add('is-near');
+      if (p.hasWon) li.classList.add('is-winner');
+      const progress = p.totalCells ? Math.round((p.markedCount / p.totalCells) * 100) : 0;
       li.innerHTML = `
+        <span class="avatar-badge avatar-sm ${p.connected ? '' : 'is-away'}" title="${p.connected ? 'conectado' : 'desconectado'}">${escapeHtml(p.avatar || '🙂')}</span>
         <div class="participant-info">
-          <span class="participant-dot ${p.connected ? 'online' : ''}"></span>
           <span class="participant-name" title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</span>
-          ${p.hasWon ? '<span class="participant-badge">🏆 Bingo</span>' : ''}
+          ${p.hasCard ? `<span class="progress-bar" title="${p.markedCount} de ${p.totalCells} casas"><span style="width:${progress}%"></span></span>` : '<small class="muted">próxima rodada</small>'}
         </div>
+        <span class="participant-flags">${p.hasWon ? '🏆' : p.nearWin ? '🔥' : ''}</span>
         <div class="participant-actions">
-          <button type="button" title="Expulsar" data-kick="${p.id}">🚫</button>
+          <button type="button" title="Remover da sala" data-kick="${p.id}">🚫</button>
         </div>
       `;
       list.appendChild(li);
@@ -289,10 +362,52 @@
     winners.forEach((p) => {
       const row = document.createElement('div');
       row.className = 'winner-row';
-      row.textContent = `🏆 ${p.name}`;
+      row.textContent = `🏆 ${p.avatar || ''} ${p.name}`;
       box.appendChild(row);
     });
   }
+
+  // ---------------- convite (QR Code + link) ----------------
+
+  let inviteCode = null;
+  let inviteUrl = '';
+
+  function setInviteUrl(url) {
+    inviteUrl = url;
+    const link = document.getElementById('join-url');
+    link.href = url;
+    link.textContent = url.replace(/^https?:\/\//, '');
+    document.getElementById('join-qr').src = qrUrl(url);
+  }
+
+  function renderInvite(code) {
+    if (code === inviteCode) return;
+    inviteCode = code;
+    getJoinUrls(code).then((urls) => {
+      if (inviteCode !== code) return;
+      setInviteUrl(urls[0]);
+      // várias redes (ex.: Wi-Fi e VPN): o professor escolhe a da turma
+      const select = document.getElementById('join-url-select');
+      select.hidden = urls.length < 2;
+      select.innerHTML = '';
+      urls.forEach((u) => {
+        const opt = document.createElement('option');
+        opt.value = u;
+        opt.textContent = u.replace(/^https?:\/\//, '').replace(/\/\?sala=.*/, '');
+        select.appendChild(opt);
+      });
+    });
+  }
+
+  // ---------------- sorteio automático: contagem na tela ----------------
+
+  function updateAutoDrawTimer() {
+    const el = document.getElementById('auto-draw-timer');
+    const at = currentState && currentState.status === 'playing' ? currentState.nextAutoDrawAt : null;
+    el.hidden = !at;
+    if (at) el.textContent = `⏱️ Próximo sorteio em ${Math.max(0, Math.ceil((at - Date.now()) / 1000))}s`;
+  }
+  setInterval(updateAutoDrawTimer, 250);
 
   // ---------------- ações ----------------
 
@@ -305,13 +420,16 @@
       });
       render(res.state);
       toast('Configurações salvas.', 'success', 2200);
+      return true;
     } catch (e) {
       document.getElementById('config-error').textContent = e.message || 'Erro ao salvar configurações.';
+      return false;
     }
   }
 
   async function handleStartGame() {
-    await handleSaveConfig();
+    // configuração inválida (ex.: poucos itens): não inicia com a antiga
+    if (!(await handleSaveConfig())) return;
     document.getElementById('config-error').textContent = '';
     try {
       const res = await emitAsync('start_game', { roomCode: session().roomCode, masterToken: session().masterToken });
@@ -330,14 +448,8 @@
     btn.disabled = true; // evita dois sorteios com um clique duplo
     play('whoosh');
     try {
-      const res = await emitAsync('draw_item', { roomCode: session().roomCode, masterToken: session().masterToken });
-      const display = document.getElementById('draw-result-display');
-      display.classList.remove('pop');
-      void display.offsetWidth;
-      display.classList.add('pop');
-      showDrawnValue(res.value);
-      play('ding');
-      speak(res.value);
+      // bola, som e voz chegam pelo evento draw_result (vale também para o automático)
+      await emitAsync('draw_item', { roomCode: session().roomCode, masterToken: session().masterToken });
     } catch (e) {
       document.getElementById('draw-error').textContent = e.message || 'Erro ao sortear.';
     } finally {
@@ -467,8 +579,34 @@
     });
     window.BingoSound.onChange(renderVoiceButton);
     renderVoiceButton();
+
+    wireChoiceTiles();
+    drawRulePictures();
+
+    // Barra de espaço sorteia (fora de campos de texto e de janelas abertas).
+    document.addEventListener('keydown', (ev) => {
+      if (ev.code !== 'Space' || ev.repeat) return;
+      if (!document.getElementById('screen-master').classList.contains('active')) return;
+      if (ev.target.closest('input, textarea, select, button, [contenteditable]')) return;
+      if (!document.getElementById('confirm-modal').hidden) return;
+      ev.preventDefault();
+      handleDraw();
+    });
+
+    document.getElementById('btn-open-screen').addEventListener('click', () => {
+      window.open(`/telao?sala=${encodeURIComponent(session().roomCode)}`, 'bingo-telao');
+    });
+    document.getElementById('btn-copy-link').addEventListener('click', () => {
+      navigator.clipboard?.writeText(inviteUrl).then(
+        () => toast('Link copiado! Mande para a turma 📲', 'success', 2200),
+        () => toast(inviteUrl, 'info', 6000)
+      );
+    });
+    document.getElementById('join-url-select').addEventListener('change', (ev) => setInviteUrl(ev.target.value));
+
     bingoTypeFields();
     refreshAllPackUis();
+    syncChoiceTiles();
   }
 
   socket.on('master_state', (state) => {
@@ -476,9 +614,22 @@
     render(state);
   });
 
-  socket.on('win_announced', ({ playerName, patterns }) => {
+  // Todo sorteio (botão, espaço ou automático) passa por aqui.
+  socket.on('draw_result', ({ value }) => {
     if (window.BingoApp.session.role !== 'master') return;
-    toast(`🏆 ${playerName} fez Bingo! (${patterns.join(', ')})`, 'success', 6000);
+    const display = document.getElementById('draw-result-display');
+    display.classList.remove('pop');
+    void display.offsetWidth;
+    display.classList.add('pop');
+    showDrawnValue(value);
+    play('ding');
+    speak(value);
+  });
+
+  socket.on('win_announced', ({ playerName, avatar, patterns }) => {
+    if (window.BingoApp.session.role !== 'master') return;
+    const how = patterns.map((p) => p.replace(/-/g, ' ')).join(', ');
+    toast(`🏆 ${avatar || ''} ${playerName} fez Bingo! (${how})`, 'success', 6000);
     play('fanfare');
     confetti({ amount: 200 });
   });

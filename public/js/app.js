@@ -110,6 +110,8 @@
   }
 
   async function tryResume() {
+    // o telão não tem sessão: ele só assiste a sala (screen.js)
+    if (window.BingoScreen.isScreenMode()) return;
     let saved = loadSession();
     // Quem chegou pelo link de outra sala começa a entrada nela, em vez de
     // voltar para a sala antiga guardada no aparelho.
@@ -237,4 +239,5 @@
 
   // inicialização dos módulos que dependem do DOM pronto
   window.BingoMaster.init();
+  if (window.BingoScreen.isScreenMode()) window.BingoScreen.start();
 })();
