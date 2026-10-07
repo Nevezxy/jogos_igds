@@ -400,6 +400,9 @@
 .participant-actions button:hover { opacity: 1; }
 
 #master-winners-list { display: flex; flex-direction: column; gap: 8px; }
+.winners-cta { margin-top: 18px; }
+.ended-card { text-align: center; }
+.ended-card .btn { margin-top: 8px; }
 .winner-row {
   display: flex; align-items: center; gap: 10px;
   background: var(--yellow);

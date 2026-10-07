@@ -159,6 +159,9 @@
   socket.on('connect', () => {
     tryResume();
   });
+  // A conexão pode abrir antes deste script terminar de carregar; nesse
+  // caso o evento 'connect' já passou e a retomada precisa rodar agora.
+  if (socket.connected) tryResume();
 
   socket.on('disconnect', () => {
     toast('Conexão perdida. Tentando reconectar...', 'error', 4000);
@@ -173,6 +176,9 @@
   socket.on('game_paused', () => toast('Partida pausada.', 'info'));
   socket.on('game_resumed', () => toast('Partida retomada.', 'info'));
   socket.on('game_restarted', () => toast('Partida reiniciada.', 'info'));
+  socket.on('new_match_started', () => {
+    if (session.role === 'player') toast('Nova partida! Sua cartela nova chegou 🎉', 'success');
+  });
   socket.on('game_ended', () => toast('A sala foi encerrada.', 'info'));
 
   window.BingoApp = {

@@ -241,6 +241,21 @@ function restartGame(code, token) {
   return room;
 }
 
+// Começa uma nova rodada na hora, com a mesma configuração e os mesmos
+// participantes: cada um recebe uma cartela nova e o sorteio recomeça.
+// (restartGame, ao contrário, volta para a tela de configuração.)
+function newMatch(code, token) {
+  const room = authMaster(code, token);
+  if (room.status === 'ended') throw new RoomError('ESTADO_INVALIDO', 'A sala já foi encerrada.');
+  if (room.status === 'waiting') {
+    throw new RoomError('ESTADO_INVALIDO', 'A partida ainda não começou. Use "Iniciar partida".');
+  }
+  // os sorteios antigos ficam no banco (cada um guarda o número da rodada)
+  room.matchNumber += 1;
+  room.status = 'waiting';
+  return startGame(code, token);
+}
+
 function endGame(code, token) {
   const room = authMaster(code, token);
   room.status = 'ended';
@@ -412,6 +427,7 @@ module.exports = {
   pauseGame,
   resumeGame,
   restartGame,
+  newMatch,
   endGame,
   drawItem,
   undoLastDraw,

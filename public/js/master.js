@@ -113,8 +113,17 @@
     // Controles de partida
     document.getElementById('btn-pause').hidden = state.status !== 'playing';
     document.getElementById('btn-resume').hidden = state.status !== 'paused';
-    document.getElementById('btn-restart').hidden = state.status === 'waiting' && state.drawnItems.length === 0;
-    document.getElementById('btn-end').hidden = state.status === 'ended';
+    // Nova partida e Mudar regras só fazem sentido com uma rodada em andamento;
+    // na sala encerrada nada disso funciona mais, então tudo some.
+    const inMatch = state.status === 'playing' || state.status === 'paused';
+    const isEnded = state.status === 'ended';
+    document.getElementById('btn-new-match').hidden = !inMatch;
+    document.getElementById('btn-new-match-win').hidden = !inMatch;
+    document.getElementById('btn-restart').hidden = !inMatch;
+    document.getElementById('btn-end').hidden = isEnded;
+    document.getElementById('master-ended').hidden = !isEnded;
+    document.getElementById('btn-undo-draw').hidden = isEnded;
+    document.getElementById('btn-toggle-lock').hidden = isEnded;
 
     const lockBtn = document.getElementById('btn-toggle-lock');
     lockBtn.textContent = state.locked ? '🔒 sala bloqueada' : '🔓 sala aberta';
@@ -234,23 +243,42 @@
     try { await emitAsync('resume_game', { roomCode: session().roomCode, masterToken: session().masterToken }); }
     catch (e) { toast(e.message, 'error'); }
   }
+  // Nova rodada na hora, mesmas regras, mesma turma, cartelas novas.
+  async function handleNewMatch() {
+    const st = currentState;
+    const someoneWon = st && st.players.some((p) => p.hasWon);
+    if (st && st.drawnItems.length && !someoneWon) {
+      const ok = await confirmModal(
+        'Começar nova partida?',
+        'Ninguém fez Bingo ainda. A rodada atual termina e todos recebem uma cartela nova.',
+        'Nova partida'
+      );
+      if (!ok) return;
+    }
+    try {
+      const res = await emitAsync('new_match', { roomCode: session().roomCode, masterToken: session().masterToken });
+      render(res.state);
+      toast('Nova partida! Cartelas novas para todo mundo 🎉', 'success');
+    } catch (e) { toast(e.message || 'Não foi possível começar outra partida.', 'error'); }
+  }
+
   async function handleRestart() {
     const ok = await confirmModal(
-      'Reiniciar partida?',
-      'Todo o progresso atual (sorteios e cartelas) será perdido e uma nova rodada começará do zero. Essa ação não pode ser desfeita.',
-      'Sim, reiniciar'
+      'Mudar as regras?',
+      'A rodada atual termina e você volta para a configuração. Os participantes continuam na sala esperando a próxima partida.',
+      'Mudar regras'
     );
     if (!ok) return;
     try {
       await emitAsync('restart_game', { roomCode: session().roomCode, masterToken: session().masterToken });
-      toast('Partida reiniciada. Configure e inicie novamente.', 'info');
+      toast('Ajuste as regras e inicie a partida.', 'info');
     } catch (e) { toast(e.message, 'error'); }
   }
   async function handleEnd() {
     const ok = await confirmModal(
-      'Encerrar sala?',
-      'A sala será encerrada para todos os participantes e não será mais possível jogar nela.',
-      'Sim, encerrar'
+      'Encerrar a sala de vez?',
+      'Ninguém mais vai poder jogar nesta sala, nem você. Para jogar outra rodada com a mesma turma, use "🎉 Nova partida". Para trocar as regras, use "⚙️ Mudar regras".',
+      'Encerrar de vez'
     );
     if (!ok) return;
     try { await emitAsync('end_game', { roomCode: session().roomCode, masterToken: session().masterToken }); }
@@ -291,8 +319,14 @@
     document.getElementById('btn-undo-draw').addEventListener('click', handleUndoDraw);
     document.getElementById('btn-pause').addEventListener('click', handlePause);
     document.getElementById('btn-resume').addEventListener('click', handleResume);
+    document.getElementById('btn-new-match').addEventListener('click', handleNewMatch);
+    document.getElementById('btn-new-match-win').addEventListener('click', handleNewMatch);
     document.getElementById('btn-restart').addEventListener('click', handleRestart);
     document.getElementById('btn-end').addEventListener('click', handleEnd);
+    document.getElementById('btn-new-room').addEventListener('click', () => {
+      window.BingoApp.resetSession();
+      showScreen('screen-create');
+    });
     document.getElementById('btn-toggle-lock').addEventListener('click', handleToggleLock);
     document.getElementById('btn-copy-code').addEventListener('click', copyRoomCode);
     bingoTypeFields();

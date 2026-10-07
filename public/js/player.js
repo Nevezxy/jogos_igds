@@ -98,12 +98,12 @@
     });
   }
 
-  function showBanner(text) {
+  function showBanner(text, keep = false) {
     const banner = document.getElementById('player-banner');
     banner.textContent = text;
     banner.hidden = false;
     clearTimeout(showBanner._t);
-    showBanner._t = setTimeout(() => { banner.hidden = true; }, 5000);
+    if (!keep) showBanner._t = setTimeout(() => { banner.hidden = true; }, 5000);
   }
 
   function render(state) {
@@ -141,7 +141,9 @@
       lastKnownDrawCount = state.drawnItems.length;
     }
 
-    if (state.you.hasWon) {
+    if (state.status === 'ended') {
+      showBanner('🌙 O jogo acabou! Valeu por jogar 💜', true);
+    } else if (state.you.hasWon) {
       showBanner('🏆 BINGO! Você venceu esta rodada!');
     } else if (state.status === 'paused') {
       showBanner('⏸ A partida está pausada pelo Mestre.');
@@ -170,6 +172,12 @@
     if (playerName !== window.BingoApp.session.playerName) {
       showBanner(`🎊 ${playerName} fez Bingo!`);
     }
+  });
+
+  socket.on('new_match_started', () => {
+    if (window.BingoApp.session.role !== 'player') return;
+    clearTimeout(showBanner._t);
+    document.getElementById('player-banner').hidden = true;
   });
 
   socket.on('you_were_kicked', () => {

@@ -129,6 +129,15 @@ function registerSocketHandlers(io) {
       } catch (e) { cb && cb(err(e)); }
     });
 
+    socket.on('new_match', ({ roomCode, masterToken } = {}, cb) => {
+      try {
+        const room = rm.newMatch(roomCode, masterToken);
+        cb && cb({ ok: true, state: rm.getMasterState(room) });
+        io.to(roomChannel(room.code)).emit('new_match_started', { matchNumber: room.matchNumber });
+        broadcastRoomState(io, room);
+      } catch (e) { cb && cb(err(e)); }
+    });
+
     socket.on('end_game', ({ roomCode, masterToken } = {}, cb) => {
       try {
         const room = rm.endGame(roomCode, masterToken);

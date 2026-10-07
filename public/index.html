@@ -153,6 +153,12 @@
     <!-- ---- Área principal ---- -->
     <main class="master-main">
 
+      <section id="master-ended" class="card-block ended-card" hidden>
+        <h2>🌙 Esta sala foi encerrada</h2>
+        <p class="muted">Ninguém mais pode jogar nela. Para jogar de novo, crie uma sala nova e passe o novo código para a turma.</p>
+        <button id="btn-new-room" class="btn btn-primary btn-lg" type="button">🎪 Criar uma sala nova</button>
+      </section>
+
       <section id="master-config" class="card-block">
         <h2>Configurar partida</h2>
         <div class="config-grid">
@@ -253,6 +259,7 @@
       <section id="master-winners" class="card-block" hidden>
         <h2>🏆 Vencedores</h2>
         <div id="master-winners-list"></div>
+        <button id="btn-new-match-win" class="btn btn-success btn-block btn-lg winners-cta" type="button">🎉 Jogar de novo com a mesma turma</button>
       </section>
 
     </main>
@@ -265,7 +272,8 @@
         <div class="master-controls">
           <button id="btn-pause" class="btn btn-secondary" type="button" hidden>⏸ Pausar</button>
           <button id="btn-resume" class="btn btn-secondary" type="button" hidden>▶️ Retomar</button>
-          <button id="btn-restart" class="btn btn-warn" type="button" hidden>🔄 Reiniciar partida</button>
+          <button id="btn-new-match" class="btn btn-success" type="button" hidden>🎉 Nova partida</button>
+          <button id="btn-restart" class="btn btn-warn" type="button" hidden>⚙️ Mudar regras</button>
           <button id="btn-end" class="btn btn-danger" type="button" hidden>⏹ Encerrar sala</button>
         </div>
       </div>

@@ -134,6 +134,19 @@ async function main() {
     errors.push('jogador expulso não deveria conseguir marcar casas');
   } catch (e) { assert(e.code === 'EXPULSO', 'jogador expulso corretamente bloqueado de marcar casas'); }
 
+  // nova partida com os mesmos participantes (sem voltar à configuração)
+  let newMatchEvent = false;
+  p1.on('new_match_started', () => { newMatchEvent = true; });
+  const nm = await emitAsync(master, 'new_match', { roomCode, masterToken });
+  await wait(150);
+  assert(nm.ok && nm.state.status === 'playing', 'nova partida começa direto, valendo');
+  assert(nm.state.drawnItems.length === 0, 'nova partida começa sem sorteios');
+  assert(newMatchEvent, 'jogadores recebem aviso de nova partida');
+  const anaAfterNew = await emitAsync(p1, 'get_state', { roomCode, playerToken: j1.playerToken });
+  assert(anaAfterNew.state.card && !anaAfterNew.state.you.hasWon, 'Ana tem cartela nova e não está mais como vencedora');
+  assert(anaAfterNew.state.card.cells.flat().every((c) => !c.marked || c.isFree), 'cartela nova começa sem marcações');
+  assert(!nm.state.players.some((pl) => pl.name === 'Bruno'), 'jogador expulso não volta na nova partida');
+
   // reiniciar partida
   const restarted = await emitAsync(master, 'restart_game', { roomCode, masterToken });
   assert(restarted.ok, 'partida reiniciada');
