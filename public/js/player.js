@@ -25,7 +25,7 @@
   let shownCardKey = null;
   let shownMarked = new Set();
 
-  function renderCard(card, drawnSet) {
+  function renderCard(card) {
     const grid = document.getElementById('player-card');
     const cardKey = card.cells.flat().map((cell) => cell.value).join('|');
     const isNewCard = cardKey !== shownCardKey;
@@ -48,7 +48,6 @@
           btn.classList.add('is-marked');
           if (!isNewCard && !shownMarked.has(key)) btn.classList.add('just-marked');
         }
-        if (!cell.isFree && drawnSet.has(cell.value) && !cell.marked) btn.classList.add('is-drawn');
         if (cell.isFree) {
           btn.innerHTML = '<span>⭐</span>';
         } else {
@@ -76,6 +75,10 @@
         row, col,
       });
     } catch (e) {
+      if (e.code === 'ITEM_NAO_SORTEADO') {
+        toast('Esse ainda não saiu! 👀', 'error', 1800);
+        return;
+      }
       toast(e.message || 'Não foi possível marcar essa casa.', 'error');
     }
   }
@@ -117,7 +120,6 @@
     statusBadge.dataset.status = statusLabel(state.status);
     document.getElementById('player-name-badge').textContent = state.you.name;
 
-    const drawnSet = new Set(state.drawnItems);
     const lastEl = document.getElementById('player-last-drawn');
     const lastValue = state.lastDrawn ?? '?';
     if (lastEl.textContent !== String(lastValue)) {
@@ -128,7 +130,7 @@
     }
 
     if (state.card) {
-      renderCard(state.card, drawnSet);
+      renderCard(state.card);
     } else {
       document.getElementById('player-card').innerHTML =
         '<p class="muted" style="grid-column:1/-1;padding:20px;">Aguardando a próxima rodada começar...</p>';

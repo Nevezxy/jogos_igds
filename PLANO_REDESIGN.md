@@ -160,19 +160,16 @@ Erros traduzidos para linguagem infantil e mostrados pelo mascote:
 1. Overlay em tela cheia: uma bola colorida rola da direita, gira e para no centro (~1,2s).
 2. O número aparece com *pop* e é **falado em voz alta** (Web Speech API, `pt-BR`).
 3. A bola encolhe e voa para a fila de "últimas bolas".
-4. Se a criança **tem** o número: a casa começa a **brilhar e balançar**
-   ("me toca!") e o mascote aparece dizendo "Você tem!".
-5. Se **não tem**: um "Ops, não tenho" curto e neutro (sem som triste).
+4. **Nenhuma dica** de onde o número está nem de se a criança o tem: ela
+   procura sozinha na cartela (decisão do professor; essa é a graça do jogo).
 
 **Marcar casa (U1 + U2):**
-- Novo modo padrão: **marcação manual com ajuda**. A casa sorteada brilha e a
-  criança toca para marcar. O toque faz o **efeito de carimbo (dab)**: um
+- ✅ **Marcação 100% manual, sem indicador** (já implementado): o sorteio não
+  marca nada e a casa sorteada não ganha destaque. A criança procura e toca para marcar. O toque faz o **efeito de carimbo (dab)**: um
   círculo colorido "esmagado" com rotação aleatória, estrelinhas saindo e o som *boing*.
 - Tocar numa casa **não sorteada** faz a casa tremer (shake) e mostra a
   dica "Esse ainda não saiu!", sem toast de erro.
 - **Desmarcar removido** para a criança. Só o servidor desfaz, quando o mestre usa "desfazer sorteio".
-- O mestre pode escolher **marcação automática** (como hoje) nas configurações,
-  para turmas muito pequenas.
 
 **"Quase lá!" (U7):**
 - Quando falta 1 casa para qualquer padrão: a linha, coluna ou diagonal ganha uma
@@ -200,7 +197,6 @@ Continua mais "sério" (é ferramenta), mas com a mesma identidade visual.
   - Tipo de bingo: 4 cartões grandes com ícone (🔢 🔤 😀 🧩)
   - Tamanho: miniaturas de cartela 3×3, 4×4, 5×5, 6×6
   - Regras de vitória: mini-desenhos da linha/coluna/diagonal/cheia
-  - **Novo:** modo de marcação (manual com ajuda / automático)
   - **Novo:** sorteio automático a cada X segundos (desligado, 10s, 15s, 20s, 30s)
   - **Novo:** voz que anuncia o número (liga/desliga)
 - **Quadro de números** (estilo painel de bingo real): grade com todos os
@@ -228,7 +224,7 @@ Biblioteca própria e pequena em `public/js/fx.js`, sem dependências:
 | Efeito | Técnica | Uso |
 |---|---|---|
 | `bounceIn` | CSS keyframes com overshoot (`cubic-bezier(.34,1.56,.64,1)`) | Entrada de telas, cartões e avatares |
-| `wiggle` | CSS rotate ±6° | Casa sorteada "me toca", botão JOGAR |
+| `wiggle` | CSS rotate ±6° | Botão JOGAR, casa tocada por engano |
 | `shake` | CSS translateX | Toque errado |
 | `stamp` | CSS scale 1.6→0.9→1 + rotate aleatório via CSS var | Marcar casa |
 | `ballRoll` | CSS transform + rotação | Sorteio |
@@ -261,7 +257,7 @@ sem arquivos de áudio. Fica leve e funciona offline.
 | Mudança | Arquivo | Detalhe |
 |---|---|---|
 | Avatar do jogador | `roomManager.joinRoom`, `publicPlayerSummary`, `db.js` | Novo campo `avatar` (validado contra uma lista permitida) |
-| Modo de marcação | `DEFAULT_CONFIG`, `drawItem` | `markingMode: 'manual' \| 'auto'`; no manual, `drawItem` **não** marca |
+| ✅ Marcação manual | `drawItem` | Feito: `drawItem` não marca as cartelas; a vitória só é detectada em `markCell` |
 | Sem desmarcar | `markCell` | No modo manual, só marca (não alterna) |
 | "Quase lá" | `winChecker.js` | Nova função `getNearWins(card, patterns)` que retorna as linhas com 1 faltando e as células que faltam |
 | Progresso | `publicPlayerSummary` | Adicionar `nearWin: boolean` para o painel do mestre e o telão |
@@ -325,7 +321,7 @@ podermos voltar atrás se algo der errado (hoje o projeto não está versionado)
 | **2. Som + FX** | `sound.js`, `fx.js` (confete, stamp, sparkle), botão de mudo | Tudo faz barulho e brilha |
 | **3. Experiência da criança** | Fluxo de entrada em 3 passos, avatares, `?sala=`, sala de espera viva, contagem 3-2-1 | A entrada fica divertida e fácil |
 | **4. Jogo** | Overlay de sorteio + voz, marcação manual com carimbo, "quase lá", tela de BINGO, pausa com mascote dormindo | O coração do jogo |
-| **5. Backend** | Avatar, `markingMode`, sem toggle, `nearWin`, auto-sorteio, espectador + testes | Suporte às fases 3, 4 e 6 |
+| **5. Backend** | Avatar, sem toggle, `nearWin`, auto-sorteio, espectador + testes | Suporte às fases 3, 4 e 6 |
 | **6. Professor + Telão** | Config em cartões, quadro de números, QR Code, participantes com progresso, rota `/telao` | A sala de aula inteira joga junto |
 | **7. Polimento** | Reduced motion, contraste, teste em celular/tablet/Chromebook, performance com 20+ jogadores | Pronto para uso real |
 

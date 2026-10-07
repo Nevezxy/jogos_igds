@@ -279,12 +279,6 @@
 }
 .bingo-cell.just-marked::before { animation: stamp .4s var(--ease-bounce) both; }
 
-/* sorteado mas ainda não marcado: brilha e balança pedindo o toque */
-.bingo-cell.is-drawn:not(.is-marked) {
-  background: var(--yellow);
-  animation: wiggle .6s ease-in-out infinite;
-}
-
 .bingo-cell.is-free {
   background: var(--yellow);
   cursor: default;

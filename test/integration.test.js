@@ -97,8 +97,18 @@ async function main() {
       // e pausado automaticamente a partida — o Mestre retoma para continuar sorteando.
       await emitAsync(master, 'resume_game', { roomCode, masterToken });
     }
-    await emitAsync(master, 'draw_item', { roomCode, masterToken });
+    const drawn = await emitAsync(master, 'draw_item', { roomCode, masterToken });
     await wait(30);
+    // o sorteio não marca sozinho: Ana procura o item na cartela e marca
+    const before = await emitAsync(p1, 'get_state', { roomCode, playerToken: j1.playerToken });
+    const cells = before.state.card.cells;
+    for (let r = 0; r < cells.length; r++) {
+      for (let c = 0; c < cells.length; c++) {
+        if (cells[r][c].value !== drawn.value) continue;
+        assert(!cells[r][c].marked, 'sorteio não marca a cartela automaticamente');
+        await emitAsync(p1, 'mark_cell', { roomCode, playerToken: j1.playerToken, row: r, col: c });
+      }
+    }
     const st = await emitAsync(p1, 'get_state', { roomCode, playerToken: j1.playerToken });
     anaWon = st.state.you.hasWon;
   }

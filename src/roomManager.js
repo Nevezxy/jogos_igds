@@ -263,37 +263,10 @@ function drawItem(code, token) {
   room.drawnSet.add(value);
   db.insertDraw(room.code, room.matchNumber, value);
 
-  // Marca automaticamente nas cartelas (o "achado" visual) — mas a marcação
-  // OFICIAL para fins de vitória só conta quando o item foi sorteado,
-  // então já podemos marcar automaticamente com segurança.
-  const newWinners = [];
-  for (const player of room.players.values()) {
-    if (!player.card || player.kicked) continue;
-    let touched = false;
-    for (const row of player.card.cells) {
-      for (const cell of row) {
-        if (!cell.isFree && cell.value === value) {
-          cell.marked = true;
-          touched = true;
-        }
-      }
-    }
-    if (touched && !player.hasWon) {
-      const patterns = getWinningPatterns(player.card, room.config.winPatterns);
-      if (patterns.length) {
-        player.hasWon = true;
-        newWinners.push({ player, patterns });
-        db.insertWin(room.code, player.id, player.name, patterns.join(','), room.matchNumber);
-        db.upsertPlayer(player, room.code);
-      }
-    }
-  }
-
-  if (newWinners.length && room.config.autoPauseOnWin) {
-    room.status = 'paused';
-  }
-
-  return { room, value, newWinners };
+  // O sorteio NÃO marca as cartelas: cada jogador procura o item na própria
+  // cartela e marca com um toque (markCell). Por isso nenhuma vitória nasce
+  // aqui — ela é detectada quando o jogador marca a casa que faltava.
+  return { room, value, newWinners: [] };
 }
 
 function undoLastDraw(code, token) {
@@ -304,7 +277,7 @@ function undoLastDraw(code, token) {
   const value = room.drawnItems.pop();
   room.drawnSet.delete(value);
 
-  // Remove a marcação automática correspondente e recalcula vitórias
+  // O item deixou de estar sorteado: desmarca quem já tinha marcado e recalcula vitórias
   for (const player of room.players.values()) {
     if (!player.card) continue;
     for (const row of player.card.cells) {
