@@ -17,6 +17,15 @@ function roomChannel(code) {
   return `room:${code}`;
 }
 
+// Telões (projetor) ficam num canal separado: recebem a visão de espectador.
+function screenChannel(code) {
+  return `screen:${code}`;
+}
+
+// Tempo da contagem 3-2-1 mostrada às crianças no começo de cada partida;
+// o primeiro sorteio automático espera ela terminar.
+const COUNTDOWN_MS = 3500;
+
 function broadcastRoomState(io, room) {
   // Estado do mestre (se conectado)
   if (room.masterSocketId) {
@@ -30,6 +39,56 @@ function broadcastRoomState(io, room) {
   }
   // Resumo leve para quem ainda está na tela de espera / listas
   io.to(roomChannel(room.code)).emit('room_summary', rm.getRoomSummary(room));
+  io.to(screenChannel(room.code)).emit('screen_state', rm.getScreenState(room));
+}
+
+function announceWin(io, room, player, patterns) {
+  io.to(roomChannel(room.code)).emit('win_announced', {
+    playerId: player.id,
+    playerName: player.name,
+    avatar: player.avatar,
+    patterns,
+  });
+}
+
+// Sorteia um item e avisa todo mundo. Usado pelo botão do professor e pelo
+// sorteio automático.
+function performDraw(io, room) {
+  const { value } = rm.drawItem(room.code, room.masterToken);
+  io.to(roomChannel(room.code)).emit('draw_result', { value, drawnItems: room.drawnItems });
+  return value;
+}
+
+// ---------------- sorteio automático ----------------
+
+function clearAutoDraw(room) {
+  clearTimeout(room.autoDrawTimer);
+  room.autoDrawTimer = null;
+  room.nextAutoDrawAt = null;
+}
+
+// (Re)agenda o próximo sorteio automático se a sala estiver valendo, com
+// intervalo configurado e itens restantes. `extraDelay` cobre a contagem
+// inicial. Chamado depois de toda ação que muda o ritmo do jogo.
+function scheduleAutoDraw(io, room, extraDelay = 0) {
+  clearAutoDraw(room);
+  const seconds = room.config.autoDrawSeconds;
+  const remaining = room.pool.length - room.drawnItems.length;
+  if (room.status !== 'playing' || !seconds || remaining <= 0) return;
+  const delay = seconds * 1000 + extraDelay;
+  room.nextAutoDrawAt = Date.now() + delay;
+  room.autoDrawTimer = setTimeout(() => {
+    room.autoDrawTimer = null;
+    room.nextAutoDrawAt = null;
+    if (room.status !== 'playing') return;
+    try {
+      performDraw(io, room);
+      scheduleAutoDraw(io, room);
+      broadcastRoomState(io, room);
+    } catch (e) {
+      if (!(e instanceof rm.RoomError)) console.error('[sorteio automático]', e);
+    }
+  }, delay);
 }
 
 function registerSocketHandlers(io) {
@@ -61,9 +120,9 @@ function registerSocketHandlers(io) {
       } catch (e) { cb && cb(err(e)); }
     });
 
-    socket.on('join_room', ({ roomCode, name, playerToken } = {}, cb) => {
+    socket.on('join_room', ({ roomCode, name, playerToken, avatar } = {}, cb) => {
       try {
-        const { room, player, reconnected } = rm.joinRoom(roomCode, name, playerToken);
+        const { room, player, reconnected } = rm.joinRoom(roomCode, name, playerToken, avatar);
         rm.attachSocket(room, player, socket.id);
         socket.join(roomChannel(room.code));
         socket.data.role = 'player';
@@ -96,6 +155,7 @@ function registerSocketHandlers(io) {
     socket.on('start_game', ({ roomCode, masterToken } = {}, cb) => {
       try {
         const room = rm.startGame(roomCode, masterToken);
+        scheduleAutoDraw(io, room, COUNTDOWN_MS);
         cb && cb({ ok: true, state: rm.getMasterState(room) });
         io.to(roomChannel(room.code)).emit('game_started');
         broadcastRoomState(io, room);
@@ -105,6 +165,7 @@ function registerSocketHandlers(io) {
     socket.on('pause_game', ({ roomCode, masterToken } = {}, cb) => {
       try {
         const room = rm.pauseGame(roomCode, masterToken);
+        clearAutoDraw(room);
         cb && cb({ ok: true });
         io.to(roomChannel(room.code)).emit('game_paused');
         broadcastRoomState(io, room);
@@ -114,6 +175,7 @@ function registerSocketHandlers(io) {
     socket.on('resume_game', ({ roomCode, masterToken } = {}, cb) => {
       try {
         const room = rm.resumeGame(roomCode, masterToken);
+        scheduleAutoDraw(io, room);
         cb && cb({ ok: true });
         io.to(roomChannel(room.code)).emit('game_resumed');
         broadcastRoomState(io, room);
@@ -123,6 +185,7 @@ function registerSocketHandlers(io) {
     socket.on('restart_game', ({ roomCode, masterToken } = {}, cb) => {
       try {
         const room = rm.restartGame(roomCode, masterToken);
+        clearAutoDraw(room);
         cb && cb({ ok: true });
         io.to(roomChannel(room.code)).emit('game_restarted');
         broadcastRoomState(io, room);
@@ -132,6 +195,7 @@ function registerSocketHandlers(io) {
     socket.on('new_match', ({ roomCode, masterToken } = {}, cb) => {
       try {
         const room = rm.newMatch(roomCode, masterToken);
+        scheduleAutoDraw(io, room, COUNTDOWN_MS);
         cb && cb({ ok: true, state: rm.getMasterState(room) });
         io.to(roomChannel(room.code)).emit('new_match_started', { matchNumber: room.matchNumber });
         broadcastRoomState(io, room);
@@ -141,6 +205,7 @@ function registerSocketHandlers(io) {
     socket.on('end_game', ({ roomCode, masterToken } = {}, cb) => {
       try {
         const room = rm.endGame(roomCode, masterToken);
+        clearAutoDraw(room);
         cb && cb({ ok: true });
         io.to(roomChannel(room.code)).emit('game_ended');
         broadcastRoomState(io, room);
@@ -151,19 +216,10 @@ function registerSocketHandlers(io) {
 
     socket.on('draw_item', ({ roomCode, masterToken } = {}, cb) => {
       try {
-        const { room, value, newWinners } = rm.drawItem(roomCode, masterToken);
+        const room = rm.authMaster(roomCode, masterToken);
+        const value = performDraw(io, room);
+        scheduleAutoDraw(io, room); // sorteio manual reinicia a contagem do automático
         cb && cb({ ok: true, value });
-        io.to(roomChannel(room.code)).emit('draw_result', {
-          value,
-          drawnItems: room.drawnItems,
-        });
-        for (const { player, patterns } of newWinners) {
-          io.to(roomChannel(room.code)).emit('win_announced', {
-            playerId: player.id,
-            playerName: player.name,
-            patterns,
-          });
-        }
         broadcastRoomState(io, room);
       } catch (e) { cb && cb(err(e)); }
     });
@@ -171,6 +227,7 @@ function registerSocketHandlers(io) {
     socket.on('undo_draw', ({ roomCode, masterToken } = {}, cb) => {
       try {
         const { room, value } = rm.undoLastDraw(roomCode, masterToken);
+        scheduleAutoDraw(io, room);
         cb && cb({ ok: true, value });
         io.to(roomChannel(room.code)).emit('draw_undone', { value, drawnItems: room.drawnItems });
         broadcastRoomState(io, room);
@@ -206,13 +263,24 @@ function registerSocketHandlers(io) {
         const { room, player, newWin } = rm.markCell(roomCode, playerToken, Number(row), Number(col));
         cb && cb({ ok: true, card: player.card });
         if (newWin) {
-          io.to(roomChannel(room.code)).emit('win_announced', {
-            playerId: player.id,
-            playerName: player.name,
-            patterns: newWin,
-          });
+          announceWin(io, room, player, newWin);
+          if (room.status !== 'playing') clearAutoDraw(room); // pausa automática na vitória
         }
         broadcastRoomState(io, room);
+      } catch (e) { cb && cb(err(e)); }
+    });
+
+    // ---------------- TELÃO (espectador) ----------------
+
+    socket.on('watch_room', ({ roomCode } = {}, cb) => {
+      try {
+        const room = rm.requireRoom(roomCode);
+        socket.join(screenChannel(room.code));
+        // também ouve os eventos de jogo (sorteio, vitória, início...)
+        socket.join(roomChannel(room.code));
+        socket.data.role = 'screen';
+        socket.data.roomCode = room.code;
+        cb && cb({ ok: true, state: rm.getScreenState(room) });
       } catch (e) { cb && cb(err(e)); }
     });
 

@@ -5,7 +5,8 @@
 
 const { generateRoomCode, generateId, generateToken } = require('./idGenerator');
 const { getPoolForConfig, validateConfig, generateCard, shuffle } = require('./bingoTypes');
-const { getWinningPatterns } = require('./winChecker');
+const { getWinningPatterns, isNearWin } = require('./winChecker');
+const { normalizeAvatar, isNameAllowed } = require('./avatars');
 const db = require('./db');
 
 const MAX_PLAYERS_PER_ROOM = 40; // folga acima dos ~20 previstos
@@ -22,7 +23,10 @@ const DEFAULT_CONFIG = {
   items: [],
   winPatterns: { row: true, column: true, diagonal: true, fullCard: false },
   autoPauseOnWin: true,
+  autoDrawSeconds: 0, // 0 = sorteio manual; senão, um sorteio a cada N segundos
 };
+
+const AUTO_DRAW_OPTIONS = [0, 8, 10, 15, 20, 30];
 
 function normalizeName(name) {
   return String(name || '').trim();
@@ -93,7 +97,9 @@ function updateConfig(code, token, partialConfig) {
     winPatterns: { ...room.config.winPatterns, ...(partialConfig.winPatterns || {}) },
   };
   merged.gridSize = Number(merged.gridSize);
+  merged.autoDrawSeconds = Number(merged.autoDrawSeconds) || 0;
   const errors = validateConfig(merged);
+  if (!AUTO_DRAW_OPTIONS.includes(merged.autoDrawSeconds)) errors.push('Intervalo de sorteio automático inválido.');
   if (errors.length) {
     throw new RoomError('CONFIG_INVALIDA', errors.join(' '));
   }
@@ -102,7 +108,7 @@ function updateConfig(code, token, partialConfig) {
   return room;
 }
 
-function joinRoom(code, name, existingToken) {
+function joinRoom(code, name, existingToken, avatar) {
   const room = requireRoom(code);
 
   // Reconexão: se um token válido for enviado e corresponder a um jogador da sala
@@ -129,6 +135,9 @@ function joinRoom(code, name, existingToken) {
   if (!cleanName || cleanName.length < 2 || cleanName.length > 30) {
     throw new RoomError('NOME_INVALIDO', 'Informe um nome válido (2 a 30 caracteres).');
   }
+  if (!isNameAllowed(cleanName)) {
+    throw new RoomError('NOME_IMPROPRIO', 'Esse nome não pode ser usado. Escolha outro, por favor.');
+  }
   const key = slugKey(cleanName);
   const duplicate = activePlayers.some((p) => slugKey(p.name) === key);
   if (duplicate) {
@@ -138,6 +147,7 @@ function joinRoom(code, name, existingToken) {
   const player = {
     id: generateId('p_'),
     name: cleanName,
+    avatar: normalizeAvatar(avatar),
     token: generateToken(),
     socketId: null,
     connected: false,
@@ -281,7 +291,7 @@ function drawItem(code, token) {
   // O sorteio NÃO marca as cartelas: cada jogador procura o item na própria
   // cartela e marca com um toque (markCell). Por isso nenhuma vitória nasce
   // aqui — ela é detectada quando o jogador marca a casa que faltava.
-  return { room, value, newWinners: [] };
+  return { room, value };
 }
 
 function undoLastDraw(code, token) {
@@ -331,9 +341,10 @@ function markCell(code, playerToken, row, col) {
   if (!room.drawnSet.has(cell.value)) {
     throw new RoomError('ITEM_NAO_SORTEADO', 'Esse item ainda não foi sorteado.');
   }
-
-  const wasMarked = cell.marked;
-  cell.marked = !wasMarked; // permite alternar (marcar/desmarcar) itens já sorteados
+  // Casa marcada fica travada: como só itens sorteados podem ser marcados,
+  // nenhuma marcação é "errada" e desmarcar só serviria para perder progresso.
+  if (cell.marked) return { room, player, cell, changed: false, newWin: null };
+  cell.marked = true;
 
   let newWin = null;
   if (!player.hasWon) {
@@ -343,10 +354,6 @@ function markCell(code, playerToken, row, col) {
       newWin = patterns;
       db.insertWin(room.code, player.id, player.name, patterns.join(','), room.matchNumber);
     }
-  } else if (wasMarked && !cell.marked) {
-    // desmarcou uma casa que fazia parte da vitória: reavalia
-    const patterns = getWinningPatterns(player.card, room.config.winPatterns);
-    if (!patterns.length) player.hasWon = false;
   }
   db.upsertPlayer(player, room.code);
 
@@ -357,13 +364,15 @@ function markCell(code, playerToken, row, col) {
 
 // ---------- Views (o que cada tipo de usuário pode enxergar) ----------
 
-function publicPlayerSummary(player) {
-  const markedCount = player.card
-    ? player.card.cells.flat().filter((c) => c.marked && !c.isFree).length
-    : 0;
+function publicPlayerSummary(player, config) {
+  const cells = player.card ? player.card.cells.flat().filter((c) => !c.isFree) : [];
+  const markedCount = cells.filter((c) => c.marked).length;
   return {
     id: player.id,
     name: player.name,
+    avatar: player.avatar,
+    totalCells: cells.length,
+    nearWin: !!(player.card && !player.hasWon && config && isNearWin(player.card, config.winPatterns)),
     connected: !!player.connected,
     kicked: !!player.kicked,
     hasWon: !!player.hasWon,
@@ -383,7 +392,10 @@ function getRoomSummary(room) {
     matchNumber: room.matchNumber,
     playerCount: players.length,
     connectedCount: players.filter((p) => p.connected).length,
+    // nomes e avatares para a sala de espera (todo mundo da turma se vê)
+    players: players.map((p) => ({ id: p.id, name: p.name, avatar: p.avatar, connected: !!p.connected })),
     config: room.config,
+    nextAutoDrawAt: room.nextAutoDrawAt || null,
   };
 }
 
@@ -395,15 +407,24 @@ function getMasterState(room) {
     lastDrawn: room.drawnItems[room.drawnItems.length - 1] || null,
     remainingCount: Math.max(room.pool.length - room.drawnItems.length, 0),
     poolSize: room.pool.length,
-    players: [...room.players.values()].filter((p) => !p.kicked).map(publicPlayerSummary),
+    pool: room.pool,
+    players: [...room.players.values()].filter((p) => !p.kicked).map((p) => publicPlayerSummary(p, room.config)),
   };
+}
+
+// Telão (projetor): só leitura, sem tokens nem cartelas.
+function getScreenState(room) {
+  const master = getMasterState(room);
+  delete master.isMaster;
+  master.isScreen = true;
+  return master;
 }
 
 function getPlayerState(room, player) {
   return {
     ...getRoomSummary(room),
     isMaster: false,
-    you: publicPlayerSummary(player),
+    you: publicPlayerSummary(player, room.config),
     card: player.card,
     drawnItems: room.drawnItems,
     lastDrawn: room.drawnItems[room.drawnItems.length - 1] || null,
@@ -434,6 +455,7 @@ module.exports = {
   markCell,
   getRoomSummary,
   getMasterState,
+  getScreenState,
   getPlayerState,
   publicPlayerSummary,
 };

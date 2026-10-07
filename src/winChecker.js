@@ -57,4 +57,24 @@ function hasWon(card, enabledPatterns) {
   return getWinningPatterns(card, enabledPatterns).length > 0;
 }
 
-module.exports = { getWinningPatterns, hasWon };
+// Linhas/colunas/diagonais (habilitadas) que estão a UMA casa de fechar.
+// Usado para o selo "🔥 quase lá" no painel do professor e no telão.
+function lineCells(size) {
+  const lines = [];
+  for (let i = 0; i < size; i++) {
+    lines.push({ kind: 'row', cells: Array.from({ length: size }, (_, c) => [i, c]) });
+    lines.push({ kind: 'column', cells: Array.from({ length: size }, (_, r) => [r, i]) });
+  }
+  lines.push({ kind: 'diagonal', cells: Array.from({ length: size }, (_, i) => [i, i]) });
+  lines.push({ kind: 'diagonal', cells: Array.from({ length: size }, (_, i) => [i, size - 1 - i]) });
+  return lines;
+}
+
+function isNearWin(card, enabledPatterns) {
+  const { cells } = card;
+  const missing = (list) => list.filter(([r, c]) => !cells[r][c].marked).length;
+  if (enabledPatterns.fullCard && missing(cells.flatMap((row, r) => row.map((_, c) => [r, c]))) === 1) return true;
+  return lineCells(cells.length).some((line) => enabledPatterns[line.kind] && missing(line.cells) === 1);
+}
+
+module.exports = { getWinningPatterns, hasWon, isNearWin };

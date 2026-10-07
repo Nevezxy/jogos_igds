@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "test": "node test/integration.test.js && node test/features.test.js"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -15,7 +16,11 @@
     "cors": "^2.8.5",
     "express": "^4.19.2",
     "nanoid": "^3.3.7",
+    "qrcode": "^1.5.4",
     "socket.io": "^4.7.5"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "socket.io-client": "^4.8.4"
+  }
 }
