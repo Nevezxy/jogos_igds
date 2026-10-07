@@ -260,13 +260,13 @@
   font-weight: 800;
   font-size: 1.35rem;
   letter-spacing: .5px;
-  color: #fff;
-  background: linear-gradient(90deg, var(--orange), var(--red), var(--orange));
+  /* texto escuro sobre amarelo/laranja: contraste alto para leitura rápida */
+  color: var(--ink);
+  background: linear-gradient(90deg, var(--yellow), var(--orange), var(--yellow));
   background-size: 200% 100%;
   border: var(--stroke) solid var(--ink);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-pop);
-  text-shadow: 0 2px 0 rgba(30, 18, 64, .45);
   animation: stripFlow 1.6s linear infinite;
 }
 @keyframes stripFlow { to { background-position: 200% 0; } }
@@ -421,4 +421,11 @@
   .ball-stage { padding: 8px 12px; gap: 10px; }
   .near-win-strip { font-size: 1.1rem; }
   .waiting-hero .mascot { --size: 76px; }
+}
+
+/* Com "reduzir movimento", as animações terminam na hora (animations.css).
+   A da contagem termina com o número invisível, então ela é desligada. */
+@media (prefers-reduced-motion: reduce) {
+  .countdown-number.tick { animation: none !important; }
+  .balloon-layer, .balloon-hint { display: none; }
 }

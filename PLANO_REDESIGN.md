@@ -1,5 +1,15 @@
 # 🎪 Plano de Redesign — Bingo Virtual "modo Poki"
 
+> **Situação (outubro de 2026): todas as 7 fases foram implementadas.**
+> Diferenças em relação ao plano original, decididas durante o trabalho:
+> - Marcação 100% manual e **sem nenhuma dica** de onde está o item sorteado
+>   (não existe modo de marcação automática).
+> - Casa marcada fica travada (tocar de novo não desmarca).
+> - A voz só fala no computador do professor (não no telão nem nas crianças).
+> - Entraram também: pacotes prontos de itens, "Nova partida com a mesma
+>   turma" e o estado de sala encerrada.
+> - O teste de carga usa 40 crianças simuladas (`npm run test:carga`).
+
 Objetivo: transformar o bingo num jogo que a criança **quer** jogar. Hoje ele
 parece uma ferramenta de sala de aula. A referência são portais como o Poki:
 cores saturadas, botões "gordinhos" que afundam ao clicar, tudo saltitante,

@@ -1,8 +1,9 @@
 # 🎯 Bingo Virtual — Sistema de Bingo para Sala de Aula
 
-Sistema web completo de Bingo Virtual em tempo real, feito para um educador
-(**Mestre da Sala**) conduzir uma partida com ~20 educandos conectados
-simultaneamente, cada um em seu próprio computador/tablet/celular.
+Bingo em tempo real com cara de jogo (inspirado em portais de jogos infantis
+como o Poki), feito para um(a) professor(a) conduzir uma partida com ~20
+crianças conectadas ao mesmo tempo, cada uma em seu celular, tablet ou
+computador — e um telão opcional para o projetor.
 
 Backend em **Node.js + Express + Socket.IO**, persistência em **SQLite**
 (via `better-sqlite3`, sem serviço externo) e frontend em **HTML/CSS/JS
@@ -21,9 +22,13 @@ npm install
 npm start
 ```
 
-Acesse `http://localhost:3000`. Abra em outra aba (ou peça para um colega
-na mesma rede acessar `http://SEU_IP:3000`) para simular um segundo
-participante.
+Acesse `http://localhost:3000` e clique em **Sou professor(a)**. O painel
+mostra um QR Code e o link da rede local (`http://SEU_IP:3000/?sala=CÓDIGO`)
+para a turma entrar pelo celular ou tablet — todos no mesmo Wi-Fi. Para
+projetar, use **📺 Abrir telão** no painel.
+
+> No Windows, se os aparelhos da turma não conseguirem abrir o link, marque
+> a rede Wi-Fi como **Privada** (ou libere a porta 3000 no firewall).
 
 A porta pode ser alterada com a variável de ambiente `PORT` (veja
 `.env.example`).
@@ -85,10 +90,12 @@ CMD ["node", "server.js"]
 
 ## 3. Capacidade
 
-Dimensionado para ~20 participantes simultâneos por sala (limite técnico
-configurado em `MAX_PLAYERS_PER_ROOM = 40` em `src/roomManager.js`, com
-folga). Múltiplas salas podem rodar ao mesmo tempo no mesmo servidor —
-cada uma é isolada por código único.
+Pensado para uma turma de ~20 crianças, com folga: limite de
+`MAX_PLAYERS_PER_ROOM = 40` em `src/roomManager.js`. O teste de carga
+(`npm run test:carga`) coloca 40 crianças marcando casas ao mesmo tempo e
+mede quanto cada sorteio leva para chegar a todas: em rede local fica na
+casa de 50 ms. Várias salas podem rodar ao mesmo tempo no mesmo servidor,
+cada uma isolada pelo seu código.
 
 ---
 
@@ -96,24 +103,43 @@ cada uma é isolada por código único.
 
 ```
 bingo-virtual/
-├── server.js                 # Sobe Express (estáticos) + Socket.IO no mesmo HTTP server
+├── server.js                 # Express (estáticos, /api/join-info, /qr.svg) + Socket.IO
 ├── src/
 │   ├── roomManager.js        # Fonte única da verdade do estado "ao vivo" de cada sala
-│   ├── socketHandlers.js     # Registra os eventos Socket.IO (mestre e educando)
+│   ├── socketHandlers.js     # Eventos Socket.IO, sorteio automático e telão
 │   ├── bingoTypes.js         # Estratégias por tipo de bingo (números/palavras/emojis/custom)
-│   ├── winChecker.js         # Validação server-side das condições de vitória
+│   ├── winChecker.js         # Vitória e "quase lá" (falta 1), sempre no servidor
+│   ├── avatars.js            # Bichinhos permitidos e filtro de nomes impróprios
 │   ├── idGenerator.js        # Código de sala, IDs e tokens de sessão
 │   └── db.js                 # Persistência SQLite (salas, jogadores, sorteios, vitórias)
 ├── public/
-│   ├── index.html            # Todas as "telas" (home, entrar, criar, espera, jogo, mestre)
-│   ├── css/style.css         # Design system (tokens, componentes, responsivo)
+│   ├── index.html            # Todas as telas (home, entrar, criar, espera, jogo, professor, telão)
+│   ├── css/
+│   │   ├── tokens.css        # Cores, raios, sombras e fontes
+│   │   ├── base.css          # Reset, fundo animado, tipografia
+│   │   ├── animations.css    # Todos os @keyframes (+ prefers-reduced-motion)
+│   │   ├── components.css    # Botões 3D, cartões, campos, toasts, modal, mascote
+│   │   ├── screens.css       # Home, cartela e painel do professor (base)
+│   │   ├── play.css          # Entrada em 3 passos, espera, jogo e camadas de tela cheia
+│   │   └── master.css        # Configuração visual, quadro de números e telão
 │   └── js/
 │       ├── socket-client.js  # Conexão Socket.IO + wrapper em Promise
-│       ├── ui.js              # Toasts, modal de confirmação, troca de telas
-│       ├── app.js             # Sessão do usuário, reconexão automática, roteamento
-│       ├── master.js          # Painel do Mestre (config, sorteio, controles, participantes)
-│       └── player.js          # Tela do educando (cartela, histórico, banners)
-├── test/integration.test.js  # Teste ponta a ponta via socket.io-client (ver seção 6)
+│       ├── mascot.js         # Bingolino, o mascote em SVG, e suas expressões
+│       ├── avatars.js        # Lista de bichinhos (igual à do servidor)
+│       ├── packs.js          # Pacotes prontos de palavras, emojis e itens
+│       ├── sound.js          # Sons sintetizados (Web Audio) e voz pt-BR
+│       ├── fx.js             # Confete, estrelinhas e tremida
+│       ├── ui.js             # Telas, toasts, modal, ajuste de texto, quadro de números, links
+│       ├── overlays.js       # Contagem 3-2-1, bola em tela cheia e comemoração de BINGO
+│       ├── master.js         # Painel do professor
+│       ├── player.js         # Sala de espera e tela de jogo da criança
+│       ├── join.js           # Entrada da criança em 3 passos
+│       ├── screen.js         # Modo telão (/telao?sala=CODE)
+│       └── app.js            # Sessão, reconexão automática e roteamento
+├── test/
+│   ├── integration.test.js   # Fluxo completo de uma partida
+│   ├── features.test.js      # Avatar, filtro de nome, quase lá, sorteio automático, telão, QR
+│   └── load.test.js          # Turma inteira jogando ao mesmo tempo
 └── data/bingo.sqlite         # Criado automaticamente na primeira execução
 ```
 
@@ -128,85 +154,102 @@ bingo-virtual/
 - **Tudo validado no servidor**: nenhuma ação de jogo (marcar casa,
   sortear, declarar vitória, expulsar) é decidida pelo cliente. O cliente
   só *pede*; o servidor decide e distribui o novo estado via broadcast.
-- **Tipos de bingo como estratégias plugáveis** (`bingoTypes.js`): cada
-  tipo só precisa implementar uma função `(config) => string[]` que gera o
-  "pool" de itens possíveis. Adicionar um novo tipo no futuro (ex.: bingo
-  de imagens) não exige tocar no resto do sistema.
-- **Reconexão por token**: cada educando recebe um `playerToken` (e o
-  Mestre um `masterToken`) guardados no `localStorage` do navegador. Se a
-  página recarregar ou a conexão cair, o cliente reconecta automaticamente
-  e recupera cartela, marcações, histórico e papel (Mestre/educando).
+- **Sem build step e sem internet na sala**: sons sintetizados no
+  navegador, mascote em SVG, QR Code gerado no servidor — tudo funciona
+  numa rede local sem acesso à internet (só as fontes do Google ficam de
+  fora nesse caso, com fonte do sistema no lugar).
+- **Reconexão por token**: cada criança recebe um `playerToken` (e o
+  professor um `masterToken`) guardados no `localStorage` do navegador. Se
+  a página recarregar ou a conexão cair, o cliente reconecta sozinho e
+  recupera cartela, marcações, histórico, bichinho e papel.
 
 ---
 
-## 5. Fluxo principal
+## 5. Como uma partida acontece
 
 ```
-Educador cria sala → recebe código
+Professor cria a sala → painel mostra QR Code e link da rede local
+        │                (opcional: 📺 Abrir telão no projetor)
+        ▼
+Crianças apontam a câmera (ou digitam o código) → nome → bichinho
         │
         ▼
-Educandos entram com o código → tela de espera (atualiza sozinha)
+Sala de espera: a turma vai aparecendo, balões para estourar
         │
         ▼
-Educador configura (tipo de bingo, tamanho da cartela, regras de vitória)
+Professor escolhe tipo, pacotes, tamanho, regras e sorteio automático → Iniciar
         │
         ▼
-Educador inicia partida → cartelas distribuídas automaticamente
+Contagem 3-2-1 → cada criança recebe a sua cartela
         │
         ▼
-Educador sorteia → todos recebem o resultado em tempo real
+Sorteio (botão, barra de espaço ou automático) → bola rola na tela de todos,
+a voz anuncia no computador do professor
         │
         ▼
-Cartelas marcam automaticamente o item sorteado / educando confirma o clique
+A criança PROCURA o item na cartela e toca para marcar (nada é marcado sozinho)
         │
         ▼
-Servidor valida Bingo → vencedor anunciado para todos
+Falta 1 → "🔥 FALTA 1!" para a criança, 🔥 no painel e no telão
+        │
+        ▼
+Servidor valida o BINGO → comemoração em tela cheia → 🎉 Nova partida
 ```
 
 ---
 
-## 6. Funcionalidades implementadas
+## 6. Funcionalidades
 
-- Criar sala / entrar em sala com código, nome único por sala, sala
-  bloqueável para novos participantes, limite de participantes.
-- Painel do Mestre: configurar tamanho da cartela (3×3 a 6×6), casa livre,
-  tipo de bingo (números, palavras, emojis, personalizado) com pacotes
-  prontos de itens (`public/js/packs.js`: 301 palavras, 240 emojis e 214
-  itens personalizados, em temas combináveis), regras de
-  vitória habilitáveis (linha, coluna, diagonal, cartela completa),
-  pausar/retomar/reiniciar/encerrar, gerar novas cartelas (via reiniciar),
-  desfazer último sorteio, expulsar participante, bloquear/liberar sala.
-- Sorteio com animação, histórico completo, impossibilidade de repetir
-  item já sorteado, auto-marcação nas cartelas, pausa automática opcional
-  ao detectar vitória (configurável).
-- Validação 100% server-side de marcação de casas e de vitória (linha,
-  coluna, diagonal, cartela completa).
-- Reconexão automática (recupera cartela, marcações, histórico e status).
-- Interface responsiva (mobile/tablet/desktop) com identidade visual
-  própria (tema "quadro-negro de recreio": azul-ardósia + giz-amarelo +
-  menta), animações leves e feedback visual claro.
+**Para a criança**
+- Visual de jogo (fundo animado, botões de brinquedo, mascote Bingolino
+  com expressões) e textos em linguagem infantil.
+- Entrada em 3 passos: código em caixinhas (conferido na hora), nome e
+  escolha de bichinho. O link do QR Code já traz o código.
+- Sala de espera com a turma chegando, fala do mascote e balões.
+- Contagem 3-2-1, bola sorteada em tela cheia e últimas bolas sempre à vista.
+- Marcação manual: a criança procura e toca; carimbo com som e estrelinhas.
+  Toque em item que não saiu só treme a casa. Casa marcada fica travada.
+- "🔥 FALTA 1 PARA O BINGO!" com tambor e borda nas casas da linha.
+- BINGO em tela cheia, linha vencedora dourada e troféu no cabeçalho.
+- Pausa com o mascote dormindo; botão 🔊/🔇 em todas as telas.
 
-### Testado (ver `test/integration.test.js`)
-Criação de sala, entrada de múltiplos jogadores, código inválido, nome
-duplicado, autenticação forjada do Mestre rejeitada, início de partida,
-bloqueio de marcação de item não sorteado, sorteio até vitória por
-cartela completa, pausa automática, expulsão (e bloqueio de ações do
-expulso), reinício de partida, reconexão por token, encerramento de sala
-e bloqueio de entrada após encerramento.
+**Para o professor**
+- QR Code e link da rede local (com escolha da rede, se houver mais de uma).
+- Configuração em cartões: tipo (números, palavras, emojis, personalizado),
+  pacotes prontos (301 palavras, 240 emojis, 214 itens), tamanho 3×3 a
+  6×6, casa livre, regras (linha, coluna, diagonal, cartela cheia) e
+  sorteio automático (8 a 30 s).
+- Sorteio por botão, barra de espaço ou automático, com voz pt-BR.
+- Quadro com todos os itens acendendo; desfazer último sorteio.
+- Participantes com bichinho, barra de progresso, 🔥 quase lá e 🏆.
+- Nova partida com a mesma turma, mudar regras, pausar/retomar, bloquear
+  entrada, remover participante, encerrar sala.
+- **Telão** (`/telao?sala=CODE`): QR gigante na espera, bola enorme,
+  quadro de números, turma com 🔥/🏆 e comemoração de BINGO.
 
-Para rodar o teste automatizado (com o servidor já rodando em outra aba):
+### Testes
+
+Com o servidor ligado (`npm start`), em outro terminal:
+
 ```bash
-npm install --no-save socket.io-client
-node test/integration.test.js
+npm test
 ```
 
-### Não implementado nesta primeira versão (próximos passos sugeridos)
+Roda `test/integration.test.js` (criação de sala, entrada, nomes
+duplicados, autenticação do professor, sorteio, marcação manual, vitória,
+pausa automática, expulsão, nova partida, reinício, reconexão e
+encerramento) e `test/features.test.js` (avatar, filtro de nomes, casa
+travada, "quase lá", sorteio automático, telão sem tokens, QR Code e
+endereços de rede). Para o teste de carga com 40 crianças:
+
+```bash
+npm run test:carga
+```
+
+### Próximos passos possíveis
 - Múltiplas cartelas por jogador na mesma partida.
 - Painel de estatísticas históricas consultando o SQLite já persistido.
 - Internacionalização (hoje 100% em português).
-- Testes automatizados de carga com 20 conexões simultâneas reais (o
-  teste incluído cobre a lógica de ponta a ponta, não performance sob
-  carga).
 
 ---
 
@@ -218,3 +261,9 @@ identidade do educando (`playerToken`), status da partida compatível com
 a ação (ex.: não é possível marcar casa com a partida pausada), item
 realmente sorteado antes de aceitar marcação, limites de participantes,
 nomes duplicados e sala bloqueada/encerrada.
+
+Além disso: o avatar só é aceito se estiver na lista de bichinhos, nomes
+impróprios comuns são recusados (filtro de cortesia em `src/avatars.js`),
+o telão recebe só a visão de espectador (sem tokens nem cartelas), cada
+criança recebe apenas a parte pública da configuração e nomes de jogadores
+são sempre inseridos na página como texto, nunca como HTML.

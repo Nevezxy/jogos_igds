@@ -217,7 +217,6 @@
   font-size: 1.25rem;
   animation: popIn .45s var(--ease-bounce) both, gentlePulse 1.4s ease-in-out .5s infinite;
 }
-.history-chips-lg .chip { min-width: 48px; height: 48px; font-size: 1.1rem; }
 
 /* ---------------- toasts ---------------- */
 

@@ -198,11 +198,10 @@ kbd {
   padding: 6px 12px;
   border: 2px solid var(--ink);
   border-radius: 999px;
-  background: var(--orange);
-  color: #fff;
+  background: var(--yellow);
+  color: var(--ink);
   font-family: var(--font-display);
   font-weight: 800;
-  text-shadow: 0 1px 0 rgba(30, 18, 64, .4);
   animation: gentlePulse 1.4s ease-in-out infinite;
 }
 .participant-row { gap: 8px; }

@@ -382,6 +382,18 @@ function publicPlayerSummary(player, config) {
   };
 }
 
+// O que as crianças precisam saber da configuração (sem as listas de
+// palavras/itens, que podem ter centenas de entradas).
+function publicConfig(config) {
+  return {
+    gridSize: config.gridSize,
+    freeSpace: config.freeSpace,
+    bingoType: config.bingoType,
+    winPatterns: config.winPatterns,
+    autoDrawSeconds: config.autoDrawSeconds,
+  };
+}
+
 function getRoomSummary(room) {
   const players = [...room.players.values()].filter((p) => !p.kicked);
   return {
@@ -394,7 +406,7 @@ function getRoomSummary(room) {
     connectedCount: players.filter((p) => p.connected).length,
     // nomes e avatares para a sala de espera (todo mundo da turma se vê)
     players: players.map((p) => ({ id: p.id, name: p.name, avatar: p.avatar, connected: !!p.connected })),
-    config: room.config,
+    config: publicConfig(room.config),
     nextAutoDrawAt: room.nextAutoDrawAt || null,
   };
 }
@@ -402,6 +414,7 @@ function getRoomSummary(room) {
 function getMasterState(room) {
   return {
     ...getRoomSummary(room),
+    config: room.config, // o professor precisa da configuração completa para editar
     isMaster: true,
     drawnItems: room.drawnItems,
     lastDrawn: room.drawnItems[room.drawnItems.length - 1] || null,

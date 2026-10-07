@@ -377,7 +377,6 @@
 .btn-draw:active:not(:disabled) { transform: translateY(10px); box-shadow: 0 0 0 var(--ink); }
 .btn-draw:disabled { opacity: .45; cursor: not-allowed; filter: grayscale(.5); }
 
-.draw-controls { display: flex; justify-content: center; margin-top: 10px; }
 
 .master-controls { display: flex; flex-direction: column; gap: 12px; }
 
@@ -393,8 +392,6 @@
   animation: bounceIn .4s var(--ease-bounce);
 }
 .participant-info { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.participant-dot { width: 12px; height: 12px; border-radius: 50%; background: #B9B0D6; border: 2px solid var(--ink); flex-shrink: 0; }
-.participant-dot.online { background: var(--green); }
 .participant-name { font-weight: 800; font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
 .participant-badge { font-size: .8rem; background: var(--yellow); border: 2px solid var(--ink); border-radius: 999px; padding: 1px 8px; font-weight: 800; }
 .participant-actions button {
