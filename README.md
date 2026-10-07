@@ -1,4 +1,4 @@
-# 🎯 Bingo Virtual — Sistema de Bingo para Sala de Aula
+# 🎮 Jogos IGDS — Plataforma de Jogos Educativos
 
 Bingo em tempo real com cara de jogo (inspirado em portais de jogos infantis
 como o Poki), feito para um(a) professor(a) conduzir uma partida com ~20
@@ -120,14 +120,14 @@ jogos_igds/
 │           ├── bingoTypes.js     # Estratégias por tipo de bingo (números/palavras/emojis/custom)
 │           └── winChecker.js     # Vitória e "quase lá" (falta 1), sempre no servidor
 ├── public/
-│   ├── index.html            # Telas (login, início, entrar, criar, espera, jogo, professor, telão)
+│   ├── index.html            # Telas (login, painel de jogos, tela de jogo, entrar, criar, espera, cartela, professor, telão)
 │   ├── css/
 │   │   ├── tokens.css        # Cores, raios, sombras e fontes
 │   │   ├── base.css          # Reset, fundo animado, tipografia
 │   │   ├── animations.css    # Todos os @keyframes (+ prefers-reduced-motion)
 │   │   ├── components.css    # Botões 3D, cartões, campos, toasts, modal, mascote
 │   │   ├── screens.css       # Home, cartela e painel do professor (base)
-│   │   └── platform.css      # Login do educando e barra de quem está logado
+│   │   └── platform.css      # Login, painel de jogos (cartões) e tela genérica de jogo
 │   ├── js/
 │   │   ├── shared/           # Usados por todos os jogos
 │   │   │   ├── socket-client.js # Conexão Socket.IO + wrapper em Promise
@@ -140,6 +140,8 @@ jogos_igds/
 │   │       ├── api.js        # Chamadas à API com o token do educando (window.PlataformaApi)
 │   │       ├── auth.js       # Login "É você?", criação de conta e sessão (window.PlataformaAuth)
 │   │       ├── games.js      # Registro e carregador de jogos sob demanda (window.Plataforma)
+│   │       ├── hub.js        # Painel de jogos: cartões do registro, trocar bichinho, sair
+│   │       ├── router.js     # Rotas: /, /jogos, /jogos/<id>, /professor (History API)
 │   │       └── app.js        # Som, cliques e navegação comuns a todas as telas
 │   └── games/
 │       └── bingo/
@@ -161,8 +163,23 @@ jogos_igds/
 ```
 
 > A plataforma está em transformação: veja `PLANO_PLATAFORMA.md`. Por
-> enquanto o bingo ainda é carregado direto pelo `index.html`; os próximos
-> jogos usam o carregador sob demanda (`public/js/platform/games.js`).
+> enquanto o bingo ainda é carregado direto pelo `index.html` e cuida das
+> próprias telas (`enter`/`leave`); os próximos jogos usam o carregador sob
+> demanda (`mount`/`unmount`, em `public/js/platform/games.js`).
+
+### Rotas
+
+| Rota | Tela |
+|------|------|
+| `/` | Login (ou o painel, se já houver alguém logado) |
+| `/jogos` | Painel de jogos |
+| `/jogos/<id>` | Um jogo (ex.: `/jogos/bingo?sala=CODE`) |
+| `/professor` | Área do professor (hoje: criar/retomar sala de bingo) |
+| `/telao?sala=CODE` | Telão do bingo, sem login |
+
+O QR Code e o link da sala continuam no formato curto `/?sala=CODE`, mais
+fácil de digitar; o roteador leva para `/jogos/bingo?sala=CODE`, pedindo o
+login antes, se for preciso.
 
 ### Por que essa arquitetura
 

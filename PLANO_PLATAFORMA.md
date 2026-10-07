@@ -1,6 +1,6 @@
 # 🌻 Plano — De "Bingo Virtual" para Plataforma de Jogos Educativos
 
-> **Situação:** plano aprovado. Etapas **A (reorganização)** e **B (contas)** concluídas; próxima: **C (painel de jogos)**.
+> **Situação:** plano aprovado. Etapas **A**, **B** e **C** concluídas (reorganização, contas e painel de jogos); próxima: **D (bingo integrado à conta)**.
 > **Decisões já tomadas** (marcadas com **[DECIDIDO]** no texto): a criança
 > cria a própria conta com confirmação; o login ignora maiúsculas, espaços
 > extras e acentos; a área do professor é protegida por PIN no `.env`; a
@@ -171,8 +171,9 @@ Tela principal depois do login, no estilo Poki:
 | `/telao?sala=CODE` | Telão do bingo (sem login, igual a hoje) |
 | `/professor` | Área do professor |
 
-Links antigos `/?sala=CODE` continuam funcionando: redirecionam para
-`/jogos/bingo?sala=CODE` e pedem login antes, se for preciso.
+O QR Code e o link da sala **continuam no formato curto** `/?sala=CODE`
+(mais fácil de digitar e um QR mais leve): o roteador redireciona para
+`/jogos/bingo?sala=CODE` e pede login antes, se for preciso.
 
 ---
 
@@ -264,6 +265,8 @@ mudanças são de integração:
 - A entrada pula o passo do nome e o do bichinho: a criança logada só
   digita o código, ou nem isso se veio pelo QR. Então "3 passos" vira
   "1 passo".
+- Um botão "← Jogos" na sala de espera e na sala encerrada, para a
+  criança voltar ao painel sem depender do botão voltar do navegador.
 - `join_room` passa a receber o `studentToken`. O servidor descobre o
   nome e o bichinho pela conta e liga o jogador da sala ao `student_id`.
   A checagem de nome duplicado passa a ser por `student_id`: a mesma
@@ -455,8 +458,8 @@ commit próprio.
 |------|---------|---------------------|
 | **A. Reorganização** ✅ | Move os arquivos do bingo para `src/games/bingo/` e `public/games/bingo/`, separa `public/js/shared/`, e cria o registro de jogos (`/api/games`) e o carregador sob demanda. O bingo continua idêntico. O roteador entra na etapa C, junto com as rotas. | `server.js`, `src/games/registry.js`, `public/js/platform/games.js` |
 | **B. Contas** ✅ | Tabelas, `/api/auth/lookup`, `/login`, `/register`, `/me`, `/logout`. Tela de login com confirmação "É você?", criação de conta com bichinho, sessão salva. | `src/platform/accounts.js`, `src/platform/routes.js`, `public/js/platform/auth.js` |
-| **C. Painel de jogos** | Cartões a partir de `/api/games`, resumo do progresso, sair e trocar bichinho. Rotas `/jogos/...`. Nome "Bingo Virtual" trocado pelo da plataforma em títulos e meta tags. | `public/js/platform/hub.js`, `public/css/hub.css` |
-| **D. Bingo integrado** | Entrada com a conta (só o código), `student_id` nos jogadores, QR apontando para `/jogos/bingo?sala=`, links antigos redirecionando. Testes do bingo ajustados para logar antes. | `src/games/bingo/*`, `public/games/bingo/*`, `test/*` |
+| **C. Painel de jogos** ✅ | Cartões a partir de `/api/games`, resumo do progresso, sair e trocar bichinho. Rotas `/jogos/...`. Nome "Bingo Virtual" trocado pelo da plataforma em títulos e meta tags. | `public/js/platform/hub.js`, `public/css/hub.css` |
+| **D. Bingo integrado** | Entrada com a conta (só o código), `student_id` nos jogadores, botão "← Jogos" na espera e na sala encerrada. Testes do bingo ajustados para logar antes. | `src/games/bingo/*`, `public/games/bingo/*`, `test/*` |
 | **E. Teclado Mágico: núcleo** | Teclado ABNT2 colorido, mãos em SVG, motor de captura (teclas mortas, Shift, Caps Lock), uma fase jogável de ponta a ponta. | `public/games/digitacao/*` |
 | **F. Teclado Mágico: conteúdo e progresso** | Os 10 mundos e as fases, gerador de exercícios, banco de palavras e frases, estrelas, mapa de mundos, tela de resultado, progresso salvo e validado no servidor, treino livre. | `levels.js`, `content.js`, `src/games/digitacao/server.js` |
 | **G. Área do professor** | PIN, lista da turma com progresso, renomear, juntar, desativar e liberar fases. | `public/js/platform/teacher.js`, rotas `/api/teacher/*` |

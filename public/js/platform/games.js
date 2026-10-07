@@ -1,21 +1,46 @@
 // public/js/platform/games.js
 // Registro e carregador de jogos no navegador. Cada jogo mora em
-// public/games/<id>/ e se registra com Plataforma.registerGame(id, módulo),
-// onde o módulo tem mount(container, ctx) e unmount(). Os arquivos de um
-// jogo (game.css, view.html e game.js) só são baixados quando a criança
-// entra nele — sem build step, com <link>/<script> dinâmicos.
+// public/games/<id>/ e se registra com Plataforma.registerGame(id, módulo).
+// Há dois jeitos de um jogo funcionar:
+//   - mount(container, ctx) / unmount(): o jogo é desenhado dentro da tela
+//     genérica de jogo. Os arquivos dele (game.css, view.html, game.js) só
+//     são baixados quando a criança entra — sem build step, com
+//     <link>/<script> dinâmicos. É o jeito recomendado para jogos novos.
+//   - enter(ctx) / leave(): o jogo já está na página e cuida das próprias
+//     telas (é o caso do bingo, que tem sala de espera, cartela, telão...).
 
 (function () {
   const modules = new Map(); // id -> { mount, unmount }
   const loading = new Map(); // id -> Promise (arquivos sendo baixados)
   let catalogPromise = null;
   let current = null; // { id, module, container }
+  // Conta as montagens: se outra montagem (ou uma desmontagem) acontecer
+  // enquanto os arquivos de um jogo ainda baixam, esse jogo não é montado.
+  let mountSeq = 0;
+
+  let teacherArea = null; // { enter(), leave() } — por enquanto, a do bingo
 
   function registerGame(id, module) {
-    if (!module || typeof module.mount !== 'function') {
-      throw new Error(`O jogo "${id}" precisa ter uma função mount(container, ctx).`);
+    if (!module || (typeof module.mount !== 'function' && typeof module.enter !== 'function')) {
+      throw new Error(`O jogo "${id}" precisa ter mount(container, ctx) ou enter(ctx).`);
     }
     modules.set(id, module);
+  }
+
+  // O que todo jogo recebe da plataforma.
+  function createContext(game, params, exit) {
+    const student = window.PlataformaAuth.student();
+    return {
+      game,
+      student,
+      params,
+      exit,
+      api: window.PlataformaApi,
+      sound: window.BingoSound,
+      fx: window.BingoFx,
+      mascot: window.BingoMascot,
+      ui: window.BingoUI,
+    };
   }
 
   // Lista pública de jogos vinda do servidor (src/games/registry.js).
@@ -81,20 +106,24 @@
     return loading.get(game.id);
   }
 
-  // Monta o jogo dentro do contêiner, desmontando o anterior.
+  // Monta o jogo dentro do contêiner, desmontando o anterior. Devolve null
+  // se a montagem foi cancelada no meio do carregamento.
   async function mountGame(id, container, ctx = {}) {
     unmountGame();
+    const seq = ++mountSeq;
     const game = await getGame(id);
     const view = await loadAssets(game);
+    if (seq !== mountSeq) return null;
     const module = modules.get(id);
     if (!module) throw new Error(`O jogo "${id}" não se registrou (Plataforma.registerGame).`);
     if (view) container.innerHTML = view;
     current = { id, module, container };
-    await module.mount(container, { ...ctx, game });
+    await module.mount(container, { game, ...ctx });
     return game;
   }
 
   function unmountGame() {
+    mountSeq++;
     if (!current) return;
     const { module, container } = current;
     current = null;
@@ -104,6 +133,10 @@
 
   window.Plataforma = {
     registerGame,
+    getModule: (id) => modules.get(id),
+    createContext,
+    registerTeacherArea: (area) => { teacherArea = area; },
+    getTeacherArea: () => teacherArea,
     listGames,
     mountGame,
     unmountGame,

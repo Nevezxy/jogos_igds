@@ -1,7 +1,7 @@
 {
-  "name": "bingo-virtual",
+  "name": "jogos-igds",
   "version": "1.0.0",
-  "description": "Sistema de Bingo Virtual em tempo real para atividades educacionais",
+  "description": "Jogos IGDS: plataforma de jogos educativos para a sala de aula (bingo em tempo real, digitação e mais)",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

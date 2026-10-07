@@ -74,3 +74,157 @@
   font-size: 1.1rem;
   animation: bounceIn .5s var(--ease-bounce);
 }
+.user-avatar {
+  cursor: pointer;
+  padding: 0;
+  transition: transform .15s var(--ease-bounce);
+}
+.user-avatar:hover { transform: rotate(-10deg) scale(1.08); }
+.user-avatar:focus-visible { outline: 3px solid var(--pink); outline-offset: 3px; }
+
+/* ================= PAINEL DE JOGOS ================= */
+
+#screen-hub { padding: 22px 16px 96px; }
+.hub-top { display: flex; justify-content: center; }
+.hub-top .user-bar { margin-bottom: 8px; }
+
+.hub-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 10px;
+}
+.logo-hub { font-size: clamp(3.2rem, 13vw, 5.4rem); }
+.hub-brand {
+  margin: -4px 0 0;
+  padding: 2px 16px;
+  background: var(--ink);
+  color: var(--yellow);
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.1rem;
+  letter-spacing: 6px;
+  transform: rotate(-3deg);
+}
+.hub-talk {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin: 18px auto 22px;
+  max-width: 520px;
+}
+.hub-talk .mascot { --size: 76px; flex-shrink: 0; }
+.hub-talk .speech { text-align: left; }
+
+.game-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 290px));
+  justify-content: center;
+  gap: 22px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+.game-grid-empty { color: #fff; font-weight: 800; text-align: center; grid-column: 1 / -1; }
+
+.game-card {
+  --card: var(--violet);
+  --card-dark: var(--violet-dark);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 22px 18px 18px;
+  background: var(--surface);
+  border: var(--stroke) solid var(--ink);
+  border-radius: var(--radius-lg, 28px);
+  box-shadow: 0 8px 0 var(--ink);
+  color: var(--ink);
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform .15s var(--ease-bounce), box-shadow .15s ease;
+  animation: bounceIn .5s var(--ease-bounce) both;
+  animation-delay: calc(var(--i, 0) * 80ms);
+}
+/* faixa colorida do jogo no topo do cartão */
+.game-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 86px;
+  background: var(--card);
+  border-bottom: var(--stroke) solid var(--ink);
+}
+.game-card > * { position: relative; }
+.game-card:hover:not(:disabled) { transform: translateY(-6px) rotate(-1deg); box-shadow: 0 14px 0 var(--ink); }
+.game-card:active:not(:disabled) { transform: translateY(6px); box-shadow: 0 2px 0 var(--ink); }
+.game-card:focus-visible { outline: 4px solid var(--yellow); outline-offset: 4px; }
+.game-card:disabled { cursor: default; filter: grayscale(.7); opacity: .8; }
+
+.game-card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 96px;
+  height: 96px;
+  margin-top: 10px;
+  border-radius: 50%;
+  border: var(--stroke) solid var(--ink);
+  background: #fff;
+  font-size: 3.4rem;
+  line-height: 1;
+  box-shadow: 0 5px 0 var(--ink);
+}
+.game-card:hover:not(:disabled) .game-card-icon { animation: wiggle .5s ease-in-out; }
+.game-card-name {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.6rem;
+  line-height: 1.1;
+  margin-top: 4px;
+}
+.game-card-tagline { color: var(--ink-soft); font-weight: 700; font-size: .95rem; line-height: 1.3; }
+.game-card-meta { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.game-chip {
+  padding: 3px 10px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: .85rem;
+}
+.game-chip-new { background: var(--yellow); animation: gentlePulse 1.6s ease-in-out infinite; }
+.game-card-summary { font-family: var(--font-display); font-weight: 800; color: var(--violet-dark); }
+.game-card-summary:empty { display: none; }
+.game-card-play {
+  margin-top: 6px;
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--card);
+  border: var(--stroke) solid var(--ink);
+  border-radius: 999px;
+  box-shadow: 0 4px 0 var(--ink);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.2rem;
+  letter-spacing: 1px;
+}
+
+/* ================= TELA GENÉRICA DE JOGO ================= */
+
+#screen-game { padding: 16px 16px 96px; }
+.game-top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: 1100px;
+  margin: 0 auto 14px;
+}
+.game-top .btn-back { position: static; }
+.game-title { margin: 0; color: #fff; font-size: 1.6rem; text-shadow: 0 2px 0 rgba(30, 18, 64, .4); }
+.game-root { max-width: 1100px; margin: 0 auto; }

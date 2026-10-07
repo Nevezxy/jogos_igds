@@ -90,96 +90,90 @@
     }
   });
 
-  // ---------------- reconexão automática ----------------
+  // ---------------- entrada, saída e reconexão automática ----------------
 
-  // Link com ?sala=CODE (QR Code do professor): abre a entrada já com o
-  // código, uma única vez por carregamento da página.
-  let urlCodeHandled = false;
-  function openJoinFromUrl() {
-    const urlCode = window.BingoJoin.codeFromUrl();
-    if (urlCodeHandled || !urlCode) return false;
-    urlCodeHandled = true;
-    window.BingoJoin.open(urlCode);
-    return true;
-  }
+  // Onde o bingo está aberto neste aparelho (quem decide é o roteador da
+  // plataforma): null = fora do bingo, 'player' = /jogos/bingo (criança
+  // logada), 'master' = /professor.
+  let mode = null;
+  let initialPending = false; // a primeira retomada desta entrada ainda não rodou
 
-  async function tryResume() {
-    // o telão não tem sessão: ele só assiste a sala (screen.js)
-    if (window.BingoScreen.isScreenMode()) return;
-    // A criança precisa estar logada na plataforma para entrar ou voltar a
-    // uma sala; o professor não (ele entra pela área do professor).
-    await window.PlataformaAuth.ready;
-    const loggedIn = window.PlataformaAuth.isLoggedIn();
-    const { goHome } = window.PlataformaAuth;
+  // Volta para a sala guardada no aparelho (recarregou a página ou a conexão
+  // caiu). Na primeira vez de cada entrada, sem sala para retomar, abre a
+  // tela inicial do papel; nas reconexões seguintes, fica na tela atual (a
+  // criança pode estar no meio da digitação do código).
+  async function resume({ initial = false } = {}) {
+    if (!mode) return;
     let saved = loadSession();
-    // Quem chegou pelo link de outra sala começa a entrada nela, em vez de
-    // voltar para a sala antiga guardada no aparelho.
-    const urlCode = !urlCodeHandled && window.BingoJoin.codeFromUrl();
-    if (saved && urlCode && saved.roomCode !== urlCode && saved.role !== 'master') {
+    if (saved && saved.role !== mode) saved = null;
+
+    if (mode === 'master') {
+      if (saved && saved.masterToken) {
+        try {
+          const res = await emitAsync('master_reconnect', { roomCode: saved.roomCode, masterToken: saved.masterToken });
+          if (mode !== 'master') return;
+          Object.assign(session, saved);
+          window.BingoMaster.render(res.state);
+          toast('Painel do professor reconectado.', 'success', 2500);
+          return;
+        } catch (e) {
+          clearStoredSession();
+        }
+      }
+      if (initial) window.BingoUI.showScreen('screen-create');
+      return;
+    }
+
+    // criança: quem chegou pelo link de outra sala começa a entrada nela, em
+    // vez de voltar para a sala antiga guardada no aparelho
+    const urlCode = window.BingoJoin.codeFromUrl();
+    if (saved && urlCode && saved.roomCode !== urlCode) {
       clearStoredSession();
       saved = null;
     }
-    // Sem sessão salva: fica na tela atual (a criança pode estar no meio
-    // da digitação do código quando a conexão volta).
-    if (!saved || saved.role === 'none' || !saved.roomCode) {
-      if (loggedIn) openJoinFromUrl();
-      return;
-    }
-
-    if (saved.role === 'master' && saved.masterToken) {
-      try {
-        const res = await emitAsync('master_reconnect', { roomCode: saved.roomCode, masterToken: saved.masterToken });
-        Object.assign(session, saved);
-        window.BingoMaster.render(res.state);
-        toast('Painel do professor reconectado.', 'success', 2500);
-        return;
-      } catch (e) {
-        clearStoredSession();
-        if (!(loggedIn && openJoinFromUrl())) goHome();
-        return;
-      }
-    }
-
-    if (saved.role === 'player' && !loggedIn) {
-      // sessão de sala de alguém que não está mais logado neste aparelho
-      clearStoredSession();
-      return;
-    }
-
-    if (saved.role === 'player' && saved.playerToken) {
+    if (saved && saved.playerToken) {
       try {
         const res = await emitAsync('join_room', {
           roomCode: saved.roomCode, name: saved.playerName, playerToken: saved.playerToken, avatar: saved.playerAvatar,
         });
+        if (mode !== 'player') return;
         Object.assign(session, saved);
         session.playerId = res.playerId;
         session.playerToken = res.playerToken;
         saveSession();
         window.BingoPlayer.render(res.state);
-        urlCodeHandled = true;
         toast('Você voltou para a sala! 👋', 'success', 2500);
         return;
       } catch (e) {
         clearStoredSession();
-        if (!(loggedIn && openJoinFromUrl())) goHome();
-        return;
+        initial = true; // a sala não existe mais: mostra a entrada
       }
     }
-
-    goHome();
+    if (initial) window.BingoJoin.open(urlCode);
   }
 
-  // Quem acabou de fazer login pelo link/QR de uma sala já cai na entrada dela.
-  window.PlataformaAuth.onLogin(() => openJoinFromUrl());
+  function enter(newMode) {
+    mode = newMode;
+    if (socket.connected) resume({ initial: true });
+    else initialPending = true; // roda quando a conexão abrir
+  }
+
+  function leave() {
+    mode = null;
+    initialPending = false;
+  }
+
+  socket.on('connect', () => {
+    const initial = initialPending;
+    initialPending = false;
+    resume({ initial });
+  });
+
   // Trocar de criança no aparelho apaga a sala da criança anterior.
   window.PlataformaAuth.onLogout(() => { if (session.role === 'player') resetSession(); });
 
-  socket.on('connect', () => {
-    tryResume();
-  });
-  // A conexão pode abrir antes deste script terminar de carregar; nesse
-  // caso o evento 'connect' já passou e a retomada precisa rodar agora.
-  if (socket.connected) tryResume();
+  window.Plataforma.registerGame('bingo', { enter: () => enter('player'), leave });
+  window.Plataforma.registerTeacherArea({ enter: () => enter('master'), leave });
 
   socket.on('disconnect', () => {
     toast('Conexão perdida. Tentando reconectar...', 'error', 4000);

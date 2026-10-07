@@ -5,7 +5,8 @@
 //   2b) não existe → "É a sua primeira vez?" → escolhe o bichinho → cria a conta
 // A confirmação existe para um erro de digitação não virar uma conta nova.
 // O token da sessão fica no localStorage; ao abrir a página, a criança
-// já logada vai direto para o início.
+// já logada vai direto para o painel. Qual tela mostrar depois do login ou
+// da saída é decisão do roteador (router.js), que escuta onLogin/onLogout.
 
 (function () {
   const api = window.PlataformaApi;
@@ -170,14 +171,14 @@
 
   // ---------------- sessão ----------------
 
-  function renderHome() {
-    document.getElementById('home-avatar').textContent = student.avatar;
-    document.getElementById('home-first-name').textContent = student.firstName;
-  }
-
   function setStudent(value) {
     student = value;
-    if (student) renderHome();
+  }
+
+  async function setAvatar(avatar) {
+    const res = await api.post('/auth/avatar', { avatar });
+    setStudent(res.student);
+    return student;
   }
 
   function finishLogin(res, isNew = false) {
@@ -187,7 +188,6 @@
     play('start');
     toast(isNew ? `Conta criada! Bem-vindo(a), ${student.firstName}! 🎉` : `Oi, ${student.firstName}! 👋`, 'success', 3000);
     if (isNew) window.BingoFx.confetti();
-    showScreen('screen-home');
     loginListeners.forEach((fn) => fn(student));
   }
 
@@ -205,15 +205,11 @@
     if (hadToken) api.post('/auth/logout').catch(() => { /* a sessão some do aparelho mesmo assim */ });
     api.setToken(null);
     logoutListeners.forEach((fn) => fn());
-    openLogin();
   }
 
-  document.getElementById('btn-logout').addEventListener('click', logout);
-
-  // Tela "inicial" de quem está neste aparelho: início se logado, senão login.
+  // Tela "inicial" de quem está neste aparelho: painel se logado, senão login.
   function goHome() {
-    if (student) showScreen('screen-home');
-    else openLogin();
+    window.PlataformaRouter.go(student ? '/jogos' : '/');
   }
 
   document.getElementById('create-back').addEventListener('click', goHome);
@@ -233,7 +229,6 @@
         else storeToken(null); // sessão expirada ou conta desativada
       }
     }
-    goHome();
     resolveReady();
   }
 
@@ -249,5 +244,7 @@
     onLogout: (fn) => logoutListeners.push(fn),
     goHome,
     logout,
+    openLogin,
+    setAvatar,
   };
 })();

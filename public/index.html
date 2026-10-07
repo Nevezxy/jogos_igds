@@ -4,8 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="theme-color" content="#6C3BFF" />
-<title>Bingo Virtual · Sala de Aula</title>
-<meta name="description" content="Bingo virtual em tempo real para atividades educacionais." />
+<title>Jogos IGDS</title>
+<meta name="description" content="Jogos IGDS: plataforma de jogos educativos para a turma — bingo em tempo real, digitação e mais." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -76,27 +76,40 @@
       <button type="button" class="btn btn-ghost btn-block" id="login-avatar-back">← voltar</button>
     </div>
   </div>
-  <button type="button" class="link-teacher" data-go="screen-create">🧑‍🏫 Área do professor</button>
+  <button type="button" class="link-teacher" id="link-teacher">🧑‍🏫 Área do professor</button>
 </section>
 
-<!-- ======================= INÍCIO (educando logado) ======================= -->
-<section id="screen-home" class="screen screen-center">
-  <div class="user-bar">
-    <span class="avatar-badge" id="home-avatar">🐼</span>
-    <span>Oi, <strong id="home-first-name">amigo(a)</strong>!</span>
-    <button type="button" class="btn-mini user-logout" id="btn-logout">Não sou eu / Sair</button>
-  </div>
-  <div class="brand">
-    <div data-mascot></div>
-    <h1 class="logo title-game" aria-label="Bingo!">
-      <span style="--i:0">B</span><span style="--i:1">I</span><span style="--i:2">N</span><span style="--i:3">G</span><span style="--i:4">O</span><span style="--i:5">!</span>
+<!-- ======================= PAINEL DE JOGOS (educando logado) ======================= -->
+<section id="screen-hub" class="screen screen-top">
+  <header class="hub-top">
+    <div class="user-bar">
+      <button type="button" class="avatar-badge user-avatar" id="hub-avatar" aria-label="Trocar meu bichinho" title="Trocar meu bichinho">🐼</button>
+      <span>Oi, <strong id="hub-first-name">amigo(a)</strong>!</span>
+      <button type="button" class="btn-mini user-logout" id="btn-logout">Não sou eu / Sair</button>
+    </div>
+  </header>
+
+  <div class="hub-hero">
+    <h1 class="logo logo-hub title-game" aria-label="Jogos IGDS">
+      <span style="--i:0">J</span><span style="--i:1">O</span><span style="--i:2">G</span><span style="--i:3">O</span><span style="--i:4">S</span>
     </h1>
-    <p class="brand-tag">Bora jogar com a turma toda? 🎉</p>
+    <p class="hub-brand" aria-hidden="true">IGDS</p>
+  </div>
+  <div class="hub-talk">
+    <div data-mascot id="hub-mascot"></div>
+    <p class="speech" id="hub-speech" aria-live="polite">Do que vamos brincar hoje? 🎈</p>
   </div>
 
-  <div class="home-choices">
-    <button class="btn btn-primary btn-play" data-go="screen-join">🎮 JOGAR</button>
-  </div>
+  <div class="game-grid" id="game-grid" aria-label="Jogos"></div>
+</section>
+
+<!-- ======================= JOGO (tela genérica para jogos carregados sob demanda) ======================= -->
+<section id="screen-game" class="screen screen-top">
+  <header class="game-top">
+    <button type="button" class="btn-back game-back" id="game-back">← Jogos</button>
+    <h2 class="game-title" id="game-title"></h2>
+  </header>
+  <div id="game-root" class="game-root"></div>
 </section>
 
 <!-- ======================= ENTRAR (educando): 3 passos ======================= -->
@@ -486,6 +499,18 @@
 </div>
 <div id="draw-announcer" class="sr-only" aria-live="assertive"></div>
 
+<!-- ======================= trocar bichinho ======================= -->
+<div id="avatar-modal" class="modal-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="avatar-modal-title">
+  <div class="modal-box">
+    <h3 id="avatar-modal-title">Escolha seu bichinho 🐾</h3>
+    <div class="avatar-grid" id="hub-avatar-grid" role="radiogroup" aria-label="Bichinhos"></div>
+    <div class="modal-actions">
+      <button id="avatar-cancel" class="btn btn-ghost" type="button">Cancelar</button>
+      <button id="avatar-save" class="btn btn-success" type="button">Pronto!</button>
+    </div>
+  </div>
+</div>
+
 <!-- ======================= modal confirmação ======================= -->
 <div id="confirm-modal" class="modal-overlay" hidden>
   <div class="modal-box">
@@ -510,6 +535,8 @@
 <script src="/js/platform/api.js"></script>
 <script src="/js/platform/auth.js"></script>
 <script src="/js/platform/games.js"></script>
+<script src="/js/platform/hub.js"></script>
+<script src="/js/platform/router.js"></script>
 <script src="/js/platform/app.js"></script>
 <!-- bingo (ainda carregado direto aqui; vira carregamento sob demanda na etapa D) -->
 <script src="/games/bingo/packs.js"></script>
