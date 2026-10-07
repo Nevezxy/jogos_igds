@@ -1,6 +1,6 @@
 # 🌻 Plano — De "Bingo Virtual" para Plataforma de Jogos Educativos
 
-> **Situação:** plano aprovado. Etapas **A** a **G** concluídas (reorganização, contas, painel, bingo integrado, Teclado Mágico e área do professor); próxima: **H (polimento e documentação)**.
+> **Situação:** plano aprovado. Etapas **A** a **H** concluídas. Fica para depois: carregar o bingo sob demanda (ver README, seção 8).
 > **Decisões já tomadas** (marcadas com **[DECIDIDO]** no texto): a criança
 > cria a própria conta com confirmação; o login ignora maiúsculas, espaços
 > extras e acentos; a área do professor é protegida por PIN no `.env`; a
@@ -464,7 +464,7 @@ commit próprio.
 | **E. Teclado Mágico: núcleo** ✅ | Teclado ABNT2 colorido, mãos em SVG, motor de captura (teclas mortas, Shift, Caps Lock), uma fase jogável de ponta a ponta. | `public/games/digitacao/*` |
 | **F. Teclado Mágico: conteúdo e progresso** ✅ | Os 10 mundos e as fases, gerador de exercícios, banco de palavras e frases, estrelas, mapa de mundos, tela de resultado, progresso salvo e validado no servidor, treino livre. | `levels.js`, `content.js`, `src/games/digitacao/server.js` |
 | **G. Área do professor** ✅ | PIN, lista da turma com progresso, renomear, juntar, desativar e liberar fases. | `public/js/platform/teacher.js`, rotas `/api/teacher/*` |
-| **H. Polimento e docs** | Testes novos (contas, progresso, validação), acessibilidade (navegação por teclado, contraste, `prefers-reduced-motion`), README com a seção "Como criar um novo jogo", atualização do `.env.example`. | `test/platform.test.js`, `README.md` |
+| **H. Polimento e docs** ✅ | Testes novos (contas, progresso, validação), acessibilidade (navegação por teclado, contraste, `prefers-reduced-motion`), README com a seção "Como criar um novo jogo", atualização do `.env.example`. | `test/platform.test.js`, `README.md` |
 
 ### Testes novos
 - `test/platform.test.js`: login sem diferenciar maiúsculas, minúsculas e

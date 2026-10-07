@@ -105,6 +105,7 @@
   }
 
   // Como cada jogo aparece na tabela (a partir do teacherSummary do servidor).
+  // Jogo sem renderizador próprio aparece com os campos do resumo.
   const GAME_CELLS = {
     digitacao(d) {
       if (!d) return '<span class="muted">—</span>';
@@ -119,6 +120,27 @@
       return d && d.wins ? `🏆 ${d.wins}` : '<span class="muted">—</span>';
     },
   };
+  function genericCell(d) {
+    if (!d || typeof d !== 'object') return '<span class="muted">—</span>';
+    return `<div class="teacher-game">${Object.entries(d)
+      .map(([k, v]) => `<span>${escapeHtml(k)}: <strong>${escapeHtml(Array.isArray(v) ? v.join(' ') : v)}</strong></span>`).join('')}</div>`;
+  }
+
+  // Colunas: uma por jogo que manda resumo para o professor, na ordem do registro.
+  let gameColumns = [];
+  async function buildColumns() {
+    const ids = new Set(students.flatMap((s) => Object.keys(s.games || {})));
+    let catalog = [];
+    try { catalog = await window.Plataforma.listGames(); } catch (e) { /* usa só os ids */ }
+    gameColumns = [
+      ...catalog.filter((g) => ids.has(g.id)),
+      ...[...ids].filter((id) => !catalog.some((g) => g.id === id)).map((id) => ({ id, icon: '🎲', name: id })),
+    ];
+    const head = document.getElementById('teacher-head');
+    head.innerHTML = '<th>Educando</th><th>Último acesso</th>'
+      + gameColumns.map((g) => `<th>${escapeHtml(g.icon)} ${escapeHtml(g.name)}</th>`).join('')
+      + '<th>Ações</th>';
+  }
 
   function renderRows() {
     const q = document.getElementById('teacher-search').value.trim().toLowerCase()
@@ -137,8 +159,7 @@
         <td><span class="avatar-badge">${escapeHtml(s.avatar)}</span> <strong>${escapeHtml(s.name)}</strong>
           ${s.active ? '' : '<span class="teacher-badge teacher-badge-off">desativada</span>'}</td>
         <td>${escapeHtml(when(s.lastLoginAt))}</td>
-        <td>${GAME_CELLS.digitacao(typing)}</td>
-        <td>${GAME_CELLS.bingo(s.games.bingo)}</td>
+        ${gameColumns.map((g) => `<td>${(GAME_CELLS[g.id] || genericCell)(s.games[g.id])}</td>`).join('')}
         <td class="teacher-actions">
           <button type="button" class="btn-mini" data-act="rename" title="Corrigir o nome">✏️ Renomear</button>
           <button type="button" class="btn-mini" data-act="merge" title="Juntar com outra conta da mesma criança">🔀 Juntar</button>
@@ -155,6 +176,7 @@
       const res = await request('GET', '/students');
       students = res.students;
       document.getElementById('teacher-allow-signup').checked = Boolean(res.settings.allowSignup);
+      await buildColumns();
       renderRows();
     } catch (e) {
       if (e.code === 'PROFESSOR_NAO_AUTORIZADO') ensureAuth('/professor');

@@ -1,14 +1,24 @@
 # 🎮 Jogos IGDS — Plataforma de Jogos Educativos
 
-Bingo em tempo real com cara de jogo (inspirado em portais de jogos infantis
-como o Poki), feito para um(a) professor(a) conduzir uma partida com ~20
-crianças conectadas ao mesmo tempo, cada uma em seu celular, tablet ou
-computador — e um telão opcional para o projetor.
+Plataforma de jogos para a sala de aula, com cara de portal de jogos
+infantil (inspirada no Poki). Cada educando tem a sua conta — o login é só
+o **nome e sobrenome** — e escolhe o jogo num painel. O progresso fica
+salvo no servidor, então a criança continua de onde parou em qualquer
+computador da escola.
+
+Jogos de hoje:
+
+| Jogo | Modo | O que é |
+|------|------|---------|
+| ⌨️ **Teclado Mágico** | sozinho(a) | Digitação com os 10 dedos: teclado ABNT2 na tela com uma cor por dedo, mãos que mostram o dedo certo e 58 fases (letras, palavras, acentos, frases, pontuação, números e textos). |
+| 🎯 **Bingo** | com a turma | Bingo em tempo real conduzido pelo professor, com ~20 crianças em celulares, tablets ou computadores, e um telão opcional para o projetor. |
+
+A plataforma foi feita para receber **novos jogos** sem mexer no núcleo
+(veja a seção 5).
 
 Backend em **Node.js + Express + Socket.IO**, persistência em **SQLite**
 (via `better-sqlite3`, sem serviço externo) e frontend em **HTML/CSS/JS
-puro** (sem build step) — fácil de rodar em qualquer host que suporte
-Node.js e WebSockets.
+puro** (sem build step).
 
 ---
 
@@ -17,49 +27,56 @@ Node.js e WebSockets.
 Pré-requisito: Node.js 18 ou superior.
 
 ```bash
-cd bingo-virtual
 npm install
 npm start
 ```
 
-Acesse `http://localhost:3000` e clique em **Sou professor(a)**. O painel
-mostra um QR Code e o link da rede local (`http://SEU_IP:3000/?sala=CÓDIGO`)
-para a turma entrar pelo celular ou tablet — todos no mesmo Wi-Fi. Para
-projetar, use **📺 Abrir telão** no painel.
+Acesse `http://localhost:3000`.
+
+- **Educando:** digita o nome e o sobrenome. Na primeira vez, confirma que é
+  uma conta nova e escolhe um bichinho; depois cai no **painel de jogos**.
+- **Professor:** link **🧑‍🏫 Área do professor** abaixo do login (ou
+  `/professor`). Lá estão a turma, com o progresso de cada um, e o
+  **Bingo** (criar sala, QR Code, telão).
+
+Para a turma entrar pelo celular ou tablet, todos precisam estar no mesmo
+Wi-Fi; o painel do bingo mostra o QR Code e o link da rede local
+(`http://SEU_IP:3000/?sala=CÓDIGO`).
 
 > No Windows, se os aparelhos da turma não conseguirem abrir o link, marque
 > a rede Wi-Fi como **Privada** (ou libere a porta 3000 no firewall).
 
-A porta pode ser alterada com a variável de ambiente `PORT` (veja
-`.env.example`).
+### Variáveis de ambiente (veja `.env.example`)
+
+| Variável | Para que serve |
+|----------|----------------|
+| `PORT` | Porta do servidor (padrão 3000). |
+| `PROFESSOR_PIN` | PIN da área do professor. Com PIN, só quem o digitar vê a turma, cadastra contas e cria salas de bingo. Sem PIN, a área fica aberta. **Recomendado em produção.** |
+| `DB_FILE` | Arquivo do banco SQLite (padrão `data/bingo.sqlite`). |
 
 ---
 
-## 2. Como hospedar fora do Claude
+## 2. Como hospedar
 
-Este projeto é um servidor Node.js comum — sobe em qualquer provedor que
-rode Node + permita WebSockets persistentes. Sugestões prontas:
+É um servidor Node.js comum: sobe em qualquer provedor que rode Node e
+permita WebSockets persistentes.
 
 ### Render / Railway / Fly.io (mais simples)
-1. Crie um repositório Git com este conteúdo (ou faça upload direto, se o
-   provedor aceitar).
+1. Crie um repositório Git com este conteúdo.
 2. Build command: `npm install`
 3. Start command: `npm start`
-4. Não é necessário configurar banco de dados externo — o SQLite é criado
-   automaticamente em `data/bingo.sqlite` na primeira execução.
-   ⚠️ Em plataformas com **sistema de arquivos efêmero** (ex: alguns
-   planos free do Render), o arquivo SQLite é apagado a cada deploy/restart
-   — isso não afeta o funcionamento do jogo (o estado "ao vivo" da
-   partida fica em memória), só o histórico persistido para estatísticas
-   futuras. Se precisar manter esse histórico entre deploys, anexe um
-   *volume persistente* apontando para a pasta `data/`.
+4. Defina `PROFESSOR_PIN` nas variáveis de ambiente do serviço.
+5. O SQLite é criado sozinho em `data/bingo.sqlite`.
+   ⚠️ Ele guarda as **contas e o progresso** dos educandos. Em planos com
+   **sistema de arquivos efêmero** (ex.: alguns planos gratuitos do
+   Render), o arquivo é apagado a cada deploy/reinício — anexe um *volume
+   persistente* na pasta `data/` (ou aponte `DB_FILE` para ele).
 
-### VPS próprio (Ubuntu, DigitalOcean, etc.) com PM2
+### VPS própria (Ubuntu, DigitalOcean etc.) com PM2
 ```bash
 npm install -g pm2
-cd bingo-virtual
 npm install
-pm2 start server.js --name bingo-virtual
+PROFESSOR_PIN=1234 pm2 start server.js --name jogos-igds
 pm2 save
 ```
 Coloque um Nginx (ou Caddy) na frente como proxy reverso para HTTPS e
@@ -85,17 +102,61 @@ COPY . .
 EXPOSE 3000
 CMD ["node", "server.js"]
 ```
+(Monte um volume em `/app/data` para não perder as contas.)
 
 ---
 
-## 3. Capacidade
+## 3. Funcionalidades
 
-Pensado para uma turma de ~20 crianças, com folga: limite de
-`MAX_PLAYERS_PER_ROOM = 40` em `src/games/bingo/roomManager.js`. O teste de carga
-(`npm run test:carga`) coloca 40 crianças marcando casas ao mesmo tempo e
-mede quanto cada sorteio leva para chegar a todas: em rede local fica na
-casa de 50 ms. Várias salas podem rodar ao mesmo tempo no mesmo servidor,
-cada uma isolada pelo seu código.
+### Contas e painel
+- Login só com **nome e sobrenome**, sem senha. A comparação ignora
+  maiúsculas, acentos e espaços extras ("joao  silva" = "João Silva").
+- Conta nova pede confirmação ("É a sua primeira vez?"), para um erro de
+  digitação não virar uma conta duplicada. Conta que existe mostra "É
+  você?" com o bichinho da criança.
+- Painel com um cartão por jogo, o resumo do progresso ("Fase 7 · ⭐ 18",
+  "🏆 3 bingos"), troca de bichinho e o botão **Não sou eu / Sair** (para
+  computadores compartilhados).
+
+### ⌨️ Teclado Mágico (digitação)
+- Teclado ABNT2 desenhado na tela, com uma cor por dedo (mindinho rosa,
+  anelar laranja, médio verde, indicador azul, polegar violeta), e as mãos
+  em SVG: a próxima tecla pulsa e o dedo certo acende.
+- Maiúsculas acendem também o **Shift do lado oposto**; **acentos** são
+  ensinados em dois passos (aperte o acento, solte, depois a letra), com o
+  aviso "acento pronto". Dica em texto para cada tecla e aviso de Caps Lock.
+- **10 mundos, 58 fases:** fileira do meio → de cima → de baixo →
+  maiúsculas → palavras → acentuação → frases → pontuação → números e
+  símbolos → textos. As fases de letras só usam as teclas já aprendidas.
+- **Estrelas:** 85% de precisão = ⭐ (libera a próxima fase), 93% = ⭐⭐,
+  97% + velocidade mínima do mundo = ⭐⭐⭐. Resultado com PPM (palavras por
+  minuto), precisão, tempo e as teclas que mais deram trabalho.
+- Treino livre (não conta estrelas) e a opção "Esperar a tecla certa".
+- Precisa de teclado físico; em tablet/celular aparece um aviso.
+
+### 🎯 Bingo
+- A criança logada só digita o código da sala (pelo QR Code, entra
+  sozinha); nome e bichinho vêm da conta. "← Jogos" na sala de espera e na
+  sala encerrada volta ao painel.
+- Sala de espera com a turma chegando, contagem 3-2-1, bola sorteada em
+  tela cheia, marcação manual com carimbo, "🔥 FALTA 1!", BINGO em tela
+  cheia. Cada bingo conta no progresso da criança.
+- Professor: tipos (números, palavras, emojis, personalizado), pacotes
+  prontos, cartela 3×3 a 6×6, regras, sorteio por botão, barra de espaço ou
+  automático, voz pt-BR, desfazer, pausar, bloquear entrada, remover
+  participante, nova partida com a mesma turma.
+- **Telão** (`/telao?sala=CODE`): QR gigante na espera, bola enorme,
+  quadro de números, turma com 🔥/🏆 e comemoração de BINGO.
+
+### 🧑‍🏫 Área do professor
+- Protegida pelo `PROFESSOR_PIN`. Com PIN, só o professor cria salas de bingo.
+- **Turma:** bichinho, último acesso, mundo/fase atual no Teclado Mágico,
+  estrelas, PPM médio, teclas com mais erro e bingos; busca por nome.
+- **Renomear** (ex.: "Ana Souza 5A" para diferenciar duas crianças),
+  **juntar** duas contas da mesma criança (fica o melhor progresso de cada
+  fase), **liberar todas as fases**, **desativar/reativar**.
+- **Cadastrar a turma** de uma vez (um nome por linha) e **ligar/desligar o
+  autocadastro** (desligado, só o professor cria contas).
 
 ---
 
@@ -103,88 +164,55 @@ cada uma isolada pelo seu código.
 
 ```
 jogos_igds/
-├── server.js                 # Express (estáticos, /api/auth, /api/games, /api/join-info, /qr.svg) + Socket.IO
+├── server.js                 # Express (estáticos, /api, /qr.svg) + Socket.IO; liga os jogos do registro
 ├── src/
 │   ├── platform/             # Núcleo da plataforma (vale para todos os jogos)
-│   │   ├── db.js             # Persistência SQLite
+│   │   ├── db.js             # Conexão SQLite (DB_FILE) e tabelas do bingo
 │   │   ├── accounts.js       # Contas dos educandos (login por nome e sobrenome) e sessões
-│   │   ├── routes.js         # Rotas HTTP do núcleo (/api/auth/..., /api/progress/...)
 │   │   ├── progress.js       # Progresso genérico por educando e jogo (game_progress, game_results)
 │   │   ├── teacher.js        # Área do professor: PIN, turma, juntar contas, liberar fases, cadastro em lote
-│   │   ├── settings.js       # Configurações da plataforma (ex.: autocadastro ligado/desligado)
+│   │   ├── settings.js       # Configurações da plataforma (ex.: autocadastro)
+│   │   ├── routes.js         # /api/auth, /api/progress, /api/teacher
 │   │   ├── idGenerator.js    # Códigos, IDs e tokens
 │   │   └── avatars.js        # Bichinhos permitidos e filtro de nomes impróprios
 │   └── games/
-│       ├── registry.js       # Lista de jogos da plataforma (o painel e o carregador leem daqui)
+│       ├── registry.js       # ⭐ Lista de jogos (o painel, o carregador e as rotas leem daqui)
 │       ├── digitacao/
-│       │   └── server.js         # Teclado Mágico: valida resultados, estrelas, progresso e resumos
+│       │   └── server.js     # Teclado Mágico: valida resultados, estrelas, progresso e resumos
 │       └── bingo/
 │           ├── server.js         # Ponto de entrada do bingo para o registro
 │           ├── roomManager.js    # Fonte única da verdade do estado "ao vivo" de cada sala
 │           ├── socketHandlers.js # Eventos Socket.IO, sorteio automático e telão
-│           ├── bingoTypes.js     # Estratégias por tipo de bingo (números/palavras/emojis/custom)
+│           ├── bingoTypes.js     # Tipos de bingo (números/palavras/emojis/custom)
 │           └── winChecker.js     # Vitória e "quase lá" (falta 1), sempre no servidor
 ├── public/
-│   ├── index.html            # Telas (login, painel de jogos, tela de jogo, entrar, criar, espera, cartela, professor, telão)
-│   ├── css/
-│   │   ├── tokens.css        # Cores, raios, sombras e fontes
-│   │   ├── base.css          # Reset, fundo animado, tipografia
-│   │   ├── animations.css    # Todos os @keyframes (+ prefers-reduced-motion)
-│   │   ├── components.css    # Botões 3D, cartões, campos, toasts, modal, mascote
-│   │   ├── screens.css       # Home, cartela e painel do professor (base)
-│   │   └── platform.css      # Login, painel de jogos (cartões) e tela genérica de jogo
+│   ├── index.html            # Telas do núcleo (login, painel, tela de jogo, professor) e do bingo
+│   ├── css/                  # tokens, base, animações, componentes, telas e platform.css
 │   ├── js/
-│   │   ├── shared/           # Usados por todos os jogos
-│   │   │   ├── socket-client.js # Conexão Socket.IO + wrapper em Promise
-│   │   │   ├── mascot.js     # Bingolino, o mascote em SVG, e suas expressões
-│   │   │   ├── avatars.js    # Lista de bichinhos (igual à do servidor)
-│   │   │   ├── sound.js      # Sons sintetizados (Web Audio) e voz pt-BR
-│   │   │   ├── fx.js         # Confete, estrelinhas e tremida
-│   │   │   └── ui.js         # Telas, toasts, modal, ajuste de texto, quadro de números, links
+│   │   ├── shared/           # Usados por todos os jogos: socket, mascote, bichinhos, som, efeitos, ui
 │   │   └── platform/
 │   │       ├── api.js        # Chamadas à API com o token do educando (window.PlataformaApi)
 │   │       ├── auth.js       # Login "É você?", criação de conta e sessão (window.PlataformaAuth)
 │   │       ├── games.js      # Registro e carregador de jogos sob demanda (window.Plataforma)
-│   │       ├── hub.js        # Painel de jogos: cartões do registro, trocar bichinho, sair
-│   │       ├── router.js     # Rotas: /, /jogos, /jogos/<id>, /professor, /professor/<id> (History API)
-│   │       ├── teacher.js    # Área do professor: PIN, ferramentas dos jogos e a turma
+│   │       ├── hub.js        # Painel de jogos
+│   │       ├── teacher.js    # Área do professor (window.PlataformaTeacher)
+│   │       ├── router.js     # Rotas (History API)
 │   │       └── app.js        # Som, cliques e navegação comuns a todas as telas
 │   └── games/
 │       ├── digitacao/        # ⌨️ Teclado Mágico (carregado sob demanda)
-│       │   ├── game.js       # Telas do jogo: mapa, antes da fase, jogando, resultado, treino livre
+│       │   ├── game.js       # Telas: mapa, antes da fase, jogando, resultado, treino livre
 │       │   ├── view.html     # HTML das telas
 │       │   ├── game.css      # Teclado, mãos, texto e mapa (uma cor por dedo)
 │       │   ├── layouts/abnt2.js # Teclado brasileiro: teclas, dedos e como digitar cada caractere
-│       │   ├── levels.js     # 10 mundos e 58 fases, estrelas e liberação (usado também pelo servidor)
+│       │   ├── levels.js     # Mundos e fases, estrelas e liberação (usado também pelo servidor)
 │       │   ├── content.js    # Banco de palavras, frases, textos e gerador de exercícios
 │       │   ├── engine.js     # Motor da rodada: acertos, precisão e PPM
-│       │   ├── keyboard.js   # Teclado na tela (próxima tecla, Shift, acerto/erro)
-│       │   └── hands.js      # Mãos em SVG com o dedo da vez aceso
-│       └── bingo/
-│           ├── play.css      # Entrada com o código, espera, jogo e camadas de tela cheia
-│           ├── master.css    # Configuração visual, quadro de números e telão
-│           ├── packs.js      # Pacotes prontos de palavras, emojis e itens
-│           ├── overlays.js   # Contagem 3-2-1, bola em tela cheia e comemoração de BINGO
-│           ├── master.js     # Painel do professor
-│           ├── player.js     # Sala de espera e tela de jogo da criança
-│           ├── join.js       # Entrada da criança na sala (só o código; nome e bichinho vêm da conta)
-│           ├── screen.js     # Modo telão (/telao?sala=CODE)
-│           └── session.js    # Sessão da sala, reconexão automática e criação de sala
-├── test/
-│   ├── digitacao.test.js     # Teclado Mágico sem navegador: motor, ABNT2, fases, conteúdo, validação
-│   ├── helpers.js            # Sobe um servidor de teste (porta própria, banco temporário) e cria contas
-│   ├── platform.test.js      # Contas e API da plataforma
-│   ├── teacher.test.js       # Área do professor (com PIN)
-│   ├── integration.test.js   # Fluxo completo de uma partida
-│   ├── features.test.js      # Avatar, filtro de nome, quase lá, sorteio automático, telão, QR
-│   └── load.test.js          # Turma inteira jogando ao mesmo tempo
-└── data/bingo.sqlite         # Criado automaticamente na primeira execução
+│       │   ├── keyboard.js   # Teclado na tela
+│       │   └── hands.js      # Mãos em SVG
+│       └── bingo/            # 🎯 Bingo (master, player, join, screen, overlays, packs, session, css)
+├── test/                     # Ver seção 6
+└── data/bingo.sqlite         # Criado automaticamente (contas, progresso e histórico do bingo)
 ```
-
-> A plataforma está em transformação: veja `PLANO_PLATAFORMA.md`. Por
-> enquanto o bingo ainda é carregado direto pelo `index.html` e cuida das
-> próprias telas (`enter`/`leave`); os próximos jogos usam o carregador sob
-> demanda (`mount`/`unmount`, em `public/js/platform/games.js`).
 
 ### Rotas
 
@@ -192,177 +220,163 @@ jogos_igds/
 |------|------|
 | `/` | Login (ou o painel, se já houver alguém logado) |
 | `/jogos` | Painel de jogos |
-| `/jogos/<id>` | Um jogo (ex.: `/jogos/bingo?sala=CODE`) |
+| `/jogos/<id>` | Um jogo (ex.: `/jogos/digitacao`, `/jogos/bingo?sala=CODE`) |
 | `/professor` | Área do professor: turma e ferramentas dos jogos |
-| `/professor/bingo` | Criar ou retomar a sala de bingo |
+| `/professor/<id>` | Ferramenta de um jogo (ex.: `/professor/bingo`) |
 | `/telao?sala=CODE` | Telão do bingo, sem login |
 
-O QR Code e o link da sala continuam no formato curto `/?sala=CODE`, mais
-fácil de digitar; o roteador leva para `/jogos/bingo?sala=CODE`, pedindo o
-login antes, se for preciso.
+O QR Code do bingo usa o link curto `/?sala=CODE`, mais fácil de digitar;
+o roteador leva para `/jogos/bingo?sala=CODE`, pedindo login antes, se for
+preciso.
+
+### API
+
+| Rota | Para quê |
+|------|----------|
+| `POST /api/auth/lookup` · `login` · `register` · `logout` · `avatar`, `GET /api/auth/me` | Contas (token no cabeçalho `X-Student-Token`) |
+| `GET /api/games` | Jogos do registro (painel e carregador) |
+| `GET /api/progress` | Resumos de progresso para os cartões do painel |
+| `GET /api/progress/<jogo>` · `POST /api/progress/<jogo>/results` | Progresso de um jogo e gravação de uma rodada (validada pelo jogo) |
+| `/api/teacher/...` | Área do professor (token no cabeçalho `X-Teacher-Token`) |
 
 ### Por que essa arquitetura
 
-- **Estado ao vivo em memória (`roomManager.js`) + persistência em SQLite**:
-  a partida precisa de baixíssima latência (sorteios, marcações), então o
-  estado "quente" fica em um `Map` em memória. O SQLite grava eventos
-  (sorteios, vitórias, snapshots de sala/jogador) para auditoria e para
-  permitir, no futuro, estatísticas e reaproveitamento de configurações —
-  sem no entanto ser o caminho crítico de latência.
-- **Tudo validado no servidor**: nenhuma ação de jogo (marcar casa,
-  sortear, declarar vitória, expulsar) é decidida pelo cliente. O cliente
-  só *pede*; o servidor decide e distribui o novo estado via broadcast.
-- **Sem build step e sem internet na sala**: sons sintetizados no
-  navegador, mascote em SVG, QR Code gerado no servidor — tudo funciona
-  numa rede local sem acesso à internet (só as fontes do Google ficam de
-  fora nesse caso, com fonte do sistema no lugar).
-- **Reconexão por token**: cada criança recebe um `playerToken` (e o
-  professor um `masterToken`) guardados no `localStorage` do navegador. Se
-  a página recarregar ou a conexão cair, o cliente reconecta sozinho e
-  recupera cartela, marcações, histórico, bichinho e papel.
+- **O núcleo não conhece as regras dos jogos.** Ele sabe quem é o
+  educando, quais jogos existem e como guardar progresso de forma
+  genérica; cada jogo decide como validar uma rodada e como ela muda o
+  progresso.
+- **Tudo validado no servidor.** No bingo, nenhuma ação (marcar casa,
+  sortear, declarar vitória) é decidida pelo cliente. No Teclado Mágico, o
+  servidor confere a fase (existe e está liberada), a coerência entre
+  caracteres, tempo e velocidade, e calcula ele mesmo as estrelas.
+- **Uma fonte só para as fases.** `public/games/digitacao/levels.js` é lido
+  pelo navegador (mapa e exercícios) e pelo servidor (validação e
+  estrelas).
+- **Jogos sob demanda e sem build step.** O painel só baixa o núcleo; os
+  arquivos de um jogo chegam quando a criança entra nele. Sons
+  sintetizados, mascote em SVG e QR Code gerado no servidor: funciona numa
+  rede local sem internet (só as fontes do Google ficam de fora).
+- **Estado ao vivo do bingo em memória + SQLite para o que precisa durar**
+  (contas, progresso, histórico).
 
 ---
 
-## 5. Como uma partida acontece
+## 5. Como criar um novo jogo
 
-```
-Professor cria a sala → painel mostra QR Code e link da rede local
-        │                (opcional: 📺 Abrir telão no projetor)
-        ▼
-Crianças apontam a câmera (ou digitam o código) → nome → bichinho
-        │
-        ▼
-Sala de espera: a turma vai aparecendo, balões para estourar
-        │
-        ▼
-Professor escolhe tipo, pacotes, tamanho, regras e sorteio automático → Iniciar
-        │
-        ▼
-Contagem 3-2-1 → cada criança recebe a sua cartela
-        │
-        ▼
-Sorteio (botão, barra de espaço ou automático) → bola rola na tela de todos,
-a voz anuncia no computador do professor
-        │
-        ▼
-A criança PROCURA o item na cartela e toca para marcar (nada é marcado sozinho)
-        │
-        ▼
-Falta 1 → "🔥 FALTA 1!" para a criança, 🔥 no painel e no telão
-        │
-        ▼
-Servidor valida o BINGO → comemoração em tela cheia → 🎉 Nova partida
-```
+1. **Crie a pasta do jogo** em `public/games/<id>/` com um `game.js` que se
+   registra na plataforma:
+
+   ```js
+   // public/games/meu-jogo/game.js
+   Plataforma.registerGame('meu-jogo', {
+     async mount(container, ctx) {
+       // container já tem o HTML de view.html (se houver)
+       // ctx.student  → { id, name, firstName, avatar }
+       // ctx.api      → ctx.api.get('/progress/meu-jogo'), ctx.api.post('/progress/meu-jogo/results', {...})
+       // ctx.sound, ctx.fx, ctx.mascot, ctx.ui → som, confete, mascote, toasts/modal
+       // ctx.params   → parâmetros da URL; ctx.exit() → volta ao painel
+       ctx.mascot.mount(container);
+     },
+     unmount() {
+       // remova timers e listeners de document/window
+     },
+   });
+   ```
+
+   Opcionais: `view.html` (HTML do jogo), `game.css` e outros scripts.
+   Use `.btn`, `.speech`, `[data-mascot]` e os tokens de cor do tema para
+   manter o visual.
+
+2. **(Opcional) Crie o módulo do servidor** em `src/games/<id>/server.js`:
+
+   | Função | Quando é usada |
+   |--------|----------------|
+   | `validateResult(body, progress)` | `POST /api/progress/<id>/results`: confira a rodada e devolva o resultado limpo (com `levelId`, `stars`, `score`...). Lance `GameError` de `src/platform/progress.js` para recusar. |
+   | `mergeProgress(old, result)` | Como a rodada muda o JSON de progresso guardado. |
+   | `summary(progress)` | Texto do cartão no painel (ou `null`). |
+   | `teacherSummary(progress)` | Dados da coluna do jogo na área do professor. |
+   | `mergeAccounts(a, b)` | Juntar o progresso de duas contas da mesma criança. |
+   | `setUnlockedAll(progress, value)` | "Liberar todas as fases" na área do professor. |
+   | `registerSockets(io)` | Jogos em tempo real (como o bingo). |
+
+3. **Acrescente o jogo em `src/games/registry.js`:**
+
+   ```js
+   {
+     id: 'meu-jogo',
+     name: 'Meu Jogo',
+     icon: '🧩',
+     tagline: 'Uma frase curta para o cartão.',
+     mode: 'solo',          // 'solo' | 'turma'
+     status: 'active',      // 'active' | 'soon' (aparece "Em breve") | 'hidden'
+     color: 'green',        // cor do cartão (token do tema)
+     isNew: true,           // etiqueta "Novo!"
+     client: { styles: ['game.css'], view: 'view.html', scripts: ['game.js'] },
+     server: require('./meu-jogo/server'), // opcional
+   },
+   ```
+
+4. **Reinicie o servidor.** O cartão aparece no painel e o jogo abre em
+   `/jogos/meu-jogo`. Se o módulo do servidor tiver `teacherSummary`, o
+   jogo ganha uma coluna na tabela da turma (com os campos do resumo; para
+   um visual próprio, acrescente uma função em `GAME_CELLS` de
+   `public/js/platform/teacher.js`).
 
 ---
 
-## 6. Funcionalidades
+## 6. Testes
 
-**⌨️ Teclado Mágico (digitação)**
-- Teclado ABNT2 desenhado na tela com uma cor por dedo (mindinho rosa,
-  anelar laranja, médio verde, indicador azul, polegar violeta) e as mãos
-  em SVG: a próxima tecla pulsa e o dedo certo acende.
-- Letra maiúscula acende também o Shift do lado oposto; acentos são
-  ensinados em dois passos (aperte o acento, solte, depois a letra), com o
-  aviso "acento pronto". Dica em texto para cada tecla e aviso de Caps Lock.
-- 10 mundos, 58 fases: fileira do meio, de cima e de baixo, maiúsculas,
-  palavras, acentuação, frases, pontuação, números e símbolos e textos.
-  Cada fase de letras só usa as teclas já aprendidas.
-- Estrelas: 85% de precisão = ⭐ (libera a próxima fase), 93% = ⭐⭐,
-  97% + velocidade mínima do mundo = ⭐⭐⭐. Resultado com PPM, precisão,
-  tempo e as teclas que mais deram trabalho.
-- Progresso salvo no servidor (continua em qualquer computador), treino
-  livre que não conta estrelas e opção "Esperar a tecla certa".
-- Precisa de teclado físico; em tablet/celular aparece um aviso.
-
-**Para a criança**
-- Visual de jogo (fundo animado, botões de brinquedo, mascote Bingolino
-  com expressões) e textos em linguagem infantil.
-- Entrada com a conta da plataforma: só o código em caixinhas (nome e
-  bichinho vêm da conta). Pelo link do QR Code, a criança entra sozinha.
-- "← Jogos" na sala de espera e na sala encerrada volta ao painel.
-- Sala de espera com a turma chegando, fala do mascote e balões.
-- Contagem 3-2-1, bola sorteada em tela cheia e últimas bolas sempre à vista.
-- Marcação manual: a criança procura e toca; carimbo com som e estrelinhas.
-  Toque em item que não saiu só treme a casa. Casa marcada fica travada.
-- "🔥 FALTA 1 PARA O BINGO!" com tambor e borda nas casas da linha.
-- BINGO em tela cheia, linha vencedora dourada e troféu no cabeçalho.
-- Pausa com o mascote dormindo; botão 🔊/🔇 em todas as telas.
-
-**Para o professor**
-- Área do professor (`/professor`), protegida pelo PIN de `PROFESSOR_PIN`
-  (sem PIN, fica aberta). Com PIN, só o professor cria salas de bingo.
-- Turma: cada educando com bichinho, último acesso, mundo/fase atual no
-  Teclado Mágico, estrelas, PPM médio, teclas com mais erro e bingos.
-- Renomear (ex.: "Ana Souza 5A" para diferenciar), juntar duas contas da
-  mesma criança (fica o melhor progresso de cada fase), liberar todas as
-  fases, desativar/reativar, cadastrar a turma de uma vez (um nome por
-  linha) e ligar/desligar o autocadastro no login.
-- QR Code e link da rede local (com escolha da rede, se houver mais de uma).
-- Configuração em cartões: tipo (números, palavras, emojis, personalizado),
-  pacotes prontos (301 palavras, 240 emojis, 214 itens), tamanho 3×3 a
-  6×6, casa livre, regras (linha, coluna, diagonal, cartela cheia) e
-  sorteio automático (8 a 30 s).
-- Sorteio por botão, barra de espaço ou automático, com voz pt-BR.
-- Quadro com todos os itens acendendo; desfazer último sorteio.
-- Participantes com bichinho, barra de progresso, 🔥 quase lá e 🏆.
-- Nova partida com a mesma turma, mudar regras, pausar/retomar, bloquear
-  entrada, remover participante, encerrar sala.
-- **Telão** (`/telao?sala=CODE`): QR gigante na espera, bola enorme,
-  quadro de números, turma com 🔥/🏆 e comemoração de BINGO.
-
-### Testes
-
-Cada arquivo de teste sobe o próprio servidor, numa porta separada e com um
-banco SQLite temporário (`test/helpers.js`), então não é preciso deixar o
-`npm start` ligado e nenhuma conta de teste fica no banco de verdade:
+Cada arquivo de teste sobe o próprio servidor, numa porta separada e com
+um banco SQLite temporário (`test/helpers.js`): não é preciso deixar o
+`npm start` ligado e nenhuma conta de teste fica no banco de verdade.
 
 ```bash
 npm test
 ```
 
-Roda `test/platform.test.js` (contas: nome e sobrenome obrigatórios,
-login sem diferenciar maiúsculas, acentos e espaços, conta repetida,
-sessão, troca de bichinho e saída), `test/integration.test.js` (criação de
-sala, entrada só com conta, mesma conta em dois aparelhos, autenticação do professor, sorteio, marcação manual, vitória,
-pausa automática, expulsão, nova partida, reinício, reconexão e
-encerramento) e `test/features.test.js` (nome e bichinho da conta, sair
-da sala antes e durante a partida, casa travada, "quase lá", sorteio automático, telão sem tokens, QR Code e
-endereços de rede). Para o teste de carga com 40 crianças:
+| Arquivo | O que testa |
+|---------|-------------|
+| `test/digitacao.test.js` | Teclado Mágico sem navegador: motor (precisão, PPM, acento composto e decomposto), ABNT2 (Shift do lado oposto, acentos, `?` e `;`), fases e estrelas, todo exercício digitável e só com as teclas da fase, validação do servidor. |
+| `test/platform.test.js` | Contas (nome e sobrenome, maiúsculas/acentos/espaços, conta repetida, sessão, bichinho, sair) e progresso pela API (estrelas do servidor, fase bloqueada, velocidade impossível, resumos). |
+| `test/teacher.test.js` | Área do professor com PIN: cadastro em lote, autocadastro, renomear, juntar contas, liberar fases, desativar, sala de bingo só pelo professor. |
+| `test/integration.test.js` | Partida completa de bingo: entrada só com conta, mesma conta em dois aparelhos, sorteio, marcação, vitória, expulsão, nova partida, reconexão, encerramento. |
+| `test/features.test.js` | Bingo: nome e bichinho da conta, sair da sala, casa travada, "quase lá", sorteio automático, telão sem tokens, QR Code, bingo contando no progresso. |
+
+Teste de carga do bingo (40 crianças marcando ao mesmo tempo; mede o tempo
+de cada sorteio até a última criança — em rede local, na casa de 50 ms):
 
 ```bash
 npm run test:carga
 ```
 
-### Próximos passos possíveis
-- Múltiplas cartelas por jogador na mesma partida.
-- Painel de estatísticas históricas consultando o SQLite já persistido.
-- Internacionalização (hoje 100% em português).
+---
+
+## 7. Segurança e privacidade — resumo
+
+- **Login sem senha (decisão pedagógica).** Crianças pequenas não precisam
+  decorar senha. Limite conhecido: quem souber o nome de um colega
+  consegue entrar na conta dele. Por isso a conta guarda só nome, bichinho
+  e progresso nos jogos, o painel tem "Não sou eu / Sair" e o professor
+  pode desativar contas. As sessões deixam de valer depois de 180 dias sem
+  uso.
+- **Área do professor com PIN** (`PROFESSOR_PIN`), comparado em tempo
+  constante e com espera depois de 10 tentativas erradas seguidas. O token
+  do professor dura 12 horas e só existe na memória do servidor.
+- **O servidor nunca confia no cliente:** bingo validado em
+  `roomManager.js` (código de sala, `masterToken`, conta do educando e
+  `playerToken`, status da partida, item sorteado, uma vaga por conta);
+  resultados do Teclado Mágico validados em `src/games/digitacao/server.js`.
+- Bichinho só da lista permitida; filtro de cortesia contra nomes
+  impróprios (`src/platform/avatars.js`); o telão recebe só a visão de
+  espectador; nomes sempre inseridos na página como texto, nunca como HTML.
 
 ---
 
-## 7. Segurança e validação — resumo
+## 8. Próximos passos possíveis
 
-**Contas dos educandos.** O login é só o nome e o sobrenome, sem senha
-(decisão pedagógica: crianças pequenas não precisam decorar senha). A
-comparação ignora maiúsculas, acentos e espaços extras. Antes de criar uma
-conta nova, a criança confirma que é a primeira vez, para um erro de
-digitação não virar uma conta duplicada. Limite conhecido: quem souber o
-nome de um colega consegue entrar na conta dele; por isso o início tem o
-botão "Não sou eu / Sair", e a conta guarda só nome, bichinho e progresso
-nos jogos. As sessões ficam em `student_sessions` e deixam de valer depois
-de 180 dias sem uso.
-
-O servidor nunca confia no cliente. Toda ação passa por `src/games/bingo/roomManager.js`,
-que valida: código de sala, autenticação do Mestre (`masterToken`),
-identidade do educando (conta da plataforma, `studentToken`, e o
-`playerToken` da sala), status da partida compatível com
-a ação (ex.: não é possível marcar casa com a partida pausada), item
-realmente sorteado antes de aceitar marcação, limites de participantes,
-uma vaga por conta e sala bloqueada/encerrada.
-
-Além disso: o avatar só é aceito se estiver na lista de bichinhos, nomes
-impróprios comuns são recusados (filtro de cortesia em `src/platform/avatars.js`),
-o telão recebe só a visão de espectador (sem tokens nem cartelas), cada
-criança recebe apenas a parte pública da configuração e nomes de jogadores
-são sempre inseridos na página como texto, nunca como HTML.
+- Carregar o bingo sob demanda, como o Teclado Mágico (hoje ele é
+  carregado pelo `index.html` e cuida das próprias telas).
+- Outros layouts de teclado (US-Internacional) no Teclado Mágico.
+- Minijogos de digitação (chuva de palavras) e um desafio de digitação da
+  turma em tempo real, reaproveitando o Socket.IO e o telão.
+- Novos jogos: tabuada, ortografia, quiz.
