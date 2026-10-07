@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+<title>Bingo Virtual · Sala de Aula</title>
+<meta name="description" content="Bingo virtual em tempo real para atividades educacionais." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+<div id="toast-stack" class="toast-stack" aria-live="polite"></div>
+
+<!-- ======================= HOME ======================= -->
+<section id="screen-home" class="screen screen-center active">
+  <div class="brand">
+    <span class="brand-mark">🎯</span>
+    <h1>Bingo Virtual</h1>
+    <p class="brand-tag">Sorteios ao vivo para a turma toda jogar junto.</p>
+  </div>
+
+  <div class="home-choices">
+    <button class="choice-card choice-join" data-go="screen-join">
+      <span class="choice-emoji">🙋</span>
+      <span class="choice-title">Entrar em uma sala</span>
+      <span class="choice-sub">Sou educando(a) e tenho um código</span>
+    </button>
+    <button class="choice-card choice-create" data-go="screen-create">
+      <span class="choice-emoji">🧑‍🏫</span>
+      <span class="choice-title">Criar uma sala</span>
+      <span class="choice-sub">Sou o(a) educador(a) / Mestre da Sala</span>
+    </button>
+  </div>
+</section>
+
+<!-- ======================= ENTRAR (educando) ======================= -->
+<section id="screen-join" class="screen screen-center">
+  <button class="btn-back" data-go="screen-home">← voltar</button>
+  <div class="panel-card">
+    <h2>Entrar na sala</h2>
+    <p class="muted">Peça o código para o seu educador(a).</p>
+    <form id="form-join">
+      <label class="field">
+        <span>Código da sala</span>
+        <input id="input-room-code" type="text" maxlength="8" placeholder="Ex: 7QXKD" autocomplete="off" required />
+      </label>
+      <label class="field">
+        <span>Seu nome</span>
+        <input id="input-player-name" type="text" maxlength="30" placeholder="Como podemos te chamar?" autocomplete="off" required />
+      </label>
+      <button type="submit" class="btn btn-primary btn-block">Entrar 🎉</button>
+      <p id="join-error" class="form-error" role="alert"></p>
+    </form>
+  </div>
+</section>
+
+<!-- ======================= CRIAR (mestre) ======================= -->
+<section id="screen-create" class="screen screen-center">
+  <button class="btn-back" data-go="screen-home">← voltar</button>
+  <div class="panel-card">
+    <h2>Criar sala</h2>
+    <p class="muted">Você será o(a) Mestre(a) da Sala e controlará a partida.</p>
+    <form id="form-create">
+      <label class="field">
+        <span>Nome da sala (opcional)</span>
+        <input id="input-room-name" type="text" maxlength="40" placeholder="Ex: Turma 5A — Bingo de Tecnologia" autocomplete="off" />
+      </label>
+      <button type="submit" class="btn btn-primary btn-block">Criar sala 🚀</button>
+      <p id="create-error" class="form-error" role="alert"></p>
+    </form>
+  </div>
+</section>
+
+<!-- ======================= ESPERA (educando) ======================= -->
+<section id="screen-waiting" class="screen screen-center">
+  <div class="waiting-card">
+    <div class="waiting-pulse">⏳</div>
+    <h2 id="waiting-room-name">Sala</h2>
+    <p class="waiting-code">Código: <strong id="waiting-room-code">----</strong></p>
+    <p class="waiting-hello">Olá, <strong id="waiting-player-name">jogador(a)</strong>! 👋</p>
+    <div class="waiting-stats">
+      <div><span id="waiting-count">0</span><small>participantes</small></div>
+      <div><span id="waiting-status">aguardando</span><small>status</small></div>
+    </div>
+    <p class="waiting-msg">O jogo ainda não começou. Assim que o Mestre iniciar, sua cartela vai aparecer aqui automaticamente ✨</p>
+  </div>
+</section>
+
+<!-- ======================= JOGO (educando) ======================= -->
+<section id="screen-player" class="screen screen-top">
+  <header class="game-header">
+    <div class="game-header-left">
+      <span class="pill" id="player-room-badge">Sala ----</span>
+      <span class="pill pill-status" id="player-status-badge">aguardando</span>
+    </div>
+    <div class="game-header-right">
+      <span id="player-name-badge">—</span>
+    </div>
+  </header>
+
+  <div class="last-drawn-bar">
+    <span class="last-drawn-label">Último sorteado</span>
+    <div id="player-last-drawn" class="last-drawn-value">—</div>
+  </div>
+
+  <div id="player-banner" class="game-banner" hidden></div>
+
+  <div class="player-main">
+    <div id="player-card" class="bingo-card" aria-label="Sua cartela de bingo"></div>
+
+    <aside class="history-panel">
+      <h3>Histórico</h3>
+      <div id="player-history" class="history-chips"></div>
+    </aside>
+  </div>
+</section>
+
+<!-- ======================= PAINEL DO MESTRE ======================= -->
+<section id="screen-master" class="screen screen-top">
+  <header class="game-header">
+    <div class="game-header-left">
+      <span class="pill">Sala <strong id="master-room-code">----</strong></span>
+      <button id="btn-copy-code" class="btn-mini" type="button">copiar código</button>
+      <span class="pill pill-status" id="master-status-badge">aguardando</span>
+    </div>
+    <div class="game-header-right">
+      <span id="master-player-count">0 participantes</span>
+    </div>
+  </header>
+
+  <div class="master-layout">
+    <!-- ---- Área principal ---- -->
+    <main class="master-main">
+
+      <section id="master-config" class="card-block">
+        <h2>Configurar partida</h2>
+        <div class="config-grid">
+          <label class="field">
+            <span>Tamanho da cartela</span>
+            <select id="cfg-grid-size">
+              <option value="3">3 × 3</option>
+              <option value="4">4 × 4</option>
+              <option value="5" selected>5 × 5</option>
+              <option value="6">6 × 6</option>
+            </select>
+          </label>
+          <label class="field field-check">
+            <input type="checkbox" id="cfg-free-space" checked />
+            <span>Casa livre no centro (Free Space)</span>
+          </label>
+          <label class="field">
+            <span>Tipo de bingo</span>
+            <select id="cfg-bingo-type">
+              <option value="numbers">🔢 Números</option>
+              <option value="words">🔤 Palavras</option>
+              <option value="emojis">😀 Emojis</option>
+              <option value="custom">🧩 Personalizado</option>
+            </select>
+          </label>
+        </div>
+
+        <div id="cfg-numbers-fields" class="config-subfields">
+          <div class="config-grid">
+            <label class="field">
+              <span>Número mínimo</span>
+              <input type="number" id="cfg-min-number" value="1" min="1" />
+            </label>
+            <label class="field">
+              <span>Número máximo</span>
+              <input type="number" id="cfg-max-number" value="75" min="5" />
+            </label>
+          </div>
+        </div>
+
+        <div id="cfg-words-fields" class="config-subfields" hidden>
+          <label class="field">
+            <span>Lista de palavras (uma por linha, ou separadas por vírgula)</span>
+            <textarea id="cfg-words" rows="4" placeholder="Computador&#10;Internet&#10;Programação&#10;RPG"></textarea>
+          </label>
+        </div>
+
+        <div id="cfg-emojis-fields" class="config-subfields" hidden>
+          <label class="field">
+            <span>Emojis (opcional — deixe em branco para usar o pacote padrão)</span>
+            <textarea id="cfg-emojis" rows="3" placeholder="🎉 🎈 🎓 📚 ✏️ 🧠"></textarea>
+          </label>
+        </div>
+
+        <div id="cfg-custom-fields" class="config-subfields" hidden>
+          <label class="field">
+            <span>Itens personalizados (um por linha, ou separados por vírgula)</span>
+            <textarea id="cfg-items" rows="4" placeholder="Computador&#10;Internet&#10;Programação&#10;Educação"></textarea>
+          </label>
+        </div>
+
+        <h3 class="config-subtitle">Regras de vitória</h3>
+        <div class="win-rules">
+          <label class="field-check"><input type="checkbox" id="cfg-win-row" checked /><span>Linha</span></label>
+          <label class="field-check"><input type="checkbox" id="cfg-win-col" checked /><span>Coluna</span></label>
+          <label class="field-check"><input type="checkbox" id="cfg-win-diag" checked /><span>Diagonal</span></label>
+          <label class="field-check"><input type="checkbox" id="cfg-win-full" /><span>Cartela completa</span></label>
+        </div>
+        <label class="field-check">
+          <input type="checkbox" id="cfg-autopause" checked />
+          <span>Pausar automaticamente quando alguém fizer Bingo</span>
+        </label>
+
+        <p id="config-error" class="form-error" role="alert"></p>
+        <div class="config-actions">
+          <button id="btn-save-config" class="btn btn-secondary" type="button">Salvar configurações</button>
+          <button id="btn-start-game" class="btn btn-primary btn-lg" type="button">Iniciar partida ▶️</button>
+        </div>
+      </section>
+
+      <section id="master-draw" class="card-block" hidden>
+        <h2>Sorteio</h2>
+        <div class="draw-area">
+          <div class="draw-result" id="draw-result-display">
+            <span id="draw-result-value">🎲</span>
+          </div>
+          <button id="btn-draw" class="btn-draw" type="button">SORTEAR</button>
+          <p id="draw-remaining" class="muted"></p>
+          <p id="draw-error" class="form-error" role="alert"></p>
+        </div>
+        <div class="draw-controls">
+          <button id="btn-undo-draw" class="btn btn-ghost" type="button">↩️ Desfazer último sorteio</button>
+        </div>
+        <h3 class="config-subtitle">Histórico de sorteios</h3>
+        <div id="master-history" class="history-chips history-chips-lg"></div>
+      </section>
+
+      <section id="master-winners" class="card-block" hidden>
+        <h2>🏆 Vencedores</h2>
+        <div id="master-winners-list"></div>
+      </section>
+
+    </main>
+
+    <!-- ---- Painel lateral ---- -->
+    <aside class="master-sidebar">
+
+      <div class="card-block">
+        <h3>Controles da partida</h3>
+        <div class="master-controls">
+          <button id="btn-pause" class="btn btn-secondary" type="button" hidden>⏸ Pausar</button>
+          <button id="btn-resume" class="btn btn-secondary" type="button" hidden>▶️ Retomar</button>
+          <button id="btn-restart" class="btn btn-warn" type="button" hidden>🔄 Reiniciar partida</button>
+          <button id="btn-end" class="btn btn-danger" type="button" hidden>⏹ Encerrar sala</button>
+        </div>
+      </div>
+
+      <div class="card-block">
+        <div class="sidebar-header">
+          <h3>Participantes</h3>
+          <button id="btn-toggle-lock" class="btn-mini" type="button">🔓 sala aberta</button>
+        </div>
+        <ul id="participants-list" class="participants-list"></ul>
+      </div>
+
+    </aside>
+  </div>
+</section>
+
+<!-- ======================= modal confirmação ======================= -->
+<div id="confirm-modal" class="modal-overlay" hidden>
+  <div class="modal-box">
+    <h3 id="confirm-title">Confirmar ação</h3>
+    <p id="confirm-message">Tem certeza?</p>
+    <div class="modal-actions">
+      <button id="confirm-cancel" class="btn btn-ghost" type="button">Cancelar</button>
+      <button id="confirm-ok" class="btn btn-danger" type="button">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/js/socket-client.js"></script>
+<script src="/js/ui.js"></script>
+<script src="/js/master.js"></script>
+<script src="/js/player.js"></script>
+<script src="/js/app.js"></script>
+</body>
+</html>

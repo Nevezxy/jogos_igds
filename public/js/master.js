@@ -1,0 +1,311 @@
+// public/js/master.js
+// Painel do Mestre da Sala: configuração antes do início, sorteio,
+// controles de partida e gestão de participantes. Toda ação chama o
+// servidor via socket e só atualiza a tela quando a resposta chega —
+// o servidor decide o que é permitido em cada estado.
+
+(function () {
+  const { socket, emitAsync } = window.BingoSocket;
+  const { showScreen, toast, confirmModal, statusLabel } = window.BingoUI;
+
+  let currentState = null;
+
+  function session() { return window.BingoApp.session; }
+
+  // ---------------- helpers de config ----------------
+
+  function bingoTypeFields() {
+    document.querySelectorAll('.config-subfields').forEach((el) => (el.hidden = true));
+    const type = document.getElementById('cfg-bingo-type').value;
+    const map = {
+      numbers: 'cfg-numbers-fields',
+      words: 'cfg-words-fields',
+      emojis: 'cfg-emojis-fields',
+      custom: 'cfg-custom-fields',
+    };
+    const id = map[type];
+    if (id) document.getElementById(id).hidden = false;
+  }
+
+  function parseListField(raw) {
+    return raw
+      .split(/[\n,]/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+
+  function readConfigFromForm() {
+    const type = document.getElementById('cfg-bingo-type').value;
+    const config = {
+      gridSize: Number(document.getElementById('cfg-grid-size').value),
+      freeSpace: document.getElementById('cfg-free-space').checked,
+      bingoType: type,
+      minNumber: Number(document.getElementById('cfg-min-number').value) || 1,
+      maxNumber: Number(document.getElementById('cfg-max-number').value) || 75,
+      words: parseListField(document.getElementById('cfg-words').value),
+      emojis: parseListField(document.getElementById('cfg-emojis').value),
+      items: parseListField(document.getElementById('cfg-items').value),
+      winPatterns: {
+        row: document.getElementById('cfg-win-row').checked,
+        column: document.getElementById('cfg-win-col').checked,
+        diagonal: document.getElementById('cfg-win-diag').checked,
+        fullCard: document.getElementById('cfg-win-full').checked,
+      },
+      autoPauseOnWin: document.getElementById('cfg-autopause').checked,
+    };
+    return config;
+  }
+
+  function fillFormFromConfig(config) {
+    document.getElementById('cfg-grid-size').value = config.gridSize;
+    document.getElementById('cfg-free-space').checked = config.freeSpace;
+    document.getElementById('cfg-bingo-type').value = config.bingoType;
+    document.getElementById('cfg-min-number').value = config.minNumber;
+    document.getElementById('cfg-max-number').value = config.maxNumber;
+    document.getElementById('cfg-words').value = (config.words || []).join('\n');
+    document.getElementById('cfg-emojis').value = (config.emojis || []).join(' ');
+    document.getElementById('cfg-items').value = (config.items || []).join('\n');
+    document.getElementById('cfg-win-row').checked = !!config.winPatterns.row;
+    document.getElementById('cfg-win-col').checked = !!config.winPatterns.column;
+    document.getElementById('cfg-win-diag').checked = !!config.winPatterns.diagonal;
+    document.getElementById('cfg-win-full').checked = !!config.winPatterns.fullCard;
+    document.getElementById('cfg-autopause').checked = !!config.autoPauseOnWin;
+    bingoTypeFields();
+  }
+
+  // ---------------- render principal ----------------
+
+  function render(state) {
+    currentState = state;
+    showScreen('screen-master');
+
+    document.getElementById('master-room-code').textContent = state.code;
+    const statusBadge = document.getElementById('master-status-badge');
+    statusBadge.textContent = statusLabel(state.status);
+    statusBadge.dataset.status = statusLabel(state.status);
+    document.getElementById('master-player-count').textContent =
+      `${state.connectedCount}/${state.playerCount} conectados`;
+
+    const isWaiting = state.status === 'waiting';
+    document.getElementById('master-config').hidden = false;
+    document.querySelectorAll('#master-config input, #master-config select, #master-config textarea')
+      .forEach((el) => { el.disabled = !isWaiting; });
+    document.getElementById('btn-save-config').disabled = !isWaiting;
+    document.getElementById('btn-start-game').hidden = !isWaiting;
+
+    document.getElementById('master-draw').hidden = isWaiting;
+    document.getElementById('master-winners').hidden = state.players.every((p) => !p.hasWon);
+
+    if (!isWaiting) fillFormFromConfig(state.config);
+
+    // Botão sortear
+    const btnDraw = document.getElementById('btn-draw');
+    btnDraw.disabled = state.status !== 'playing' || state.remainingCount === 0;
+    document.getElementById('draw-remaining').textContent =
+      state.poolSize ? `${state.remainingCount} de ${state.poolSize} itens restantes` : '';
+    document.getElementById('draw-result-value').textContent = state.lastDrawn ?? '🎲';
+
+    renderHistory(state.drawnItems);
+    renderParticipants(state.players);
+    renderWinners(state.players);
+
+    // Controles de partida
+    document.getElementById('btn-pause').hidden = state.status !== 'playing';
+    document.getElementById('btn-resume').hidden = state.status !== 'paused';
+    document.getElementById('btn-restart').hidden = state.status === 'waiting' && state.drawnItems.length === 0;
+    document.getElementById('btn-end').hidden = state.status === 'ended';
+
+    const lockBtn = document.getElementById('btn-toggle-lock');
+    lockBtn.textContent = state.locked ? '🔒 sala bloqueada' : '🔓 sala aberta';
+  }
+
+  function renderHistory(drawnItems) {
+    const wrap = document.getElementById('master-history');
+    wrap.innerHTML = '';
+    if (!drawnItems.length) {
+      wrap.innerHTML = '<span class="muted">Nenhum sorteio ainda.</span>';
+      return;
+    }
+    drawnItems.slice().reverse().forEach((item, i) => {
+      const chip = document.createElement('span');
+      chip.className = 'chip' + (i === 0 ? ' chip-latest' : '');
+      chip.textContent = item;
+      wrap.appendChild(chip);
+    });
+  }
+
+  function renderParticipants(players) {
+    const list = document.getElementById('participants-list');
+    list.innerHTML = '';
+    if (!players.length) {
+      list.innerHTML = '<li class="muted">Nenhum participante ainda.</li>';
+      return;
+    }
+    players.forEach((p) => {
+      const li = document.createElement('li');
+      li.className = 'participant-row';
+      li.innerHTML = `
+        <div class="participant-info">
+          <span class="participant-dot ${p.connected ? 'online' : ''}"></span>
+          <span class="participant-name" title="${p.name}">${p.name}</span>
+          ${p.hasWon ? '<span class="participant-badge">🏆 Bingo</span>' : ''}
+        </div>
+        <div class="participant-actions">
+          <button type="button" title="Expulsar" data-kick="${p.id}">🚫</button>
+        </div>
+      `;
+      list.appendChild(li);
+    });
+    list.querySelectorAll('[data-kick]').forEach((btn) => {
+      btn.addEventListener('click', () => handleKick(btn.dataset.kick, btn.closest('li').querySelector('.participant-name').textContent));
+    });
+  }
+
+  function renderWinners(players) {
+    const box = document.getElementById('master-winners-list');
+    const winners = players.filter((p) => p.hasWon);
+    box.innerHTML = '';
+    winners.forEach((p) => {
+      const row = document.createElement('div');
+      row.className = 'winner-row';
+      row.textContent = `🏆 ${p.name}`;
+      box.appendChild(row);
+    });
+  }
+
+  // ---------------- ações ----------------
+
+  async function handleSaveConfig() {
+    document.getElementById('config-error').textContent = '';
+    try {
+      const config = readConfigFromForm();
+      const res = await emitAsync('update_config', {
+        roomCode: session().roomCode, masterToken: session().masterToken, config,
+      });
+      render(res.state);
+      toast('Configurações salvas.', 'success', 2200);
+    } catch (e) {
+      document.getElementById('config-error').textContent = e.message || 'Erro ao salvar configurações.';
+    }
+  }
+
+  async function handleStartGame() {
+    await handleSaveConfig();
+    document.getElementById('config-error').textContent = '';
+    try {
+      const res = await emitAsync('start_game', { roomCode: session().roomCode, masterToken: session().masterToken });
+      render(res.state);
+      toast('Partida iniciada! Cartelas distribuídas. 🎉', 'success');
+    } catch (e) {
+      document.getElementById('config-error').textContent = e.message || 'Erro ao iniciar partida.';
+      toast(e.message || 'Erro ao iniciar partida.', 'error');
+    }
+  }
+
+  async function handleDraw() {
+    document.getElementById('draw-error').textContent = '';
+    try {
+      const res = await emitAsync('draw_item', { roomCode: session().roomCode, masterToken: session().masterToken });
+      const display = document.getElementById('draw-result-display');
+      display.classList.remove('pop');
+      void display.offsetWidth;
+      display.classList.add('pop');
+      document.getElementById('draw-result-value').textContent = res.value;
+    } catch (e) {
+      document.getElementById('draw-error').textContent = e.message || 'Erro ao sortear.';
+    }
+  }
+
+  async function handleUndoDraw() {
+    try {
+      await emitAsync('undo_draw', { roomCode: session().roomCode, masterToken: session().masterToken });
+      toast('Último sorteio desfeito.', 'info');
+    } catch (e) {
+      toast(e.message || 'Não foi possível desfazer.', 'error');
+    }
+  }
+
+  async function handlePause() {
+    try { await emitAsync('pause_game', { roomCode: session().roomCode, masterToken: session().masterToken }); }
+    catch (e) { toast(e.message, 'error'); }
+  }
+  async function handleResume() {
+    try { await emitAsync('resume_game', { roomCode: session().roomCode, masterToken: session().masterToken }); }
+    catch (e) { toast(e.message, 'error'); }
+  }
+  async function handleRestart() {
+    const ok = await confirmModal(
+      'Reiniciar partida?',
+      'Todo o progresso atual (sorteios e cartelas) será perdido e uma nova rodada começará do zero. Essa ação não pode ser desfeita.',
+      'Sim, reiniciar'
+    );
+    if (!ok) return;
+    try {
+      await emitAsync('restart_game', { roomCode: session().roomCode, masterToken: session().masterToken });
+      toast('Partida reiniciada. Configure e inicie novamente.', 'info');
+    } catch (e) { toast(e.message, 'error'); }
+  }
+  async function handleEnd() {
+    const ok = await confirmModal(
+      'Encerrar sala?',
+      'A sala será encerrada para todos os participantes e não será mais possível jogar nela.',
+      'Sim, encerrar'
+    );
+    if (!ok) return;
+    try { await emitAsync('end_game', { roomCode: session().roomCode, masterToken: session().masterToken }); }
+    catch (e) { toast(e.message, 'error'); }
+  }
+
+  async function handleKick(playerId, name) {
+    const ok = await confirmModal('Remover participante?', `${name} será removido(a) da sala imediatamente.`, 'Remover');
+    if (!ok) return;
+    try {
+      await emitAsync('kick_player', { roomCode: session().roomCode, masterToken: session().masterToken, playerId });
+      toast(`${name} foi removido(a).`, 'info');
+    } catch (e) { toast(e.message, 'error'); }
+  }
+
+  async function handleToggleLock() {
+    const locked = !(currentState && currentState.locked);
+    try {
+      await emitAsync('lock_room', { roomCode: session().roomCode, masterToken: session().masterToken, locked });
+    } catch (e) { toast(e.message, 'error'); }
+  }
+
+  function copyRoomCode() {
+    const code = session().roomCode;
+    navigator.clipboard?.writeText(code).then(
+      () => toast(`Código ${code} copiado!`, 'success', 2000),
+      () => toast(`Código da sala: ${code}`, 'info')
+    );
+  }
+
+  // ---------------- wiring ----------------
+
+  function init() {
+    document.getElementById('cfg-bingo-type').addEventListener('change', bingoTypeFields);
+    document.getElementById('btn-save-config').addEventListener('click', handleSaveConfig);
+    document.getElementById('btn-start-game').addEventListener('click', handleStartGame);
+    document.getElementById('btn-draw').addEventListener('click', handleDraw);
+    document.getElementById('btn-undo-draw').addEventListener('click', handleUndoDraw);
+    document.getElementById('btn-pause').addEventListener('click', handlePause);
+    document.getElementById('btn-resume').addEventListener('click', handleResume);
+    document.getElementById('btn-restart').addEventListener('click', handleRestart);
+    document.getElementById('btn-end').addEventListener('click', handleEnd);
+    document.getElementById('btn-toggle-lock').addEventListener('click', handleToggleLock);
+    document.getElementById('btn-copy-code').addEventListener('click', copyRoomCode);
+    bingoTypeFields();
+  }
+
+  socket.on('master_state', (state) => {
+    if (window.BingoApp.session.role !== 'master') return;
+    render(state);
+  });
+
+  socket.on('win_announced', ({ playerName, patterns }) => {
+    if (window.BingoApp.session.role !== 'master') return;
+    toast(`🏆 ${playerName} fez Bingo! (${patterns.join(', ')})`, 'success', 6000);
+  });
+
+  window.BingoMaster = { init, render };
+})();
