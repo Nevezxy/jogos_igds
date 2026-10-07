@@ -27,11 +27,104 @@
     if (id) document.getElementById(id).hidden = false;
   }
 
-  function parseListField(raw) {
+  // Palavras e itens personalizados: um por linha ou separados por vírgula.
+  // Emojis: também aceitam espaço como separador.
+  function parseListField(raw, { splitSpaces = false } = {}) {
     return raw
-      .split(/[\n,]/)
+      .split(splitSpaces ? /[\n,\s]+/ : /[\n,]/)
       .map((s) => s.trim())
       .filter(Boolean);
+  }
+
+  // ---------------- pacotes prontos ----------------
+
+  function isEmojiField(textarea) { return textarea.id === 'cfg-emojis'; }
+
+  function listFor(textarea) {
+    return parseListField(textarea.value, { splitSpaces: isEmojiField(textarea) });
+  }
+
+  function writeList(textarea, items) {
+    textarea.value = items.join(isEmojiField(textarea) ? ' ' : '\n');
+  }
+
+  function packsOf(picker) {
+    return (window.BingoPacks && window.BingoPacks[picker.dataset.packType]) || [];
+  }
+
+  function minItemsNeeded() {
+    const size = Number(document.getElementById('cfg-grid-size').value);
+    const free = document.getElementById('cfg-free-space').checked && size % 2 === 1;
+    return size * size - (free ? 1 : 0);
+  }
+
+  // Um pacote aparece marcado quando todos os itens dele estão na lista;
+  // assim os chips acompanham edições feitas à mão no campo de texto.
+  function refreshPackUi(picker) {
+    const textarea = document.getElementById(picker.dataset.target);
+    const current = new Set(listFor(textarea));
+    picker.querySelectorAll('input[data-pack]').forEach((input) => {
+      const pack = packsOf(picker).find((p) => p.id === input.dataset.pack);
+      input.checked = !!pack && pack.items.every((item) => current.has(item));
+    });
+
+    const countEl = document.querySelector(`[data-count-for="${textarea.id}"]`);
+    const need = minItemsNeeded();
+    const usesDefault = isEmojiField(textarea) && current.size === 0;
+    const low = !usesDefault && current.size < need;
+    countEl.textContent = usesDefault
+      ? 'Lista vazia: será usado o pacote padrão de emojis.'
+      : `${current.size} itens na lista${low ? ` · a cartela precisa de pelo menos ${need}` : ' ✅'}`;
+    countEl.classList.toggle('is-low', low);
+  }
+
+  function refreshAllPackUis() {
+    document.querySelectorAll('.pack-picker').forEach(refreshPackUi);
+  }
+
+  function togglePack(picker, pack, on) {
+    const textarea = document.getElementById(picker.dataset.target);
+    let items = listFor(textarea);
+    if (on) {
+      const present = new Set(items);
+      pack.items.forEach((item) => { if (!present.has(item)) { items.push(item); present.add(item); } });
+    } else {
+      // itens que também estão em outro pacote marcado continuam na lista
+      const keep = new Set();
+      picker.querySelectorAll('input[data-pack]:checked').forEach((input) => {
+        const other = packsOf(picker).find((p) => p.id === input.dataset.pack);
+        if (other && other.id !== pack.id) other.items.forEach((item) => keep.add(item));
+      });
+      const remove = new Set(pack.items.filter((item) => !keep.has(item)));
+      items = items.filter((item) => !remove.has(item));
+    }
+    writeList(textarea, items);
+    refreshPackUi(picker);
+  }
+
+  function buildPackPickers() {
+    document.querySelectorAll('.pack-picker').forEach((picker) => {
+      picker.innerHTML = '';
+      packsOf(picker).forEach((pack) => {
+        const label = document.createElement('label');
+        label.className = 'pack-chip';
+        label.innerHTML = `<input type="checkbox" data-pack="${pack.id}"><span>${pack.icon} ${pack.label} <small>${pack.items.length}</small></span>`;
+        label.querySelector('input').addEventListener('change', (ev) => togglePack(picker, pack, ev.target.checked));
+        picker.appendChild(label);
+      });
+      document.getElementById(picker.dataset.target).addEventListener('input', () => refreshPackUi(picker));
+    });
+  }
+
+  // Ao trocar para um modo com a lista vazia, já deixa o primeiro pacote
+  // marcado, para a partida funcionar de primeira.
+  function preselectFirstPack() {
+    const type = document.getElementById('cfg-bingo-type').value;
+    const picker = document.querySelector(`.pack-picker[data-pack-type="${type}"]`);
+    if (!picker) return;
+    const textarea = document.getElementById(picker.dataset.target);
+    const first = packsOf(picker)[0];
+    if (first && listFor(textarea).length === 0) togglePack(picker, first, true);
   }
 
   function readConfigFromForm() {
@@ -43,7 +136,7 @@
       minNumber: Number(document.getElementById('cfg-min-number').value) || 1,
       maxNumber: Number(document.getElementById('cfg-max-number').value) || 75,
       words: parseListField(document.getElementById('cfg-words').value),
-      emojis: parseListField(document.getElementById('cfg-emojis').value),
+      emojis: parseListField(document.getElementById('cfg-emojis').value, { splitSpaces: true }),
       items: parseListField(document.getElementById('cfg-items').value),
       winPatterns: {
         row: document.getElementById('cfg-win-row').checked,
@@ -71,6 +164,7 @@
     document.getElementById('cfg-win-full').checked = !!config.winPatterns.fullCard;
     document.getElementById('cfg-autopause').checked = !!config.autoPauseOnWin;
     bingoTypeFields();
+    refreshAllPackUis();
   }
 
   // ---------------- render principal ----------------
@@ -312,7 +406,13 @@
   // ---------------- wiring ----------------
 
   function init() {
-    document.getElementById('cfg-bingo-type').addEventListener('change', bingoTypeFields);
+    buildPackPickers();
+    document.getElementById('cfg-bingo-type').addEventListener('change', () => {
+      bingoTypeFields();
+      preselectFirstPack();
+    });
+    document.getElementById('cfg-grid-size').addEventListener('change', refreshAllPackUis);
+    document.getElementById('cfg-free-space').addEventListener('change', refreshAllPackUis);
     document.getElementById('btn-save-config').addEventListener('click', handleSaveConfig);
     document.getElementById('btn-start-game').addEventListener('click', handleStartGame);
     document.getElementById('btn-draw').addEventListener('click', handleDraw);
@@ -330,6 +430,7 @@
     document.getElementById('btn-toggle-lock').addEventListener('click', handleToggleLock);
     document.getElementById('btn-copy-code').addEventListener('click', copyRoomCode);
     bingoTypeFields();
+    refreshAllPackUis();
   }
 
   socket.on('master_state', (state) => {

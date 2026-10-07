@@ -25,6 +25,19 @@
   let shownCardKey = null;
   let shownMarked = new Set();
 
+  // Passa ao CSS o tamanho do texto da casa: a palavra mais longa limita a
+  // largura da letra (para nenhuma palavra quebrar no meio) e o número de
+  // palavras limita a altura (cada uma pode ir para uma linha).
+  function fitCellText(btn, text) {
+    const words = text.split(/\s+/).filter(Boolean);
+    const longest = Math.max(2, ...words.map((w) => [...w].length));
+    btn.style.setProperty('--longest', longest);
+    btn.style.setProperty('--words', Math.max(1, words.length));
+    if (words.length === 1 && /^\p{Extended_Pictographic}/u.test(text) && [...text].length <= 3) {
+      btn.classList.add('is-emoji');
+    }
+  }
+
   function renderCard(card) {
     const grid = document.getElementById('player-card');
     const cardKey = card.cells.flat().map((cell) => cell.value).join('|');
@@ -32,6 +45,7 @@
     const marked = new Set();
 
     grid.style.gridTemplateColumns = `repeat(${card.size}, 1fr)`;
+    grid.style.gridTemplateRows = `repeat(${card.size}, 1fr)`;
     grid.classList.toggle('is-entering', isNewCard);
     grid.innerHTML = '';
     card.cells.forEach((row, r) => {
@@ -48,11 +62,15 @@
           btn.classList.add('is-marked');
           if (!isNewCard && !shownMarked.has(key)) btn.classList.add('just-marked');
         }
+        const label = document.createElement('span');
+        label.className = 'cell-text';
         if (cell.isFree) {
-          btn.innerHTML = '<span>⭐</span>';
+          label.textContent = '⭐';
         } else {
-          btn.textContent = cell.value;
+          label.textContent = cell.value;
+          fitCellText(btn, String(cell.value));
         }
+        btn.appendChild(label);
         btn.setAttribute('aria-label', cell.isFree ? 'Casa livre' : `Casa ${cell.value}${cell.marked ? ', marcada' : ''}`);
         if (!cell.isFree) {
           btn.addEventListener('click', () => handleMarkCell(r, c));
@@ -65,6 +83,23 @@
 
     shownCardKey = cardKey;
     shownMarked = marked;
+    requestAnimationFrame(() => shrinkOverflowingCells(grid));
+  }
+
+  // Ajuste final: o CSS estima o tamanho pela quantidade de letras; se
+  // alguma casa ainda transbordar (letras largas como M e W), diminui a
+  // letra aos poucos até caber.
+  function shrinkOverflowingCells(grid) {
+    grid.querySelectorAll('.bingo-cell:not(.is-free) .cell-text').forEach((label) => {
+      const cell = label.parentElement;
+      label.style.fontSize = '';
+      const fits = () => label.offsetWidth <= cell.clientWidth - 6 && label.offsetHeight <= cell.clientHeight - 6;
+      let size = parseFloat(getComputedStyle(label).fontSize);
+      for (let i = 0; i < 10 && !fits() && size > 8; i++) {
+        size *= 0.9;
+        label.style.fontSize = `${size}px`;
+      }
+    });
   }
 
   async function handleMarkCell(row, col) {
@@ -149,6 +184,13 @@
       showBanner('⏸ A partida está pausada pelo Mestre.');
     }
   }
+
+  // a casa muda de tamanho ao girar o tablet ou redimensionar a janela
+  let resizeTimer = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => shrinkOverflowingCells(document.getElementById('player-card')), 150);
+  });
 
   // ------------- eventos globais -------------
 

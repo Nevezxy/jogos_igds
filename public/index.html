@@ -200,24 +200,33 @@
         </div>
 
         <div id="cfg-words-fields" class="config-subfields" hidden>
+          <p class="pack-title">📦 Pacotes prontos <small>(escolha um ou mais)</small></p>
+          <div class="pack-picker" data-pack-type="words" data-target="cfg-words"></div>
           <label class="field">
             <span>Lista de palavras (uma por linha, ou separadas por vírgula)</span>
-            <textarea id="cfg-words" rows="4" placeholder="Computador&#10;Internet&#10;Programação&#10;RPG"></textarea>
+            <textarea id="cfg-words" rows="5" placeholder="Computador&#10;Internet&#10;Programação&#10;RPG"></textarea>
           </label>
+          <p class="pack-count" data-count-for="cfg-words"></p>
         </div>
 
         <div id="cfg-emojis-fields" class="config-subfields" hidden>
+          <p class="pack-title">📦 Pacotes prontos <small>(escolha um ou mais)</small></p>
+          <div class="pack-picker" data-pack-type="emojis" data-target="cfg-emojis"></div>
           <label class="field">
-            <span>Emojis (opcional — deixe em branco para usar o pacote padrão)</span>
-            <textarea id="cfg-emojis" rows="3" placeholder="🎉 🎈 🎓 📚 ✏️ 🧠"></textarea>
+            <span>Emojis separados por espaço (em branco = pacote padrão)</span>
+            <textarea id="cfg-emojis" rows="4" placeholder="🎉 🎈 🎓 📚 ✏️ 🧠"></textarea>
           </label>
+          <p class="pack-count" data-count-for="cfg-emojis"></p>
         </div>
 
         <div id="cfg-custom-fields" class="config-subfields" hidden>
+          <p class="pack-title">📦 Pacotes prontos <small>(escolha um ou mais)</small></p>
+          <div class="pack-picker" data-pack-type="custom" data-target="cfg-items"></div>
           <label class="field">
             <span>Itens personalizados (um por linha, ou separados por vírgula)</span>
-            <textarea id="cfg-items" rows="4" placeholder="Computador&#10;Internet&#10;Programação&#10;Educação"></textarea>
+            <textarea id="cfg-items" rows="5" placeholder="🐶 Cachorro&#10;BA&#10;São Paulo&#10;Qualquer texto"></textarea>
           </label>
+          <p class="pack-count" data-count-for="cfg-items"></p>
         </div>
 
         <h3 class="config-subtitle">Regras de vitória</h3>
@@ -305,6 +314,7 @@
 <script src="/socket.io/socket.io.js"></script>
 <script src="/js/socket-client.js"></script>
 <script src="/js/mascot.js"></script>
+<script src="/js/packs.js"></script>
 <script src="/js/ui.js"></script>
 <script src="/js/master.js"></script>
 <script src="/js/player.js"></script>

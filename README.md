@@ -170,7 +170,9 @@ Servidor valida Bingo → vencedor anunciado para todos
 - Criar sala / entrar em sala com código, nome único por sala, sala
   bloqueável para novos participantes, limite de participantes.
 - Painel do Mestre: configurar tamanho da cartela (3×3 a 6×6), casa livre,
-  tipo de bingo (números, palavras, emojis, personalizado), regras de
+  tipo de bingo (números, palavras, emojis, personalizado) com pacotes
+  prontos de itens (`public/js/packs.js`: 301 palavras, 240 emojis e 214
+  itens personalizados, em temas combináveis), regras de
   vitória habilitáveis (linha, coluna, diagonal, cartela completa),
   pausar/retomar/reiniciar/encerrar, gerar novas cartelas (via reiniciar),
   desfazer último sorteio, expulsar participante, bloquear/liberar sala.
