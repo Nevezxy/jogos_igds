@@ -6,7 +6,7 @@
 
 (function () {
   const { socket, emitAsync } = window.BingoSocket;
-  const { showScreen, toast, confirmModal, statusLabel } = window.BingoUI;
+  const { showScreen, toast, confirmModal, statusLabel, escapeHtml } = window.BingoUI;
 
   let currentState = null;
 
@@ -87,7 +87,8 @@
       `${state.connectedCount}/${state.playerCount} conectados`;
 
     const isWaiting = state.status === 'waiting';
-    document.getElementById('master-config').hidden = false;
+    // Durante a partida a configuração some, deixando o sorteio no topo
+    document.getElementById('master-config').hidden = !isWaiting;
     document.querySelectorAll('#master-config input, #master-config select, #master-config textarea')
       .forEach((el) => { el.disabled = !isWaiting; });
     document.getElementById('btn-save-config').disabled = !isWaiting;
@@ -147,7 +148,7 @@
       li.innerHTML = `
         <div class="participant-info">
           <span class="participant-dot ${p.connected ? 'online' : ''}"></span>
-          <span class="participant-name" title="${p.name}">${p.name}</span>
+          <span class="participant-name" title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</span>
           ${p.hasWon ? '<span class="participant-badge">🏆 Bingo</span>' : ''}
         </div>
         <div class="participant-actions">

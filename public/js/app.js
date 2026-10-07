@@ -116,10 +116,9 @@
 
   async function tryResume() {
     const saved = loadSession();
-    if (!saved || saved.role === 'none' || !saved.roomCode) {
-      showScreen('screen-home');
-      return;
-    }
+    // Sem sessão salva: fica na tela atual (a criança pode estar no meio
+    // da digitação do código quando a conexão volta).
+    if (!saved || saved.role === 'none' || !saved.roomCode) return;
 
     if (saved.role === 'master' && saved.masterToken) {
       try {

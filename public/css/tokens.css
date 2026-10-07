@@ -1,0 +1,57 @@
+/* ============================================================
+   BINGO VIRTUAL — design tokens
+   Tema "Parque de Diversões Digital" (referência: portais de jogos
+   infantis como o Poki): fundo roxo→azul vibrante, cartões brancos com
+   contorno grosso e sombra sólida "de desenho animado", botões de
+   brinquedo que afundam ao clicar.
+   Tipografia: Baloo 2 (títulos, redonda e lúdica) + Nunito (texto).
+   ============================================================ */
+
+:root {
+  /* fundo */
+  --bg-1: #6C3BFF;
+  --bg-2: #4F46E5;
+  --bg-3: #2EC4FF;
+
+  /* superfícies */
+  --surface: #FFFFFF;
+  --surface-2: #F4F0FF;
+  --surface-3: #EAE3FF;
+
+  /* tinta (contornos e texto) */
+  --ink: #1E1240;
+  --ink-soft: #5B4F82;
+  --line: rgba(30, 18, 64, 0.14);
+
+  /* cores de brinquedo */
+  --yellow: #FFD23F;
+  --yellow-dark: #E0A800;
+  --pink: #FF4FA3;
+  --pink-dark: #D62F82;
+  --green: #3DDC84;
+  --green-dark: #1FAF60;
+  --orange: #FF8A3D;
+  --orange-dark: #E06514;
+  --red: #FF4D5E;
+  --red-dark: #D42A3B;
+  --sky: #2EC4FF;
+  --sky-dark: #0896CC;
+  --violet: #8B5CF6;
+  --violet-dark: #6233D6;
+
+  /* forma */
+  --radius-sm: 14px;
+  --radius-md: 20px;
+  --radius-lg: 28px;
+  --stroke: 3px;
+  --shadow-pop: 0 6px 0 var(--ink);
+  --shadow-pop-lg: 0 10px 0 var(--ink);
+  --shadow-float: 0 18px 40px rgba(30, 10, 90, 0.35);
+
+  /* movimento */
+  --ease-bounce: cubic-bezier(.34, 1.56, .64, 1);
+  --ease-out: cubic-bezier(.22, 1, .36, 1);
+
+  --font-display: 'Baloo 2', 'Trebuchet MS', system-ui, sans-serif;
+  --font-body: 'Nunito', system-ui, sans-serif;
+}

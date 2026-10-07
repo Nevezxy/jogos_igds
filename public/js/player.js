@@ -18,25 +18,43 @@
     document.getElementById('waiting-status').textContent = statusLabel(state.status);
   }
 
-  function cellLabel(cell) {
-    if (cell.isFree) return 'GRÁTIS';
-    return cell.value;
-  }
+  // A cartela é redesenhada a cada estado recebido. Para as animações não
+  // repetirem a cada sorteio, guardamos qual cartela já foi mostrada e
+  // quais casas já estavam marcadas: só a cartela nova "monta" e só a casa
+  // recém-marcada ganha o carimbo.
+  let shownCardKey = null;
+  let shownMarked = new Set();
 
   function renderCard(card, drawnSet) {
     const grid = document.getElementById('player-card');
+    const cardKey = card.cells.flat().map((cell) => cell.value).join('|');
+    const isNewCard = cardKey !== shownCardKey;
+    const marked = new Set();
+
     grid.style.gridTemplateColumns = `repeat(${card.size}, 1fr)`;
+    grid.classList.toggle('is-entering', isNewCard);
     grid.innerHTML = '';
     card.cells.forEach((row, r) => {
       row.forEach((cell, c) => {
+        const key = `${r}-${c}`;
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'bingo-cell';
+        btn.dataset.col = c % 6;
+        btn.style.setProperty('--i', r * card.size + c);
         if (cell.isFree) btn.classList.add('is-free');
-        if (cell.marked) btn.classList.add('is-marked');
+        if (cell.marked) {
+          marked.add(key);
+          btn.classList.add('is-marked');
+          if (!isNewCard && !shownMarked.has(key)) btn.classList.add('just-marked');
+        }
         if (!cell.isFree && drawnSet.has(cell.value) && !cell.marked) btn.classList.add('is-drawn');
-        btn.textContent = cellLabel(cell);
-        btn.setAttribute('aria-label', cell.isFree ? 'Casa livre' : `Casa ${cell.value}`);
+        if (cell.isFree) {
+          btn.innerHTML = '<span>⭐</span>';
+        } else {
+          btn.textContent = cell.value;
+        }
+        btn.setAttribute('aria-label', cell.isFree ? 'Casa livre' : `Casa ${cell.value}${cell.marked ? ', marcada' : ''}`);
         if (!cell.isFree) {
           btn.addEventListener('click', () => handleMarkCell(r, c));
         } else {
@@ -45,6 +63,9 @@
         grid.appendChild(btn);
       });
     });
+
+    shownCardKey = cardKey;
+    shownMarked = marked;
   }
 
   async function handleMarkCell(row, col) {
@@ -97,7 +118,14 @@
     document.getElementById('player-name-badge').textContent = state.you.name;
 
     const drawnSet = new Set(state.drawnItems);
-    document.getElementById('player-last-drawn').textContent = state.lastDrawn ?? '—';
+    const lastEl = document.getElementById('player-last-drawn');
+    const lastValue = state.lastDrawn ?? '?';
+    if (lastEl.textContent !== String(lastValue)) {
+      lastEl.textContent = lastValue;
+      lastEl.classList.remove('pop');
+      void lastEl.offsetWidth;
+      lastEl.classList.add('pop');
+    }
 
     if (state.card) {
       renderCard(state.card, drawnSet);

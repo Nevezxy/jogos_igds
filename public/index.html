@@ -2,37 +2,50 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#6C3BFF" />
 <title>Bingo Virtual · Sala de Aula</title>
 <meta name="description" content="Bingo virtual em tempo real para atividades educacionais." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/css/style.css" />
+<link rel="stylesheet" href="/css/tokens.css" />
+<link rel="stylesheet" href="/css/base.css" />
+<link rel="stylesheet" href="/css/animations.css" />
+<link rel="stylesheet" href="/css/components.css" />
+<link rel="stylesheet" href="/css/screens.css" />
 </head>
 <body>
+
+<!-- fundo animado: bolinhas de bingo, estrelas e anéis flutuando -->
+<div class="bg-scene" aria-hidden="true">
+  <div class="bg-shape bg-ball" style="--x:6%;--y:12%;--s:64px;--c:var(--pink);--d:8s"><span>7</span></div>
+  <div class="bg-shape bg-star" style="--x:84%;--y:8%;--s:46px;--c:var(--yellow);--d:7s;--delay:-2s"></div>
+  <div class="bg-shape bg-ball" style="--x:88%;--y:62%;--s:78px;--c:var(--green);--d:10s;--delay:-4s"><span>42</span></div>
+  <div class="bg-shape bg-ring" style="--x:14%;--y:70%;--s:70px;--c:var(--sky);--d:11s;--delay:-1s"></div>
+  <div class="bg-shape bg-star" style="--x:42%;--y:88%;--s:34px;--c:var(--pink);--d:6s;--delay:-3s;--rot:20deg"></div>
+  <div class="bg-shape bg-ball" style="--x:70%;--y:30%;--s:42px;--c:var(--orange);--d:9s;--delay:-5s"><span>3</span></div>
+  <div class="bg-shape bg-ring" style="--x:58%;--y:4%;--s:40px;--c:var(--yellow);--d:8s;--delay:-6s"></div>
+  <div class="bg-shape bg-star" style="--x:3%;--y:42%;--s:30px;--c:var(--green);--d:7s;--delay:-1s;--rot:-15deg"></div>
+  <div class="bg-shape bg-ball" style="--x:30%;--y:24%;--s:36px;--c:var(--sky);--d:12s;--delay:-7s"><span>19</span></div>
+  <div class="bg-shape bg-star" style="--x:92%;--y:88%;--s:40px;--c:var(--orange);--d:9s;--delay:-2s;--rot:10deg"></div>
+</div>
 
 <div id="toast-stack" class="toast-stack" aria-live="polite"></div>
 
 <!-- ======================= HOME ======================= -->
 <section id="screen-home" class="screen screen-center active">
   <div class="brand">
-    <span class="brand-mark">🎯</span>
-    <h1>Bingo Virtual</h1>
-    <p class="brand-tag">Sorteios ao vivo para a turma toda jogar junto.</p>
+    <div data-mascot></div>
+    <h1 class="logo title-game" aria-label="Bingo!">
+      <span style="--i:0">B</span><span style="--i:1">I</span><span style="--i:2">N</span><span style="--i:3">G</span><span style="--i:4">O</span><span style="--i:5">!</span>
+    </h1>
+    <p class="brand-tag">Bora jogar com a turma toda? 🎉</p>
   </div>
 
   <div class="home-choices">
-    <button class="choice-card choice-join" data-go="screen-join">
-      <span class="choice-emoji">🙋</span>
-      <span class="choice-title">Entrar em uma sala</span>
-      <span class="choice-sub">Sou educando(a) e tenho um código</span>
-    </button>
-    <button class="choice-card choice-create" data-go="screen-create">
-      <span class="choice-emoji">🧑‍🏫</span>
-      <span class="choice-title">Criar uma sala</span>
-      <span class="choice-sub">Sou o(a) educador(a) / Mestre da Sala</span>
-    </button>
+    <button class="btn btn-primary btn-play" data-go="screen-join">🎮 JOGAR</button>
+    <button class="btn btn-violet btn-teacher" data-go="screen-create">🧑‍🏫 Sou professor(a)</button>
   </div>
 </section>
 
@@ -40,18 +53,20 @@
 <section id="screen-join" class="screen screen-center">
   <button class="btn-back" data-go="screen-home">← voltar</button>
   <div class="panel-card">
-    <h2>Entrar na sala</h2>
-    <p class="muted">Peça o código para o seu educador(a).</p>
+    <div class="panel-head">
+      <div data-mascot></div>
+      <p class="speech">Qual é o código da sala? 🤔</p>
+    </div>
     <form id="form-join">
       <label class="field">
         <span>Código da sala</span>
-        <input id="input-room-code" type="text" maxlength="8" placeholder="Ex: 7QXKD" autocomplete="off" required />
+        <input id="input-room-code" type="text" maxlength="8" placeholder="ABC12" inputmode="text" autocapitalize="characters" spellcheck="false" autocomplete="off" required />
       </label>
       <label class="field">
         <span>Seu nome</span>
-        <input id="input-player-name" type="text" maxlength="30" placeholder="Como podemos te chamar?" autocomplete="off" required />
+        <input id="input-player-name" type="text" maxlength="30" placeholder="Seu nome aqui" autocomplete="off" required />
       </label>
-      <button type="submit" class="btn btn-primary btn-block">Entrar 🎉</button>
+      <button type="submit" class="btn btn-success btn-block btn-lg">Vamos lá! 🚀</button>
       <p id="join-error" class="form-error" role="alert"></p>
     </form>
   </div>
@@ -61,14 +76,17 @@
 <section id="screen-create" class="screen screen-center">
   <button class="btn-back" data-go="screen-home">← voltar</button>
   <div class="panel-card">
-    <h2>Criar sala</h2>
-    <p class="muted">Você será o(a) Mestre(a) da Sala e controlará a partida.</p>
+    <div class="panel-head">
+      <div data-mascot></div>
+      <p class="speech">Oi, professor(a)! Vamos criar uma sala? ✨</p>
+    </div>
+    <p class="muted">Você vai comandar os sorteios da partida.</p>
     <form id="form-create">
       <label class="field">
         <span>Nome da sala (opcional)</span>
         <input id="input-room-name" type="text" maxlength="40" placeholder="Ex: Turma 5A — Bingo de Tecnologia" autocomplete="off" />
       </label>
-      <button type="submit" class="btn btn-primary btn-block">Criar sala 🚀</button>
+      <button type="submit" class="btn btn-primary btn-block btn-lg">Criar sala 🎪</button>
       <p id="create-error" class="form-error" role="alert"></p>
     </form>
   </div>
@@ -77,15 +95,15 @@
 <!-- ======================= ESPERA (educando) ======================= -->
 <section id="screen-waiting" class="screen screen-center">
   <div class="waiting-card">
-    <div class="waiting-pulse">⏳</div>
+    <div data-mascot id="waiting-mascot"></div>
     <h2 id="waiting-room-name">Sala</h2>
     <p class="waiting-code">Código: <strong id="waiting-room-code">----</strong></p>
-    <p class="waiting-hello">Olá, <strong id="waiting-player-name">jogador(a)</strong>! 👋</p>
+    <p class="waiting-hello">Oi, <strong id="waiting-player-name">jogador(a)</strong>! 👋</p>
     <div class="waiting-stats">
-      <div><span id="waiting-count">0</span><small>participantes</small></div>
-      <div><span id="waiting-status">aguardando</span><small>status</small></div>
+      <div><span id="waiting-count">0</span><small>na sala</small></div>
+      <div><span id="waiting-status">aguardando</span><small>situação</small></div>
     </div>
-    <p class="waiting-msg">O jogo ainda não começou. Assim que o Mestre iniciar, sua cartela vai aparecer aqui automaticamente ✨</p>
+    <p class="waiting-msg">Já já começa! Quando o(a) professor(a) apertar o play, sua cartela aparece aqui ✨</p>
   </div>
 </section>
 
@@ -102,7 +120,7 @@
   </header>
 
   <div class="last-drawn-bar">
-    <span class="last-drawn-label">Último sorteado</span>
+    <span class="last-drawn-label">Saiu agora! 👉</span>
     <div id="player-last-drawn" class="last-drawn-value">—</div>
   </div>
 
@@ -112,7 +130,7 @@
     <div id="player-card" class="bingo-card" aria-label="Sua cartela de bingo"></div>
 
     <aside class="history-panel">
-      <h3>Histórico</h3>
+      <h3>Já saíram 🎱</h3>
       <div id="player-history" class="history-chips"></div>
     </aside>
   </div>
@@ -221,7 +239,7 @@
           <div class="draw-result" id="draw-result-display">
             <span id="draw-result-value">🎲</span>
           </div>
-          <button id="btn-draw" class="btn-draw" type="button">SORTEAR</button>
+          <button id="btn-draw" class="btn-draw" type="button">🎰 SORTEAR</button>
           <p id="draw-remaining" class="muted"></p>
           <p id="draw-error" class="form-error" role="alert"></p>
         </div>
@@ -278,6 +296,7 @@
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="/js/socket-client.js"></script>
+<script src="/js/mascot.js"></script>
 <script src="/js/ui.js"></script>
 <script src="/js/master.js"></script>
 <script src="/js/player.js"></script>

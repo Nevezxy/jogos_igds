@@ -47,14 +47,20 @@ function confirmModal(title, message, confirmLabel = 'Confirmar') {
 }
 
 const STATUS_LABELS = {
-  waiting: 'aguardando',
-  playing: 'jogando',
-  paused: 'pausada',
-  ended: 'encerrada',
+  waiting: 'esperando',
+  playing: 'valendo!',
+  paused: 'pausado',
+  ended: 'acabou',
 };
 
 function statusLabel(status) {
   return STATUS_LABELS[status] || status;
 }
 
-window.BingoUI = { showScreen, toast, confirmModal, statusLabel };
+function escapeHtml(text) {
+  return String(text ?? '').replace(/[&<>"']/g, (ch) => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]
+  ));
+}
+
+window.BingoUI = { showScreen, toast, confirmModal, statusLabel, escapeHtml };

@@ -1,0 +1,98 @@
+/* ============================================================
+   Todas as animações do jogo. Regra: animar só transform e opacity
+   (60fps em celular fraco). Respeita prefers-reduced-motion no fim.
+   ============================================================ */
+
+@keyframes bgShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes floatY {
+  0%, 100% { transform: translateY(0) rotate(var(--rot, 0deg)); }
+  50% { transform: translateY(-28px) rotate(calc(var(--rot, 0deg) + 12deg)); }
+}
+
+@keyframes idleBounce {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  45% { transform: translateY(-14px) scale(.97, 1.03); }
+  55% { transform: translateY(-14px) scale(.97, 1.03); }
+  90% { transform: translateY(0) scale(1.06, .94); }
+}
+
+@keyframes blink {
+  0%, 92%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(.1); }
+}
+
+@keyframes letterHop {
+  0%, 60%, 100% { transform: translateY(0) rotate(var(--tilt, 0deg)); }
+  30% { transform: translateY(-16px) rotate(calc(var(--tilt, 0deg) * -1)); }
+}
+
+@keyframes bounceIn {
+  0% { opacity: 0; transform: scale(.6) translateY(20px); }
+  70% { opacity: 1; transform: scale(1.05) translateY(-4px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes popIn {
+  0% { opacity: 0; transform: scale(.3); }
+  70% { opacity: 1; transform: scale(1.12); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-18px) scale(.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-6deg); }
+  75% { transform: rotate(6deg); }
+}
+
+@keyframes gentlePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes drawPop {
+  0% { transform: scale(.4) rotate(-200deg); opacity: 0; }
+  65% { transform: scale(1.15) rotate(12deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); }
+}
+
+@keyframes stamp {
+  0% { transform: scale(1.8) rotate(var(--stamp-rot, -12deg)); opacity: 0; }
+  60% { transform: scale(.88) rotate(var(--stamp-rot, -12deg)); opacity: 1; }
+  100% { transform: scale(1) rotate(var(--stamp-rot, -12deg)); opacity: 1; }
+}
+
+@keyframes zzz {
+  0% { opacity: 0; transform: translate(0, 0) scale(.6); }
+  30% { opacity: 1; }
+  100% { opacity: 0; transform: translate(16px, -30px) scale(1.1); }
+}
+
+@keyframes spinSlow { to { transform: rotate(360deg); } }
+
+/* ---------- utilitários de animação ---------- */
+
+.anim-bounce-in { animation: bounceIn .55s var(--ease-bounce) both; }
+.anim-pop-in { animation: popIn .45s var(--ease-bounce) both; }
+.anim-wiggle { animation: wiggle .5s ease-in-out infinite; }
+
+/* entrada escalonada: o elemento define --i (0, 1, 2…) */
+.stagger { animation: bounceIn .5s var(--ease-bounce) both; animation-delay: calc(var(--i, 0) * 70ms); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+  }
+  .bg-scene { animation: none !important; }
+  .bg-shape { display: none; }
+}

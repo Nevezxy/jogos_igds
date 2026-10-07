@@ -1,0 +1,323 @@
+/* ============================================================
+   Componentes reutilizáveis: botões de brinquedo, cartões, campos,
+   pílulas, bolinhas (chips), toasts, modal e mascote.
+   ============================================================ */
+
+/* ---------------- botões "3D de brinquedo" ---------------- */
+
+.btn {
+  --btn-bg: var(--yellow);
+  --btn-fg: var(--ink);
+  position: relative;
+  border: var(--stroke) solid var(--ink);
+  border-radius: var(--radius-md);
+  padding: 14px 22px;
+  min-height: 56px;
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: .3px;
+  cursor: pointer;
+  box-shadow: var(--shadow-pop);
+  transform: translateY(0);
+  transition: transform .09s ease, box-shadow .09s ease, filter .15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+/* brilho no topo do botão */
+.btn::after {
+  content: "";
+  position: absolute;
+  left: 10px; right: 10px; top: 5px;
+  height: 30%;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .35);
+  pointer-events: none;
+}
+.btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 0 var(--ink); filter: brightness(1.05); }
+.btn:active:not(:disabled) { transform: translateY(6px); box-shadow: 0 0 0 var(--ink); }
+.btn:focus-visible { outline: 4px solid #fff; outline-offset: 3px; }
+.btn:disabled { opacity: .5; cursor: not-allowed; filter: grayscale(.4); }
+.btn-block { width: 100%; }
+.btn-lg { padding: 18px 28px; font-size: 1.3rem; min-height: 64px; }
+
+.btn-primary { --btn-bg: var(--yellow); }
+.btn-secondary { --btn-bg: var(--sky); }
+.btn-success { --btn-bg: var(--green); }
+.btn-warn { --btn-bg: var(--orange); }
+.btn-danger { --btn-bg: var(--red); --btn-fg: #fff; }
+.btn-violet { --btn-bg: var(--violet); --btn-fg: #fff; }
+.btn-ghost { --btn-bg: var(--surface); box-shadow: 0 4px 0 var(--ink); }
+.btn-ghost::after { display: none; }
+
+.btn-mini {
+  background: #fff;
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  padding: 6px 14px;
+  min-height: 36px;
+  font-family: var(--font-display);
+  font-size: .9rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 3px 0 var(--ink);
+  transition: transform .08s ease, box-shadow .08s ease;
+}
+.btn-mini:hover { transform: translateY(-1px); }
+.btn-mini:active { transform: translateY(3px); box-shadow: 0 0 0 var(--ink); }
+
+.btn-back {
+  position: absolute;
+  top: 18px;
+  left: 16px;
+  background: #fff;
+  border: var(--stroke) solid var(--ink);
+  border-radius: 999px;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1rem;
+  padding: 8px 18px;
+  cursor: pointer;
+  box-shadow: 0 4px 0 var(--ink);
+  transition: transform .08s ease, box-shadow .08s ease;
+}
+.btn-back:hover { transform: translateY(-2px) rotate(-2deg); }
+.btn-back:active { transform: translateY(4px); box-shadow: 0 0 0 var(--ink); }
+
+/* ---------------- cartões ---------------- */
+
+.panel-card,
+.card-block,
+.waiting-card,
+.modal-box {
+  background: var(--surface);
+  border: var(--stroke) solid var(--ink);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-pop-lg), var(--shadow-float);
+}
+
+/* ---------------- campos ---------------- */
+
+.field { display: block; margin-bottom: 16px; }
+.field > span { display: block; font-family: var(--font-display); font-weight: 800; font-size: 1.05rem; margin-bottom: 6px; color: var(--ink); }
+.field input[type="text"],
+.field input[type="number"],
+.field select,
+.field textarea {
+  width: 100%;
+  border: var(--stroke) solid var(--ink);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  font-size: 1.1rem;
+  font-family: var(--font-body);
+  font-weight: 700;
+  background: var(--surface-2);
+  color: var(--ink);
+  box-shadow: inset 0 4px 0 rgba(30, 18, 64, .08);
+  transition: background .15s ease, box-shadow .15s ease;
+}
+.field input::placeholder, .field textarea::placeholder { color: #A99FC9; font-weight: 600; }
+.field input:focus, .field select:focus, .field textarea:focus {
+  outline: none;
+  background: #fff;
+  box-shadow: 0 0 0 4px var(--yellow);
+}
+.field input:disabled, .field select:disabled, .field textarea:disabled { opacity: .6; }
+
+/* checkbox virando "interruptor" de brinquedo */
+.field-check { display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 1rem; margin-bottom: 12px; cursor: pointer; }
+.field-check input {
+  appearance: none;
+  -webkit-appearance: none;
+  flex-shrink: 0;
+  width: 50px;
+  height: 30px;
+  border-radius: 999px;
+  border: var(--stroke) solid var(--ink);
+  background: var(--surface-3);
+  position: relative;
+  cursor: pointer;
+  transition: background .2s ease;
+}
+.field-check input::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--ink);
+  transition: transform .25s var(--ease-bounce);
+}
+.field-check input:checked { background: var(--green); }
+.field-check input:checked::after { transform: translateX(20px); }
+.field-check input:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+.field-check input:disabled { opacity: .5; cursor: not-allowed; }
+
+.form-error { color: var(--red-dark); font-weight: 800; font-size: .95rem; min-height: 1.2em; margin-top: 8px; }
+.form-error:not(:empty) { animation: wiggle .35s ease 2; }
+
+/* ---------------- pílulas ---------------- */
+
+.pill {
+  background: #fff;
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-family: var(--font-display);
+  font-size: .95rem;
+  font-weight: 800;
+  box-shadow: 0 3px 0 var(--ink);
+}
+.pill-status { background: var(--sky); text-transform: uppercase; letter-spacing: .5px; }
+.pill-status[data-status="esperando"] { background: var(--sky); }
+.pill-status[data-status="valendo!"] { background: var(--green); animation: gentlePulse 1.6s ease-in-out infinite; }
+.pill-status[data-status="pausado"] { background: var(--yellow); }
+.pill-status[data-status="acabou"] { background: var(--red); color: #fff; }
+
+/* ---------------- bolinhas (histórico) ---------------- */
+
+.history-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  --c: var(--sky);
+  min-width: 42px;
+  height: 42px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 2px solid var(--ink);
+  background: radial-gradient(circle at 30% 25%, rgba(255, 255, 255, .7) 0 14%, var(--c) 15% 100%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: var(--ink);
+  box-shadow: 0 3px 0 var(--ink);
+  animation: popIn .35s var(--ease-bounce) both;
+}
+.chip:nth-child(5n+1) { --c: var(--sky); }
+.chip:nth-child(5n+2) { --c: var(--pink); }
+.chip:nth-child(5n+3) { --c: var(--green); }
+.chip:nth-child(5n+4) { --c: var(--orange); }
+.chip:nth-child(5n+5) { --c: var(--violet); }
+.chip.chip-latest {
+  --c: var(--yellow);
+  min-width: 52px;
+  height: 52px;
+  font-size: 1.25rem;
+  animation: popIn .45s var(--ease-bounce) both, gentlePulse 1.4s ease-in-out .5s infinite;
+}
+.history-chips-lg .chip { min-width: 48px; height: 48px; font-size: 1.1rem; }
+
+/* ---------------- toasts ---------------- */
+
+.toast-stack {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  z-index: 999;
+  width: min(420px, calc(100vw - 32px));
+  pointer-events: none;
+}
+.toast {
+  background: #fff;
+  color: var(--ink);
+  border: var(--stroke) solid var(--ink);
+  border-radius: 999px;
+  padding: 12px 22px;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 800;
+  text-align: center;
+  box-shadow: 0 5px 0 var(--ink);
+  animation: slideDown .4s var(--ease-bounce);
+}
+.toast.toast-info { background: var(--sky); }
+.toast.toast-error { background: var(--orange); }
+.toast.toast-success { background: var(--green); }
+
+/* ---------------- modal ---------------- */
+
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(30, 18, 64, .65);
+  display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 16px;
+  backdrop-filter: blur(3px);
+}
+.modal-overlay[hidden] { display: none; }
+.modal-box { padding: 28px 24px; max-width: 400px; width: 100%; text-align: center; animation: popIn .4s var(--ease-bounce); }
+.modal-box h3 { font-size: 1.5rem; }
+.modal-actions { display: flex; gap: 12px; margin-top: 20px; }
+.modal-actions .btn { flex: 1; }
+
+/* ---------------- mascote (Bingolino) ---------------- */
+
+.mascot { display: inline-block; width: var(--size, 120px); height: var(--size, 120px); }
+.mascot svg { width: 100%; height: 100%; overflow: visible; display: block; }
+.mascot .m-body { animation: idleBounce 2.4s ease-in-out infinite; transform-origin: 60px 112px; transform-box: view-box; }
+.mascot .m-eyes-open { animation: blink 4.5s infinite; transform-origin: 60px 52px; transform-box: view-box; }
+
+/* expressões: cada humor liga/desliga partes do rosto */
+.mascot .m-eyes-happy,
+.mascot .m-eyes-closed,
+.mascot .m-mouth-o,
+.mascot .m-mouth-big,
+.mascot .m-zzz { display: none; }
+
+.mascot[data-mood="party"] .m-eyes-open,
+.mascot[data-mood="party"] .m-mouth-smile { display: none; }
+.mascot[data-mood="party"] .m-eyes-happy,
+.mascot[data-mood="party"] .m-mouth-big { display: inline; }
+.mascot[data-mood="party"] .m-body { animation-duration: .9s; }
+
+.mascot[data-mood="wow"] .m-mouth-smile { display: none; }
+.mascot[data-mood="wow"] .m-mouth-o { display: inline; }
+
+.mascot[data-mood="sleep"] .m-eyes-open,
+.mascot[data-mood="sleep"] .m-mouth-smile { display: none; }
+.mascot[data-mood="sleep"] .m-eyes-closed,
+.mascot[data-mood="sleep"] .m-mouth-o,
+.mascot[data-mood="sleep"] .m-zzz { display: inline; }
+.mascot[data-mood="sleep"] .m-body { animation-duration: 4s; }
+.mascot .m-zzz text { animation: zzz 2.4s ease-out infinite; transform-box: fill-box; }
+.mascot .m-zzz text:nth-child(2) { animation-delay: .8s; }
+.mascot .m-zzz text:nth-child(3) { animation-delay: 1.6s; }
+
+/* balão de fala do mascote */
+.speech {
+  position: relative;
+  background: #fff;
+  border: var(--stroke) solid var(--ink);
+  border-radius: var(--radius-md);
+  padding: 10px 16px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.1rem;
+  box-shadow: 0 4px 0 var(--ink);
+}
+.speech::before {
+  content: "";
+  position: absolute;
+  left: -13px;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  background: #fff;
+  border-left: var(--stroke) solid var(--ink);
+  border-bottom: var(--stroke) solid var(--ink);
+  transform: translateY(-50%) rotate(45deg);
+}
