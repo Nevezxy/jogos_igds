@@ -264,6 +264,42 @@
 .modal-actions { display: flex; gap: 12px; margin-top: 20px; }
 .modal-actions .btn { flex: 1; }
 
+/* ---------------- efeitos (fx.js) ---------------- */
+
+.fx-canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 998; }
+.fx-sparkle {
+  position: fixed;
+  z-index: 998;
+  pointer-events: none;
+  font-size: 18px;
+  line-height: 1;
+  text-shadow: 0 0 2px var(--ink), 0 0 1px var(--ink);
+  animation: sparkleOut .65s var(--ease-out) forwards;
+}
+.fx-shake { animation: shake .4s ease-in-out !important; }
+
+/* ---------------- botão de som ---------------- */
+
+.sound-toggle {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 997;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: var(--stroke) solid var(--ink);
+  background: #fff;
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 5px 0 var(--ink);
+  transition: transform .08s ease, box-shadow .08s ease;
+}
+.sound-toggle:hover { transform: translateY(-2px) rotate(-6deg); }
+.sound-toggle:active { transform: translateY(5px); box-shadow: 0 0 0 var(--ink); }
+.sound-toggle[aria-pressed="true"] { background: var(--surface-3); }
+
 /* ---------------- mascote (Bingolino) ---------------- */
 
 .mascot { display: inline-block; width: var(--size, 120px); height: var(--size, 120px); }

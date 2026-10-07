@@ -32,6 +32,7 @@
 </div>
 
 <div id="toast-stack" class="toast-stack" aria-live="polite"></div>
+<button id="btn-sound" class="sound-toggle" type="button" aria-pressed="false" aria-label="Desligar o som" title="Som">🔊</button>
 
 <!-- ======================= HOME ======================= -->
 <section id="screen-home" class="screen screen-center active">
@@ -143,6 +144,7 @@
       <span class="pill">Sala <strong id="master-room-code">----</strong></span>
       <button id="btn-copy-code" class="btn-mini" type="button">copiar código</button>
       <span class="pill pill-status" id="master-status-badge">aguardando</span>
+      <button id="btn-voice" class="btn-mini" type="button" title="A voz lê em voz alta cada item sorteado neste computador">🗣️ voz ligada</button>
     </div>
     <div class="game-header-right">
       <span id="master-player-count">0 participantes</span>
@@ -315,6 +317,8 @@
 <script src="/js/socket-client.js"></script>
 <script src="/js/mascot.js"></script>
 <script src="/js/packs.js"></script>
+<script src="/js/sound.js"></script>
+<script src="/js/fx.js"></script>
 <script src="/js/ui.js"></script>
 <script src="/js/master.js"></script>
 <script src="/js/player.js"></script>

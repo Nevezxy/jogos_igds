@@ -57,10 +57,23 @@ function statusLabel(status) {
   return STATUS_LABELS[status] || status;
 }
 
+// Ajusta o tamanho da letra para o texto caber numa bola/caixa: a palavra
+// mais longa limita pela largura e o número de palavras (uma por linha no
+// pior caso) limita pela altura. `area` é a fração da caixa usada pelo
+// texto (a "janela" branca da bola é menor que a bola inteira).
+function fitText(el, text, { area = 1, max = Infinity, min = 9 } = {}) {
+  const words = String(text).split(/\s+/).filter(Boolean);
+  const longest = Math.max(2, ...words.map((w) => [...w].length));
+  const w = el.clientWidth * area;
+  const h = el.clientHeight * area;
+  const size = Math.min(max, (w * 1.7) / longest, (h * 0.8) / Math.max(1, words.length));
+  el.style.fontSize = `${Math.max(min, size)}px`;
+}
+
 function escapeHtml(text) {
   return String(text ?? '').replace(/[&<>"']/g, (ch) => (
     { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]
   ));
 }
 
-window.BingoUI = { showScreen, toast, confirmModal, statusLabel, escapeHtml };
+window.BingoUI = { showScreen, toast, confirmModal, statusLabel, escapeHtml, fitText };

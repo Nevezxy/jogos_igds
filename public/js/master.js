@@ -6,7 +6,9 @@
 
 (function () {
   const { socket, emitAsync } = window.BingoSocket;
-  const { showScreen, toast, confirmModal, statusLabel, escapeHtml } = window.BingoUI;
+  const { showScreen, toast, confirmModal, statusLabel, escapeHtml, fitText } = window.BingoUI;
+  const { play, speak } = window.BingoSound;
+  const { confetti } = window.BingoFx;
 
   let currentState = null;
 
@@ -167,6 +169,14 @@
     refreshAllPackUis();
   }
 
+  // Mostra o item na bola do sorteio, com a letra ajustada ao tamanho dele.
+  function showDrawnValue(value) {
+    const el = document.getElementById('draw-result-value');
+    if (el.textContent === String(value) && el.style.fontSize) return;
+    el.textContent = value;
+    fitText(el, value, { area: 0.8, max: el.clientWidth * 0.42 });
+  }
+
   // ---------------- render principal ----------------
 
   function render(state) {
@@ -198,7 +208,7 @@
     btnDraw.disabled = state.status !== 'playing' || state.remainingCount === 0;
     document.getElementById('draw-remaining').textContent =
       state.poolSize ? `${state.remainingCount} de ${state.poolSize} itens restantes` : '';
-    document.getElementById('draw-result-value').textContent = state.lastDrawn ?? '🎲';
+    showDrawnValue(state.lastDrawn ?? '🎲');
 
     renderHistory(state.drawnItems);
     renderParticipants(state.players);
@@ -238,7 +248,14 @@
     });
   }
 
+  // ids já vistos, para tocar o "pop" só quando alguém novo entra
+  let knownPlayerIds = null;
+
   function renderParticipants(players) {
+    const ids = new Set(players.map((p) => p.id));
+    if (knownPlayerIds && players.some((p) => !knownPlayerIds.has(p.id))) play('join');
+    knownPlayerIds = ids;
+
     const list = document.getElementById('participants-list');
     list.innerHTML = '';
     if (!players.length) {
@@ -307,16 +324,25 @@
   }
 
   async function handleDraw() {
+    const btn = document.getElementById('btn-draw');
+    if (btn.disabled) return;
     document.getElementById('draw-error').textContent = '';
+    btn.disabled = true; // evita dois sorteios com um clique duplo
+    play('whoosh');
     try {
       const res = await emitAsync('draw_item', { roomCode: session().roomCode, masterToken: session().masterToken });
       const display = document.getElementById('draw-result-display');
       display.classList.remove('pop');
       void display.offsetWidth;
       display.classList.add('pop');
-      document.getElementById('draw-result-value').textContent = res.value;
+      showDrawnValue(res.value);
+      play('ding');
+      speak(res.value);
     } catch (e) {
       document.getElementById('draw-error').textContent = e.message || 'Erro ao sortear.';
+    } finally {
+      // o render seguinte (master_state) decide se o botão volta a ficar ativo
+      if (currentState) btn.disabled = currentState.status !== 'playing' || currentState.remainingCount === 0;
     }
   }
 
@@ -429,6 +455,18 @@
     });
     document.getElementById('btn-toggle-lock').addEventListener('click', handleToggleLock);
     document.getElementById('btn-copy-code').addEventListener('click', copyRoomCode);
+
+    // Voz que lê o sorteio — só neste computador (o do professor).
+    const voiceBtn = document.getElementById('btn-voice');
+    const renderVoiceButton = () => {
+      voiceBtn.textContent = window.BingoSound.voiceOn() ? '🗣️ voz ligada' : '🤐 voz desligada';
+    };
+    voiceBtn.addEventListener('click', () => {
+      window.BingoSound.setVoice(!window.BingoSound.voiceOn());
+      if (window.BingoSound.voiceOn()) speak('Voz ligada!');
+    });
+    window.BingoSound.onChange(renderVoiceButton);
+    renderVoiceButton();
     bingoTypeFields();
     refreshAllPackUis();
   }
@@ -441,6 +479,8 @@
   socket.on('win_announced', ({ playerName, patterns }) => {
     if (window.BingoApp.session.role !== 'master') return;
     toast(`🏆 ${playerName} fez Bingo! (${patterns.join(', ')})`, 'success', 6000);
+    play('fanfare');
+    confetti({ amount: 200 });
   });
 
   window.BingoMaster = { init, render };

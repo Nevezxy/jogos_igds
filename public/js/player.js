@@ -6,7 +6,9 @@
 
 (function () {
   const { socket, emitAsync } = window.BingoSocket;
-  const { showScreen, toast, statusLabel } = window.BingoUI;
+  const { showScreen, toast, statusLabel, fitText } = window.BingoUI;
+  const { play } = window.BingoSound;
+  const { confetti, sparkle, shake } = window.BingoFx;
 
   let lastKnownDrawCount = 0;
 
@@ -73,7 +75,7 @@
         btn.appendChild(label);
         btn.setAttribute('aria-label', cell.isFree ? 'Casa livre' : `Casa ${cell.value}${cell.marked ? ', marcada' : ''}`);
         if (!cell.isFree) {
-          btn.addEventListener('click', () => handleMarkCell(r, c));
+          btn.addEventListener('click', () => handleMarkCell(r, c, btn));
         } else {
           btn.disabled = true;
         }
@@ -84,6 +86,12 @@
     shownCardKey = cardKey;
     shownMarked = marked;
     requestAnimationFrame(() => shrinkOverflowingCells(grid));
+    // terminada a montagem, tira a animação de entrada (senão ela se
+    // repetiria quando outro efeito, como a tremida, mexe na casa)
+    if (isNewCard) {
+      clearTimeout(renderCard._enterTimer);
+      renderCard._enterTimer = setTimeout(() => grid.classList.remove('is-entering'), 1500);
+    }
   }
 
   // Ajuste final: o CSS estima o tamanho pela quantidade de letras; se
@@ -102,15 +110,26 @@
     });
   }
 
-  async function handleMarkCell(row, col) {
+  async function handleMarkCell(row, col, btn) {
+    const wasMarked = btn.classList.contains('is-marked');
+    // posição guardada antes: a cartela pode ser redesenhada antes da resposta
+    const rect = btn.getBoundingClientRect();
     try {
       await emitAsync('mark_cell', {
         roomCode: window.BingoApp.session.roomCode,
         playerToken: window.BingoApp.session.playerToken,
         row, col,
       });
+      if (wasMarked) {
+        play('pop');
+      } else {
+        play('boing');
+        sparkle(rect.left + rect.width / 2, rect.top + rect.height / 2);
+      }
     } catch (e) {
       if (e.code === 'ITEM_NAO_SORTEADO') {
+        play('bonk');
+        shake(btn);
         toast('Esse ainda não saiu! 👀', 'error', 1800);
         return;
       }
@@ -159,6 +178,8 @@
     const lastValue = state.lastDrawn ?? '?';
     if (lastEl.textContent !== String(lastValue)) {
       lastEl.textContent = lastValue;
+      // (a tela já está visível aqui, então a bola pode ser medida)
+      fitText(lastEl, lastValue, { area: 0.66, max: lastEl.clientWidth * 0.42 });
       lastEl.classList.remove('pop');
       void lastEl.offsetWidth;
       lastEl.classList.add('pop');
@@ -181,7 +202,7 @@
     } else if (state.you.hasWon) {
       showBanner('🏆 BINGO! Você venceu esta rodada!');
     } else if (state.status === 'paused') {
-      showBanner('⏸ A partida está pausada pelo Mestre.');
+      showBanner('⏸ O(a) professor(a) pausou o jogo. Já volta!');
     }
   }
 
@@ -207,11 +228,17 @@
   socket.on('draw_result', ({ value }) => {
     if (window.BingoApp.session.role !== 'player') return;
     toast(`Saiu: ${value}`, 'info', 2600);
+    play('ding');
   });
 
   socket.on('win_announced', ({ playerName }) => {
     if (window.BingoApp.session.role !== 'player') return;
-    if (playerName !== window.BingoApp.session.playerName) {
+    if (playerName === window.BingoApp.session.playerName) {
+      play('fanfare');
+      confetti({ amount: 220 });
+    } else {
+      play('tada');
+      confetti({ amount: 70 });
       showBanner(`🎊 ${playerName} fez Bingo!`);
     }
   });

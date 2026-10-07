@@ -185,7 +185,7 @@
   border: 2px solid var(--ink);
   z-index: -1;
 }
-.last-drawn-value { isolation: isolate; }
+.last-drawn-value { isolation: isolate; padding: 0 13px; word-break: normal; }
 .last-drawn-value.pop { animation: drawPop .7s var(--ease-bounce); }
 
 .game-banner {
@@ -393,7 +393,7 @@
   font-weight: 800;
   line-height: 1;
   overflow: hidden;
-  word-break: break-word;
+  padding: 0 12px;
 }
 .draw-result.pop { animation: drawPop .7s var(--ease-bounce); }
 

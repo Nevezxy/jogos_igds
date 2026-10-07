@@ -172,14 +172,51 @@
   });
 
   // Eventos de partida — feedback leve independente do papel
-  socket.on('game_started', () => toast('A partida começou! 🎉', 'success'));
-  socket.on('game_paused', () => toast('Partida pausada.', 'info'));
-  socket.on('game_resumed', () => toast('Partida retomada.', 'info'));
+  const { play } = window.BingoSound;
+  socket.on('game_started', () => { toast('A partida começou! 🎉', 'success'); play('start'); });
+  socket.on('game_paused', () => { toast('Partida pausada.', 'info'); play('pause'); });
+  socket.on('game_resumed', () => { toast('Partida retomada.', 'info'); play('start'); });
   socket.on('game_restarted', () => toast('Partida reiniciada.', 'info'));
   socket.on('new_match_started', () => {
+    play('start');
     if (session.role === 'player') toast('Nova partida! Sua cartela nova chegou 🎉', 'success');
   });
-  socket.on('game_ended', () => toast('A sala foi encerrada.', 'info'));
+  socket.on('game_ended', () => { toast('A sala foi encerrada.', 'info'); play('pause'); });
+
+  // ---------------- som ----------------
+
+  // Botão 🔊/🔇 fixo no canto (vale para este aparelho).
+  const soundBtn = document.getElementById('btn-sound');
+  function renderSoundButton() {
+    const muted = window.BingoSound.isMuted();
+    soundBtn.textContent = muted ? '🔇' : '🔊';
+    soundBtn.setAttribute('aria-pressed', String(muted));
+    soundBtn.setAttribute('aria-label', muted ? 'Ligar o som' : 'Desligar o som');
+  }
+  soundBtn.addEventListener('click', () => {
+    window.BingoSound.setMuted(!window.BingoSound.isMuted());
+    play('pop');
+  });
+  window.BingoSound.onChange(renderSoundButton);
+  renderSoundButton();
+
+  // "Clique de brinquedo" nos botões comuns. Casas da cartela e o botão de
+  // sortear têm sons próprios.
+  document.addEventListener('click', (ev) => {
+    // (o clique no rótulo de um chip gera um segundo clique no checkbox; ignora esse)
+    if (ev.target.matches('.pack-chip input')) return;
+    const target = ev.target.closest('.btn, .btn-mini, .btn-back, .pack-chip');
+    if (target && !target.matches('.btn-draw') && !target.disabled) play('click');
+  });
+
+  // Tocar no mascote faz ele comemorar (surpresinha para as crianças).
+  document.addEventListener('click', (ev) => {
+    const mascot = ev.target.closest('.mascot');
+    if (!mascot) return;
+    window.BingoMascot.setMood('party', mascot, 1200);
+    play('boing');
+    window.BingoFx.sparkleAt(mascot, 10);
+  });
 
   window.BingoApp = {
     session,

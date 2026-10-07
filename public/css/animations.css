@@ -78,6 +78,20 @@
 
 @keyframes spinSlow { to { transform: rotate(360deg); } }
 
+@keyframes sparkleOut {
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(.4) rotate(0); }
+  70% { opacity: 1; }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.1) rotate(160deg); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-7px) rotate(-2deg); }
+  40% { transform: translateX(6px) rotate(2deg); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(3px); }
+}
+
 /* ---------- utilitários de animação ---------- */
 
 .anim-bounce-in { animation: bounceIn .55s var(--ease-bounce) both; }
