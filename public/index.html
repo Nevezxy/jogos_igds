@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="/css/animations.css" />
 <link rel="stylesheet" href="/css/components.css" />
 <link rel="stylesheet" href="/css/screens.css" />
+<link rel="stylesheet" href="/css/play.css" />
 </head>
 <body>
 
@@ -50,24 +51,38 @@
   </div>
 </section>
 
-<!-- ======================= ENTRAR (educando) ======================= -->
+<!-- ======================= ENTRAR (educando): 3 passos ======================= -->
 <section id="screen-join" class="screen screen-center">
-  <button class="btn-back" data-go="screen-home">← voltar</button>
-  <div class="panel-card">
-    <div class="panel-head">
-      <div data-mascot></div>
-      <p class="speech">Qual é o código da sala? 🤔</p>
+  <button class="btn-back" id="join-back" type="button">← voltar</button>
+  <div class="panel-card join-card">
+    <div class="join-steps" aria-hidden="true">
+      <span class="step-dot" data-step="1">1</span>
+      <span class="step-line"></span>
+      <span class="step-dot" data-step="2">2</span>
+      <span class="step-line"></span>
+      <span class="step-dot" data-step="3">3</span>
     </div>
-    <form id="form-join">
-      <label class="field">
-        <span>Código da sala</span>
-        <input id="input-room-code" type="text" maxlength="8" placeholder="ABC12" inputmode="text" autocapitalize="characters" spellcheck="false" autocomplete="off" required />
-      </label>
-      <label class="field">
-        <span>Seu nome</span>
-        <input id="input-player-name" type="text" maxlength="30" placeholder="Seu nome aqui" autocomplete="off" required />
-      </label>
-      <button type="submit" class="btn btn-success btn-block btn-lg">Vamos lá! 🚀</button>
+    <div class="panel-head">
+      <div data-mascot id="join-mascot"></div>
+      <p class="speech" id="join-speech" aria-live="polite">Qual é o código da sala? 🤔</p>
+    </div>
+    <form id="form-join" novalidate autocomplete="off">
+      <div class="join-step" data-step="1">
+        <div class="code-boxes" id="code-boxes" role="group" aria-label="Código da sala (5 letras)"></div>
+        <input type="hidden" id="input-room-code" />
+        <button type="button" class="btn btn-success btn-block btn-lg" id="join-next-1">Próximo ➜</button>
+      </div>
+      <div class="join-step" data-step="2" hidden>
+        <label class="field">
+          <span class="sr-only">Seu nome</span>
+          <input id="input-player-name" class="input-big" type="text" maxlength="30" placeholder="Seu nome aqui" autocomplete="off" />
+        </label>
+        <button type="button" class="btn btn-success btn-block btn-lg" id="join-next-2">Próximo ➜</button>
+      </div>
+      <div class="join-step" data-step="3" hidden>
+        <div class="avatar-grid" id="avatar-grid" role="radiogroup" aria-label="Escolha seu bichinho"></div>
+        <button type="submit" class="btn btn-success btn-block btn-lg" id="join-submit">Vamos jogar! 🚀</button>
+      </div>
       <p id="join-error" class="form-error" role="alert"></p>
     </form>
   </div>
@@ -95,43 +110,57 @@
 
 <!-- ======================= ESPERA (educando) ======================= -->
 <section id="screen-waiting" class="screen screen-center">
+  <div class="balloon-layer" id="balloon-layer" aria-hidden="true"></div>
   <div class="waiting-card">
-    <div data-mascot id="waiting-mascot"></div>
-    <h2 id="waiting-room-name">Sala</h2>
-    <p class="waiting-code">Código: <strong id="waiting-room-code">----</strong></p>
-    <p class="waiting-hello">Oi, <strong id="waiting-player-name">jogador(a)</strong>! 👋</p>
-    <div class="waiting-stats">
-      <div><span id="waiting-count">0</span><small>na sala</small></div>
-      <div><span id="waiting-status">aguardando</span><small>situação</small></div>
+    <div class="waiting-hero">
+      <div data-mascot id="waiting-mascot"></div>
+      <p class="speech" id="waiting-speech">Esperando a turma...</p>
     </div>
-    <p class="waiting-msg">Já já começa! Quando o(a) professor(a) apertar o play, sua cartela aparece aqui ✨</p>
+    <p class="waiting-hello"><span id="waiting-avatar" class="avatar-badge">🐶</span><span>Oi, <strong id="waiting-player-name">jogador(a)</strong>!</span></p>
+    <h2 id="waiting-room-name">Sala</h2>
+    <div class="waiting-friends" id="waiting-friends" aria-label="Quem já está na sala"></div>
+    <p class="waiting-msg">Já já começa! Quando o(a) professor(a) der o play, sua cartela aparece aqui ✨</p>
+    <p class="waiting-code">Sala <strong id="waiting-room-code">----</strong> · <span id="waiting-count">0</span> na sala</p>
   </div>
+  <p class="balloon-hint">🎈 Estoure os balões enquanto espera!</p>
 </section>
 
 <!-- ======================= JOGO (educando) ======================= -->
 <section id="screen-player" class="screen screen-top">
-  <header class="game-header">
-    <div class="game-header-left">
-      <span class="pill" id="player-room-badge">Sala ----</span>
-      <span class="pill pill-status" id="player-status-badge">aguardando</span>
+  <header class="game-header player-header">
+    <div class="me-chip">
+      <span id="player-avatar" class="avatar-badge">🐶</span>
+      <span id="player-name-badge">—</span>
+      <span id="player-trophy" class="trophy" hidden title="Você fez BINGO nesta rodada">🏆</span>
     </div>
     <div class="game-header-right">
-      <span id="player-name-badge">—</span>
+      <span class="pill progress-pill" title="Casas marcadas">⭐ <span id="player-progress">0/0</span></span>
+      <span class="pill pill-status" id="player-status-badge">esperando</span>
     </div>
   </header>
 
-  <div class="last-drawn-bar">
-    <span class="last-drawn-label">Saiu agora! 👉</span>
-    <div id="player-last-drawn" class="last-drawn-value">—</div>
+  <div class="ball-stage">
+    <div class="ball-stage-main">
+      <span class="last-drawn-label">Saiu agora!</span>
+      <div id="player-last-drawn" class="last-drawn-value">?</div>
+    </div>
+    <div class="recent-balls" id="player-recent" aria-label="Últimos sorteados"></div>
   </div>
 
+  <div id="near-win-strip" class="near-win-strip" hidden>🔥 FALTA 1 PARA O BINGO! 🔥</div>
   <div id="player-banner" class="game-banner" hidden></div>
 
   <div class="player-main">
-    <div id="player-card" class="bingo-card" aria-label="Sua cartela de bingo"></div>
+    <div class="card-wrap">
+      <div id="player-card" class="bingo-card" aria-label="Sua cartela de bingo"></div>
+      <div id="pause-cover" class="pause-cover" hidden>
+        <div data-mascot data-mood="sleep" data-base-mood="sleep"></div>
+        <p>Pausa! Já volta 😴</p>
+      </div>
+    </div>
 
     <aside class="history-panel">
-      <h3>Já saíram 🎱</h3>
+      <h3>Já saíram <span id="player-history-count" class="count-badge">0</span></h3>
       <div id="player-history" class="history-chips"></div>
     </aside>
   </div>
@@ -301,6 +330,25 @@
   </div>
 </section>
 
+<!-- ======================= camadas de animação ======================= -->
+<div id="countdown-overlay" class="overlay countdown-overlay" hidden>
+  <span id="countdown-number" class="countdown-number title-game"></span>
+</div>
+<div id="draw-overlay" class="overlay draw-overlay" hidden aria-hidden="true">
+  <div class="draw-ball"><span id="draw-overlay-value"></span></div>
+</div>
+<div id="bingo-overlay" class="overlay bingo-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="bingo-overlay-text">
+  <div class="bingo-box">
+    <div class="bingo-letters title-game" aria-hidden="true">
+      <span style="--i:0">B</span><span style="--i:1">I</span><span style="--i:2">N</span><span style="--i:3">G</span><span style="--i:4">O</span><span style="--i:5">!</span>
+    </div>
+    <div data-mascot data-mood="party" data-base-mood="party" class="bingo-mascot"></div>
+    <p id="bingo-overlay-text" class="bingo-text">Você fez BINGO!</p>
+    <button id="bingo-overlay-close" class="btn btn-primary btn-lg" type="button">Uhuu! 🎉</button>
+  </div>
+</div>
+<div id="draw-announcer" class="sr-only" aria-live="assertive"></div>
+
 <!-- ======================= modal confirmação ======================= -->
 <div id="confirm-modal" class="modal-overlay" hidden>
   <div class="modal-box">
@@ -316,12 +364,15 @@
 <script src="/socket.io/socket.io.js"></script>
 <script src="/js/socket-client.js"></script>
 <script src="/js/mascot.js"></script>
+<script src="/js/avatars.js"></script>
 <script src="/js/packs.js"></script>
 <script src="/js/sound.js"></script>
 <script src="/js/fx.js"></script>
 <script src="/js/ui.js"></script>
+<script src="/js/overlays.js"></script>
 <script src="/js/master.js"></script>
 <script src="/js/player.js"></script>
+<script src="/js/join.js"></script>
 <script src="/js/app.js"></script>
 </body>
 </html>

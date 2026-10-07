@@ -16,6 +16,7 @@
     playerToken: null,
     playerId: null,
     playerName: null,
+    playerAvatar: null,
   };
 
   function saveSession() {
@@ -41,6 +42,7 @@
     session.playerToken = null;
     session.playerId = null;
     session.playerName = null;
+    session.playerAvatar = null;
     clearStoredSession();
   }
 
@@ -54,13 +56,14 @@
     saveSession();
   }
 
-  function setPlayerSession(roomCode, playerId, playerToken, playerName) {
+  function setPlayerSession(roomCode, playerId, playerToken, playerName, playerAvatar) {
     session.role = 'player';
     session.roomCode = roomCode;
     session.masterToken = null;
     session.playerId = playerId;
     session.playerToken = playerToken;
     session.playerName = playerName;
+    session.playerAvatar = playerAvatar || null;
     saveSession();
   }
 
@@ -70,26 +73,7 @@
     btn.addEventListener('click', () => showScreen(btn.dataset.go));
   });
 
-  // ---------------- entrar em uma sala ----------------
-
-  document.getElementById('form-join').addEventListener('submit', async (ev) => {
-    ev.preventDefault();
-    const errorEl = document.getElementById('join-error');
-    errorEl.textContent = '';
-    const code = document.getElementById('input-room-code').value.trim().toUpperCase();
-    const name = document.getElementById('input-player-name').value.trim();
-    const submitBtn = ev.target.querySelector('button[type="submit"]');
-    submitBtn.disabled = true;
-    try {
-      const res = await emitAsync('join_room', { roomCode: code, name });
-      setPlayerSession(code, res.playerId, res.playerToken, name);
-      window.BingoPlayer.render(res.state);
-    } catch (e) {
-      errorEl.textContent = e.message || 'Não foi possível entrar na sala.';
-    } finally {
-      submitBtn.disabled = false;
-    }
-  });
+  // (a entrada da criança, em 3 passos, fica em join.js)
 
   // ---------------- criar uma sala ----------------
 
@@ -114,22 +98,43 @@
 
   // ---------------- reconexão automática ----------------
 
+  // Link com ?sala=CODE (QR Code do professor): abre a entrada já com o
+  // código, uma única vez por carregamento da página.
+  let urlCodeHandled = false;
+  function openJoinFromUrl() {
+    const urlCode = window.BingoJoin.codeFromUrl();
+    if (urlCodeHandled || !urlCode) return false;
+    urlCodeHandled = true;
+    window.BingoJoin.open(urlCode);
+    return true;
+  }
+
   async function tryResume() {
-    const saved = loadSession();
+    let saved = loadSession();
+    // Quem chegou pelo link de outra sala começa a entrada nela, em vez de
+    // voltar para a sala antiga guardada no aparelho.
+    const urlCode = !urlCodeHandled && window.BingoJoin.codeFromUrl();
+    if (saved && urlCode && saved.roomCode !== urlCode && saved.role !== 'master') {
+      clearStoredSession();
+      saved = null;
+    }
     // Sem sessão salva: fica na tela atual (a criança pode estar no meio
     // da digitação do código quando a conexão volta).
-    if (!saved || saved.role === 'none' || !saved.roomCode) return;
+    if (!saved || saved.role === 'none' || !saved.roomCode) {
+      openJoinFromUrl();
+      return;
+    }
 
     if (saved.role === 'master' && saved.masterToken) {
       try {
         const res = await emitAsync('master_reconnect', { roomCode: saved.roomCode, masterToken: saved.masterToken });
         Object.assign(session, saved);
         window.BingoMaster.render(res.state);
-        toast('Painel do Mestre reconectado.', 'success', 2500);
+        toast('Painel do professor reconectado.', 'success', 2500);
         return;
       } catch (e) {
         clearStoredSession();
-        showScreen('screen-home');
+        if (!openJoinFromUrl()) showScreen('screen-home');
         return;
       }
     }
@@ -137,18 +142,19 @@
     if (saved.role === 'player' && saved.playerToken) {
       try {
         const res = await emitAsync('join_room', {
-          roomCode: saved.roomCode, name: saved.playerName, playerToken: saved.playerToken,
+          roomCode: saved.roomCode, name: saved.playerName, playerToken: saved.playerToken, avatar: saved.playerAvatar,
         });
         Object.assign(session, saved);
         session.playerId = res.playerId;
         session.playerToken = res.playerToken;
         saveSession();
         window.BingoPlayer.render(res.state);
-        toast('Você foi reconectado(a) à sala.', 'success', 2500);
+        urlCodeHandled = true;
+        toast('Você voltou para a sala! 👋', 'success', 2500);
         return;
       } catch (e) {
         clearStoredSession();
-        showScreen('screen-home');
+        if (!openJoinFromUrl()) showScreen('screen-home');
         return;
       }
     }
@@ -173,13 +179,16 @@
 
   // Eventos de partida — feedback leve independente do papel
   const { play } = window.BingoSound;
-  socket.on('game_started', () => { toast('A partida começou! 🎉', 'success'); play('start'); });
-  socket.on('game_paused', () => { toast('Partida pausada.', 'info'); play('pause'); });
-  socket.on('game_resumed', () => { toast('Partida retomada.', 'info'); play('start'); });
+  // (para a criança, o começo da partida é a contagem 3-2-1 do player.js)
+  socket.on('game_started', () => {
+    if (session.role === 'master') { toast('A partida começou! 🎉', 'success'); play('start'); }
+  });
+  socket.on('game_paused', () => { toast('Pausa! ⏸', 'info'); play('pause'); });
+  socket.on('game_resumed', () => { toast('Valendo de novo! ▶️', 'success'); play('start'); });
   socket.on('game_restarted', () => toast('Partida reiniciada.', 'info'));
   socket.on('new_match_started', () => {
-    play('start');
-    if (session.role === 'player') toast('Nova partida! Sua cartela nova chegou 🎉', 'success');
+    if (session.role === 'master') play('start');
+    if (session.role === 'player') toast('Nova partida! Cartela nova 🎉', 'success');
   });
   socket.on('game_ended', () => { toast('A sala foi encerrada.', 'info'); play('pause'); });
 

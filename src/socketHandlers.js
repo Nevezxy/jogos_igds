@@ -120,6 +120,16 @@ function registerSocketHandlers(io) {
       } catch (e) { cb && cb(err(e)); }
     });
 
+    // Passo 1 da entrada: confere o código antes de pedir nome e avatar.
+    socket.on('check_room', ({ roomCode } = {}, cb) => {
+      try {
+        const room = rm.requireRoom(roomCode);
+        if (room.status === 'ended') throw new rm.RoomError('SALA_ENCERRADA', 'Esta sala já foi encerrada.');
+        if (room.locked) throw new rm.RoomError('SALA_BLOQUEADA', 'O Mestre bloqueou a entrada de novos participantes.');
+        cb && cb({ ok: true, code: room.code, name: room.name });
+      } catch (e) { cb && cb(err(e)); }
+    });
+
     socket.on('join_room', ({ roomCode, name, playerToken, avatar } = {}, cb) => {
       try {
         const { room, player, reconnected } = rm.joinRoom(roomCode, name, playerToken, avatar);

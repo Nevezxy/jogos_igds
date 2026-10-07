@@ -99,6 +99,13 @@
       tone({ freq: NOTE.A5, dur: 0.7, vol: 0.6 });
       tone({ freq: NOTE.E6, dur: 0.5, start: 0.02, vol: 0.3 });
     },
+    // contagem 3-2-1
+    tick: () => tone({ freq: NOTE.G4, type: 'square', dur: 0.12, vol: 0.35 }),
+    // "falta 1!": três batidas de tambor acelerando
+    drum: () => {
+      [0, 0.16, 0.28].forEach((start, i) =>
+        tone({ freq: 140 - i * 10, to: 60, type: 'sine', dur: 0.14, start, vol: 1 }));
+    },
     start: () => {
       [NOTE.C5, NOTE.E5, NOTE.G5, NOTE.C6].forEach((f, i) =>
         tone({ freq: f, type: 'triangle', dur: 0.16, start: i * 0.1, vol: 0.7 }));

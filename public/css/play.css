@@ -1,0 +1,424 @@
+/* ============================================================
+   Experiência da criança: entrada em 3 passos, sala de espera com
+   balões, cabeçalho e bolas do jogo, "falta 1!", pausa e as camadas
+   de tela cheia (contagem, bola sorteada, BINGO).
+   ============================================================ */
+
+/* ---------------- avatar ---------------- */
+
+.avatar-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 2px solid var(--ink);
+  background: #fff;
+  font-size: 1.6rem;
+  line-height: 1;
+  box-shadow: 0 3px 0 var(--ink);
+}
+
+/* ================= ENTRADA EM 3 PASSOS ================= */
+
+.join-steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+.step-dot {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 3px solid var(--ink);
+  background: var(--surface-3);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+  color: var(--ink-soft);
+  transition: background .2s ease, transform .3s var(--ease-bounce);
+}
+.step-dot.is-current { background: var(--yellow); color: var(--ink); transform: scale(1.15); }
+.step-dot.is-done { background: var(--green); color: var(--ink); }
+.step-line { width: 34px; height: 4px; background: var(--ink); opacity: .25; border-radius: 4px; }
+
+.join-step { animation: slideDown .35s var(--ease-out); }
+
+.code-boxes { display: flex; justify-content: center; gap: 8px; margin: 6px 0 20px; }
+.code-box {
+  width: 54px;
+  height: 66px;
+  border: var(--stroke) solid var(--ink);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 2rem;
+  text-transform: uppercase;
+  color: var(--ink);
+  box-shadow: 0 4px 0 var(--ink);
+  caret-color: var(--pink);
+  transition: transform .15s var(--ease-bounce), background .15s ease;
+}
+.code-box:focus { outline: none; background: #fff; box-shadow: 0 4px 0 var(--ink), 0 0 0 4px var(--yellow); }
+.code-box.is-filled { background: var(--yellow); animation: popIn .25s var(--ease-bounce); }
+
+.input-big {
+  text-align: center;
+  font-family: var(--font-display) !important;
+  font-size: 1.6rem !important;
+  padding: 14px 16px !important;
+}
+
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin: 4px 0 20px;
+}
+.avatar-option {
+  aspect-ratio: 1;
+  border: var(--stroke) solid var(--ink);
+  border-radius: 50%;
+  background: var(--surface-2);
+  font-size: clamp(1.8rem, 9vw, 2.4rem);
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 4px 0 var(--ink);
+  transition: transform .15s var(--ease-bounce), background .15s ease;
+  animation: popIn .4s var(--ease-bounce) both;
+  animation-delay: calc(var(--i, 0) * 30ms);
+}
+.avatar-option:hover { transform: translateY(-3px) rotate(-6deg); }
+.avatar-option[aria-checked="true"] {
+  background: var(--yellow);
+  transform: scale(1.12);
+  box-shadow: 0 4px 0 var(--ink), 0 0 0 4px #fff, 0 0 0 7px var(--pink);
+}
+.avatar-option:focus-visible { outline: 3px solid var(--pink); outline-offset: 3px; }
+
+/* ================= SALA DE ESPERA ================= */
+
+#screen-waiting { overflow: hidden; }
+.waiting-card {
+  position: relative;
+  z-index: 1;
+  padding: 24px 22px;
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+  animation: bounceIn .5s var(--ease-bounce);
+}
+.waiting-hero { display: flex; align-items: center; justify-content: center; gap: 14px; margin-bottom: 8px; }
+.waiting-hero .mascot { --size: 96px; flex-shrink: 0; }
+.waiting-hero .speech { text-align: left; min-width: 150px; }
+.waiting-hello { font-size: 1.25rem; display: flex; align-items: center; justify-content: center; gap: 10px; margin: 6px 0; }
+.waiting-card h2 { font-size: 1.5rem; margin: 6px 0 12px; color: var(--violet-dark); }
+
+.waiting-friends {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 8px;
+  padding: 14px 10px;
+  margin-bottom: 12px;
+  min-height: 84px;
+  background: var(--surface-2);
+  border: 2px dashed rgba(30, 18, 64, .3);
+  border-radius: var(--radius-md);
+  max-height: 260px;
+  overflow-y: auto;
+}
+.friend { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 64px; }
+.friend small { font-weight: 800; font-size: .78rem; max-width: 64px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.friend.is-me .avatar-badge { background: var(--yellow); }
+.friend.is-me small { color: var(--pink-dark); }
+.friend.is-away { opacity: .45; }
+.friend.is-new { animation: friendDrop .6s var(--ease-bounce) both; animation-delay: calc(var(--i, 0) * 60ms); }
+.waiting-msg { color: var(--ink-soft); font-size: 1rem; }
+.waiting-code { font-size: .95rem; color: var(--ink-soft); margin: 0; }
+.waiting-code strong {
+  display: inline-block;
+  font-family: var(--font-display);
+  letter-spacing: 3px;
+  color: var(--ink);
+  background: var(--yellow);
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  padding: 0 8px;
+}
+
+@keyframes friendDrop {
+  0% { opacity: 0; transform: translateY(-60px) scale(.6); }
+  60% { opacity: 1; transform: translateY(6px) scale(1.1); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* balões subindo atrás do cartão */
+.balloon-layer { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.balloon {
+  position: absolute;
+  left: var(--x);
+  bottom: -120px;
+  width: 64px;
+  height: 78px;
+  padding: 0;
+  border: 3px solid var(--ink);
+  border-radius: 50% 50% 46% 46%;
+  background: radial-gradient(circle at 32% 28%, rgba(255, 255, 255, .7) 0 10%, var(--c) 11% 100%);
+  cursor: pointer;
+  pointer-events: auto;
+  animation: balloonRise var(--d, 9s) linear forwards;
+  -webkit-tap-highlight-color: transparent;
+}
+/* barbante */
+.balloon::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: 2px;
+  height: 36px;
+  background: rgba(30, 18, 64, .5);
+}
+.balloon.is-popped { animation: balloonPop .18s ease-out forwards; }
+@keyframes balloonRise {
+  0% { transform: translate(0, 0) rotate(-4deg); }
+  50% { transform: translate(var(--sway), -60vh) rotate(4deg); }
+  100% { transform: translate(0, calc(-100vh - 160px)) rotate(-4deg); }
+}
+@keyframes balloonPop {
+  to { transform: scale(1.6); opacity: 0; }
+}
+.balloon-hint {
+  position: relative;
+  z-index: 1;
+  margin-top: 16px;
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.1rem;
+  text-shadow: 0 2px 0 rgba(30, 18, 64, .5);
+}
+
+/* ================= TELA DE JOGO ================= */
+
+.player-header { padding: 12px 16px; }
+.me-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  background: #fff;
+  border: var(--stroke) solid var(--ink);
+  border-radius: 999px;
+  padding: 4px 16px 4px 4px;
+  box-shadow: 0 4px 0 var(--ink);
+}
+.me-chip #player-name-badge {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.15rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 40vw;
+}
+.trophy { font-size: 1.5rem; animation: gentlePulse 1.2s ease-in-out infinite; }
+.progress-pill { background: var(--yellow); }
+
+.ball-stage {
+  margin: 0 auto 14px;
+  width: min(560px, calc(100% - 32px));
+  background: var(--surface);
+  border: var(--stroke) solid var(--ink);
+  border-radius: var(--radius-lg);
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: var(--shadow-pop);
+}
+.ball-stage-main { display: flex; flex-direction: column; align-items: center; gap: 2px; flex-shrink: 0; }
+.ball-stage .last-drawn-label { font-size: .95rem; }
+.recent-balls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; min-width: 0; }
+.recent-balls:empty::before { content: "As bolas sorteadas aparecem aqui 🎱"; color: var(--ink-soft); font-weight: 700; font-size: .95rem; }
+.chip-recent { animation: none; opacity: .9; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.near-win-strip {
+  margin: 0 auto 14px;
+  width: min(560px, calc(100% - 32px));
+  padding: 10px 16px;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.35rem;
+  letter-spacing: .5px;
+  color: #fff;
+  background: linear-gradient(90deg, var(--orange), var(--red), var(--orange));
+  background-size: 200% 100%;
+  border: var(--stroke) solid var(--ink);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-pop);
+  text-shadow: 0 2px 0 rgba(30, 18, 64, .45);
+  animation: stripFlow 1.6s linear infinite;
+}
+@keyframes stripFlow { to { background-position: 200% 0; } }
+
+.card-wrap { position: relative; }
+.card-wait {
+  grid-column: 1 / -1;
+  grid-row: 1 / -1;
+  align-self: center;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  padding: 20px;
+}
+
+/* casa que está numa linha a 1 de fechar */
+.bingo-cell.is-near { box-shadow: 0 4px 0 var(--ink), 0 0 0 3px var(--orange); animation: nearPulse 1s ease-in-out infinite; }
+@keyframes nearPulse {
+  0%, 100% { box-shadow: 0 4px 0 var(--ink), 0 0 0 3px var(--orange); }
+  50% { box-shadow: 0 4px 0 var(--ink), 0 0 0 6px var(--orange); }
+}
+/* casa da linha vencedora */
+.bingo-cell.is-win { background: var(--yellow); box-shadow: 0 4px 0 var(--ink), 0 0 16px 4px rgba(255, 210, 63, .9); }
+.bingo-cell.is-win::before { --cell-c: #FFB800; }
+
+/* pausa: cartela "dorme" */
+.pause-cover {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: var(--radius-lg);
+  background: rgba(30, 18, 64, .55);
+  backdrop-filter: grayscale(.8) blur(2px);
+  animation: popIn .35s var(--ease-bounce);
+}
+.pause-cover .mascot { --size: 120px; }
+.pause-cover p {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.6rem;
+  color: #fff;
+  margin: 0;
+  text-shadow: 0 3px 0 var(--ink);
+}
+
+.count-badge {
+  display: inline-block;
+  min-width: 30px;
+  padding: 0 8px;
+  border-radius: 999px;
+  border: 2px solid var(--ink);
+  background: var(--yellow);
+  font-size: 1rem;
+  text-align: center;
+  vertical-align: middle;
+}
+
+/* ================= CAMADAS DE TELA CHEIA ================= */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 990;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.overlay[hidden] { display: none; }
+
+/* contagem 3-2-1 */
+.countdown-overlay { background: rgba(30, 18, 64, .55); pointer-events: none; }
+.countdown-number { font-size: clamp(7rem, 34vw, 14rem); line-height: 1; color: var(--yellow); }
+.countdown-number.is-final { font-size: clamp(4rem, 18vw, 9rem); color: var(--pink); }
+.countdown-number.tick { animation: countPop .8s var(--ease-bounce) both; }
+@keyframes countPop {
+  0% { transform: scale(2.4); opacity: 0; }
+  35% { transform: scale(.9); opacity: 1; }
+  55% { transform: scale(1.05); }
+  85% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(.7); opacity: 0; }
+}
+
+/* bola sorteada */
+.draw-overlay { background: rgba(30, 18, 64, .35); pointer-events: none; animation: fadeIn .2s ease; }
+.draw-overlay.is-leaving { animation: fadeOut .35s ease forwards; }
+.draw-ball {
+  width: min(52vw, 260px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 5px solid var(--ink);
+  background: radial-gradient(circle at 30% 25%, rgba(255, 255, 255, .8) 0 10%, var(--pink) 11% 100%);
+  box-shadow: 0 12px 0 var(--ink), 0 20px 60px rgba(0, 0, 0, .35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16%;
+}
+.draw-ball span {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #fff;
+  border: 4px solid var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 8px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  line-height: 1;
+  overflow: hidden;
+}
+.draw-ball.roll { animation: ballRoll .9s var(--ease-out) both; }
+.draw-ball.roll span { animation: popIn .45s var(--ease-bounce) .7s both; }
+@keyframes ballRoll {
+  0% { transform: translateX(80vw) rotate(540deg) scale(.6); }
+  70% { transform: translateX(-4vw) rotate(-20deg) scale(1.05); }
+  100% { transform: translateX(0) rotate(0) scale(1); }
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeOut { to { opacity: 0; transform: scale(.9); } }
+
+/* BINGO! */
+.bingo-overlay { z-index: 995; background: rgba(30, 18, 64, .7); padding: 16px; }
+.bingo-box { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; }
+.bingo-letters { display: flex; gap: 4px; font-size: clamp(4rem, 18vw, 8rem); line-height: 1; }
+.bingo-letters span { display: inline-block; animation: letterHop 1s ease-in-out infinite; animation-delay: calc(var(--i) * 90ms); }
+.bingo-letters span:nth-child(1) { color: var(--yellow); }
+.bingo-letters span:nth-child(2) { color: var(--pink); }
+.bingo-letters span:nth-child(3) { color: var(--green); }
+.bingo-letters span:nth-child(4) { color: var(--sky); }
+.bingo-letters span:nth-child(5) { color: var(--orange); }
+.bingo-letters span:nth-child(6) { color: #fff; }
+.bingo-mascot { --size: 140px; }
+.bingo-text {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(1.6rem, 6vw, 2.4rem);
+  color: #fff;
+  text-shadow: 0 3px 0 var(--ink);
+  margin: 0 0 6px;
+}
+
+@media (max-width: 560px) {
+  .code-box { width: 48px; height: 60px; font-size: 1.7rem; }
+  .ball-stage { padding: 8px 12px; gap: 10px; }
+  .near-win-strip { font-size: 1.1rem; }
+  .waiting-hero .mascot { --size: 76px; }
+}
