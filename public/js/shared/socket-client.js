@@ -1,4 +1,4 @@
-// public/js/socket-client.js
+// public/js/shared/socket-client.js
 // Wrapper fino sobre o socket.io-client: guarda a conexão única da aba
 // e transforma emits com callback (ack) em Promises, para um código
 // mais legível nos outros arquivos.

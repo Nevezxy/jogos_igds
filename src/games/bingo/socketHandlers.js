@@ -1,4 +1,4 @@
-// src/socketHandlers.js
+// src/games/bingo/socketHandlers.js
 // Registra todos os eventos de Socket.IO. Cada handler:
 //   1) valida entrada básica,
 //   2) delega a lógica de verdade para roomManager (fonte única da verdade),

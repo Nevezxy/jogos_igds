@@ -1,6 +1,6 @@
-// src/avatars.js
+// src/platform/avatars.js
 // Bichinhos que a criança pode escolher como avatar e um filtro simples de
-// nomes impróprios. A mesma lista de avatares existe em public/js/avatars.js
+// nomes impróprios. A mesma lista de avatares existe em public/js/shared/avatars.js
 // (o cliente mostra as opções; o servidor só aceita valores desta lista).
 
 const AVATARS = [

@@ -1,4 +1,4 @@
-// public/js/sound.js
+// public/js/shared/sound.js
 // Sons do jogo, sintetizados na hora com a Web Audio API (sem arquivos de
 // áudio: leve e funciona sem internet), e a voz que anuncia o sorteio
 // (speechSynthesis, pt-BR). Preferências de som e voz ficam no localStorage.

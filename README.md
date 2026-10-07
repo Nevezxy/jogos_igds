@@ -91,7 +91,7 @@ CMD ["node", "server.js"]
 ## 3. Capacidade
 
 Pensado para uma turma de ~20 crianças, com folga: limite de
-`MAX_PLAYERS_PER_ROOM = 40` em `src/roomManager.js`. O teste de carga
+`MAX_PLAYERS_PER_ROOM = 40` em `src/games/bingo/roomManager.js`. O teste de carga
 (`npm run test:carga`) coloca 40 crianças marcando casas ao mesmo tempo e
 mede quanto cada sorteio leva para chegar a todas: em rede local fica na
 casa de 50 ms. Várias salas podem rodar ao mesmo tempo no mesmo servidor,
@@ -102,46 +102,61 @@ cada uma isolada pelo seu código.
 ## 4. Arquitetura
 
 ```
-bingo-virtual/
-├── server.js                 # Express (estáticos, /api/join-info, /qr.svg) + Socket.IO
+jogos_igds/
+├── server.js                 # Express (estáticos, /api/games, /api/join-info, /qr.svg) + Socket.IO
 ├── src/
-│   ├── roomManager.js        # Fonte única da verdade do estado "ao vivo" de cada sala
-│   ├── socketHandlers.js     # Eventos Socket.IO, sorteio automático e telão
-│   ├── bingoTypes.js         # Estratégias por tipo de bingo (números/palavras/emojis/custom)
-│   ├── winChecker.js         # Vitória e "quase lá" (falta 1), sempre no servidor
-│   ├── avatars.js            # Bichinhos permitidos e filtro de nomes impróprios
-│   ├── idGenerator.js        # Código de sala, IDs e tokens de sessão
-│   └── db.js                 # Persistência SQLite (salas, jogadores, sorteios, vitórias)
+│   ├── platform/             # Núcleo da plataforma (vale para todos os jogos)
+│   │   ├── db.js             # Persistência SQLite
+│   │   ├── idGenerator.js    # Códigos, IDs e tokens
+│   │   └── avatars.js        # Bichinhos permitidos e filtro de nomes impróprios
+│   └── games/
+│       ├── registry.js       # Lista de jogos da plataforma (o painel e o carregador leem daqui)
+│       └── bingo/
+│           ├── server.js         # Ponto de entrada do bingo para o registro
+│           ├── roomManager.js    # Fonte única da verdade do estado "ao vivo" de cada sala
+│           ├── socketHandlers.js # Eventos Socket.IO, sorteio automático e telão
+│           ├── bingoTypes.js     # Estratégias por tipo de bingo (números/palavras/emojis/custom)
+│           └── winChecker.js     # Vitória e "quase lá" (falta 1), sempre no servidor
 ├── public/
-│   ├── index.html            # Todas as telas (home, entrar, criar, espera, jogo, professor, telão)
+│   ├── index.html            # Telas (home, entrar, criar, espera, jogo, professor, telão)
 │   ├── css/
 │   │   ├── tokens.css        # Cores, raios, sombras e fontes
 │   │   ├── base.css          # Reset, fundo animado, tipografia
 │   │   ├── animations.css    # Todos os @keyframes (+ prefers-reduced-motion)
 │   │   ├── components.css    # Botões 3D, cartões, campos, toasts, modal, mascote
-│   │   ├── screens.css       # Home, cartela e painel do professor (base)
-│   │   ├── play.css          # Entrada em 3 passos, espera, jogo e camadas de tela cheia
-│   │   └── master.css        # Configuração visual, quadro de números e telão
-│   └── js/
-│       ├── socket-client.js  # Conexão Socket.IO + wrapper em Promise
-│       ├── mascot.js         # Bingolino, o mascote em SVG, e suas expressões
-│       ├── avatars.js        # Lista de bichinhos (igual à do servidor)
-│       ├── packs.js          # Pacotes prontos de palavras, emojis e itens
-│       ├── sound.js          # Sons sintetizados (Web Audio) e voz pt-BR
-│       ├── fx.js             # Confete, estrelinhas e tremida
-│       ├── ui.js             # Telas, toasts, modal, ajuste de texto, quadro de números, links
-│       ├── overlays.js       # Contagem 3-2-1, bola em tela cheia e comemoração de BINGO
-│       ├── master.js         # Painel do professor
-│       ├── player.js         # Sala de espera e tela de jogo da criança
-│       ├── join.js           # Entrada da criança em 3 passos
-│       ├── screen.js         # Modo telão (/telao?sala=CODE)
-│       └── app.js            # Sessão, reconexão automática e roteamento
+│   │   └── screens.css       # Home, cartela e painel do professor (base)
+│   ├── js/
+│   │   ├── shared/           # Usados por todos os jogos
+│   │   │   ├── socket-client.js # Conexão Socket.IO + wrapper em Promise
+│   │   │   ├── mascot.js     # Bingolino, o mascote em SVG, e suas expressões
+│   │   │   ├── avatars.js    # Lista de bichinhos (igual à do servidor)
+│   │   │   ├── sound.js      # Sons sintetizados (Web Audio) e voz pt-BR
+│   │   │   ├── fx.js         # Confete, estrelinhas e tremida
+│   │   │   └── ui.js         # Telas, toasts, modal, ajuste de texto, quadro de números, links
+│   │   └── platform/
+│   │       ├── games.js      # Registro e carregador de jogos sob demanda (window.Plataforma)
+│   │       └── app.js        # Som, cliques e navegação comuns a todas as telas
+│   └── games/
+│       └── bingo/
+│           ├── play.css      # Entrada em 3 passos, espera, jogo e camadas de tela cheia
+│           ├── master.css    # Configuração visual, quadro de números e telão
+│           ├── packs.js      # Pacotes prontos de palavras, emojis e itens
+│           ├── overlays.js   # Contagem 3-2-1, bola em tela cheia e comemoração de BINGO
+│           ├── master.js     # Painel do professor
+│           ├── player.js     # Sala de espera e tela de jogo da criança
+│           ├── join.js       # Entrada da criança em 3 passos
+│           ├── screen.js     # Modo telão (/telao?sala=CODE)
+│           └── session.js    # Sessão da sala, reconexão automática e criação de sala
 ├── test/
 │   ├── integration.test.js   # Fluxo completo de uma partida
 │   ├── features.test.js      # Avatar, filtro de nome, quase lá, sorteio automático, telão, QR
 │   └── load.test.js          # Turma inteira jogando ao mesmo tempo
 └── data/bingo.sqlite         # Criado automaticamente na primeira execução
 ```
+
+> A plataforma está em transformação: veja `PLANO_PLATAFORMA.md`. Por
+> enquanto o bingo ainda é carregado direto pelo `index.html`; os próximos
+> jogos usam o carregador sob demanda (`public/js/platform/games.js`).
 
 ### Por que essa arquitetura
 
@@ -255,7 +270,7 @@ npm run test:carga
 
 ## 7. Segurança e validação — resumo
 
-O servidor nunca confia no cliente. Toda ação passa por `roomManager.js`,
+O servidor nunca confia no cliente. Toda ação passa por `src/games/bingo/roomManager.js`,
 que valida: código de sala, autenticação do Mestre (`masterToken`),
 identidade do educando (`playerToken`), status da partida compatível com
 a ação (ex.: não é possível marcar casa com a partida pausada), item
@@ -263,7 +278,7 @@ realmente sorteado antes de aceitar marcação, limites de participantes,
 nomes duplicados e sala bloqueada/encerrada.
 
 Além disso: o avatar só é aceito se estiver na lista de bichinhos, nomes
-impróprios comuns são recusados (filtro de cortesia em `src/avatars.js`),
+impróprios comuns são recusados (filtro de cortesia em `src/platform/avatars.js`),
 o telão recebe só a visão de espectador (sem tokens nem cartelas), cada
 criança recebe apenas a parte pública da configuração e nomes de jogadores
 são sempre inseridos na página como texto, nunca como HTML.

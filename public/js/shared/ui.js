@@ -1,4 +1,4 @@
-// public/js/ui.js
+// public/js/shared/ui.js
 // Utilitários de interface compartilhados entre as telas: alternância
 // de "screens" (SPA simples sem framework), toasts de feedback e um
 // modal de confirmação genérico (usado, por ex., para reiniciar partida).

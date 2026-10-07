@@ -1,4 +1,4 @@
-// public/js/fx.js
+// public/js/shared/fx.js
 // Efeitos visuais de recompensa, sem dependências:
 //   confetti()  — chuva de confete em <canvas> por cima da tela
 //   sparkle()   — estrelinhas saindo de um ponto (ao marcar uma casa)

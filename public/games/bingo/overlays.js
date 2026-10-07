@@ -1,4 +1,4 @@
-// public/js/overlays.js
+// public/games/bingo/overlays.js
 // Camadas de tela cheia usadas pela criança e pelo telão:
 //   countdown() — "3, 2, 1, BINGO!" no começo de cada partida
 //   drawBall()  — a bola sorteada rola até o meio da tela e some

@@ -1,7 +1,7 @@
-// public/js/app.js
-// Orquestra a aplicação: guarda a sessão do usuário (papel, sala, tokens),
-// tenta reconectar automaticamente quando a página é recarregada ou a
-// conexão cai, e liga os formulários da tela inicial (entrar / criar).
+// public/games/bingo/session.js
+// Sessão do bingo: guarda o papel na sala (professor ou criança), o código e
+// os tokens, tenta reconectar automaticamente quando a página é recarregada
+// ou a conexão cai, e liga o formulário de criar sala.
 
 (function () {
   const { socket, emitAsync } = window.BingoSocket;
@@ -66,12 +66,6 @@
     session.playerAvatar = playerAvatar || null;
     saveSession();
   }
-
-  // ---------------- home / navegação simples ----------------
-
-  document.querySelectorAll('[data-go]').forEach((btn) => {
-    btn.addEventListener('click', () => showScreen(btn.dataset.go));
-  });
 
   // (a entrada da criança, em 3 passos, fica em join.js)
 
@@ -193,41 +187,6 @@
     if (session.role === 'player') toast('Nova partida! Cartela nova 🎉', 'success');
   });
   socket.on('game_ended', () => { toast('A sala foi encerrada.', 'info'); play('pause'); });
-
-  // ---------------- som ----------------
-
-  // Botão 🔊/🔇 fixo no canto (vale para este aparelho).
-  const soundBtn = document.getElementById('btn-sound');
-  function renderSoundButton() {
-    const muted = window.BingoSound.isMuted();
-    soundBtn.textContent = muted ? '🔇' : '🔊';
-    soundBtn.setAttribute('aria-pressed', String(muted));
-    soundBtn.setAttribute('aria-label', muted ? 'Ligar o som' : 'Desligar o som');
-  }
-  soundBtn.addEventListener('click', () => {
-    window.BingoSound.setMuted(!window.BingoSound.isMuted());
-    play('pop');
-  });
-  window.BingoSound.onChange(renderSoundButton);
-  renderSoundButton();
-
-  // "Clique de brinquedo" nos botões comuns. Casas da cartela e o botão de
-  // sortear têm sons próprios.
-  document.addEventListener('click', (ev) => {
-    // (o clique no rótulo de um chip gera um segundo clique no checkbox; ignora esse)
-    if (ev.target.matches('.pack-chip input')) return;
-    const target = ev.target.closest('.btn, .btn-mini, .btn-back, .pack-chip');
-    if (target && !target.matches('.btn-draw') && !target.disabled) play('click');
-  });
-
-  // Tocar no mascote faz ele comemorar (surpresinha para as crianças).
-  document.addEventListener('click', (ev) => {
-    const mascot = ev.target.closest('.mascot');
-    if (!mascot) return;
-    window.BingoMascot.setMood('party', mascot, 1200);
-    play('boing');
-    window.BingoFx.sparkleAt(mascot, 10);
-  });
 
   window.BingoApp = {
     session,

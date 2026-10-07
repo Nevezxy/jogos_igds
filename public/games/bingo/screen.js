@@ -1,4 +1,4 @@
-// public/js/screen.js
+// public/games/bingo/screen.js
 // Modo Telão (/telao?sala=CODE): tela grande para o projetor ou a TV da sala.
 // Entra como espectador (só leitura, sem token) e mostra:
 //   - antes de começar: QR Code gigante, link, código e a turma chegando

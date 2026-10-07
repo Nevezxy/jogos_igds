@@ -1,4 +1,4 @@
-// public/js/packs.js
+// public/games/bingo/packs.js
 // Pacotes prontos de itens para os modos Palavras, Emojis e Personalizado.
 // O professor marca um ou mais pacotes e os itens vão para a lista do modo
 // (que continua editável). Cada modo soma mais de 200 itens.

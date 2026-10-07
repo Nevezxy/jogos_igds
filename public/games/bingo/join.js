@@ -1,4 +1,4 @@
-// public/js/join.js
+// public/games/bingo/join.js
 // Entrada da criança em 3 passos, um de cada vez:
 //   1) código da sala em 5 caixinhas (pulado quando o link/QR traz ?sala=)
 //   2) nome

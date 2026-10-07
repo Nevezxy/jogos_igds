@@ -1,13 +1,13 @@
-// src/roomManager.js
+// src/games/bingo/roomManager.js
 // Fonte única de verdade para o estado "ao vivo" de cada sala.
 // Tudo que importa para a lógica do jogo é decidido e validado AQUI,
 // nunca confiando em dados vindos do cliente além de IDs/valores de entrada.
 
-const { generateRoomCode, generateId, generateToken } = require('./idGenerator');
+const { generateRoomCode, generateId, generateToken } = require('../../platform/idGenerator');
 const { getPoolForConfig, validateConfig, generateCard, shuffle } = require('./bingoTypes');
 const { getWinningPatterns, isNearWin } = require('./winChecker');
-const { normalizeAvatar, isNameAllowed } = require('./avatars');
-const db = require('./db');
+const { normalizeAvatar, isNameAllowed } = require('../../platform/avatars');
+const db = require('../../platform/db');
 
 const MAX_PLAYERS_PER_ROOM = 40; // folga acima dos ~20 previstos
 const rooms = new Map(); // code -> room

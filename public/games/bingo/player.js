@@ -1,4 +1,4 @@
-// public/js/player.js
+// public/games/bingo/player.js
 // Tudo relacionado à experiência da criança: sala de espera (com os amigos
 // chegando e balões para estourar) e tela de jogo (bola sorteada, cartela,
 // "falta 1!", BINGO, pausa). O servidor é a única fonte de verdade — este

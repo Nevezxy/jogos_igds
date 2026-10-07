@@ -1,4 +1,4 @@
-// src/winChecker.js
+// src/games/bingo/winChecker.js
 // Verifica condições de vitória em uma cartela, dado o conjunto de
 // condições habilitadas pelo Mestre. Roda SEMPRE no servidor.
 

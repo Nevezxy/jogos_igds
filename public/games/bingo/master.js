@@ -1,4 +1,4 @@
-// public/js/master.js
+// public/games/bingo/master.js
 // Painel do Mestre da Sala: configuração antes do início, sorteio,
 // controles de partida e gestão de participantes. Toda ação chama o
 // servidor via socket e só atualiza a tela quando a resposta chega —

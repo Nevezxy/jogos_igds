@@ -1,6 +1,7 @@
 // server.js
-// Ponto de entrada. Sobe o Express (arquivos estáticos do frontend) e o
-// Socket.IO (toda a comunicação em tempo real) no mesmo servidor HTTP.
+// Ponto de entrada da plataforma Jogos IGDS. Sobe o Express (arquivos
+// estáticos e API) e o Socket.IO (jogos em tempo real) no mesmo servidor
+// HTTP. Cada jogo se conecta pelo registro em src/games/registry.js.
 
 const os = require('os');
 const path = require('path');
@@ -10,7 +11,7 @@ const cors = require('cors');
 const http = require('http');
 const { Server } = require('socket.io');
 
-const { registerSocketHandlers } = require('./src/socketHandlers');
+const registry = require('./src/games/registry');
 
 const PORT = process.env.PORT || 3000;
 
@@ -36,6 +37,11 @@ function lanAddresses() {
   return [...ips.filter(isPrivate), ...ips.filter((ip) => !isPrivate(ip))];
 }
 
+// Jogos disponíveis (painel de seleção e carregador do navegador).
+app.get('/api/games', (req, res) => {
+  res.json({ games: registry.publicGames() });
+});
+
 app.get('/api/join-info', (req, res) => {
   res.json({ port: PORT, urls: lanAddresses().map((ip) => `http://${ip}:${PORT}`) });
 });
@@ -52,9 +58,12 @@ app.get('/qr.svg', async (req, res) => {
   }
 });
 
-// Qualquer rota não-API cai na SPA
+// Qualquer rota de tela cai na SPA. Arquivos que não existem (ex.: um
+// /games/<id>/game.js ausente) e rotas /api desconhecidas respondem 404, para
+// o carregador de jogos perceber o erro em vez de receber o index.html.
 app.get('*', (req, res, next) => {
   if (req.path.startsWith('/socket.io')) return next();
+  if (req.path.startsWith('/api/') || path.extname(req.path)) return res.status(404).send('Não encontrado.');
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
@@ -65,8 +74,10 @@ const io = new Server(server, {
   pingTimeout: 20000,
 });
 
-registerSocketHandlers(io);
+for (const game of registry.games) {
+  if (game.server && typeof game.server.registerSockets === 'function') game.server.registerSockets(io);
+}
 
 server.listen(PORT, () => {
-  console.log(`🎉 Bingo Virtual rodando em http://localhost:${PORT}`);
+  console.log(`🎉 Jogos IGDS rodando em http://localhost:${PORT}`);
 });

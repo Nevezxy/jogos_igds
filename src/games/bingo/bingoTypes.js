@@ -1,4 +1,4 @@
-// src/bingoTypes.js
+// src/games/bingo/bingoTypes.js
 // Arquitetura extensível: cada "tipo de bingo" é uma estratégia que sabe
 // gerar um POOL de itens possíveis a partir da config do Mestre.
 // Para adicionar um novo tipo no futuro, basta registrar uma nova função

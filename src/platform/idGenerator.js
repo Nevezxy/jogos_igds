@@ -1,4 +1,4 @@
-// src/idGenerator.js
+// src/platform/idGenerator.js
 const { nanoid, customAlphabet } = require('nanoid');
 
 // Código de sala: curto, fácil de digitar e ler em voz alta (sem caracteres ambíguos)

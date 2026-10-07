@@ -1,4 +1,4 @@
-// public/js/mascot.js
+// public/js/shared/mascot.js
 // "Bingolino", o mascote: uma bolinha de bingo com carinha, em SVG inline
 // (sem arquivos externos). Qualquer elemento com [data-mascot] recebe o
 // desenho. O humor é trocado via atributo data-mood, e o CSS
