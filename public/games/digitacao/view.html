@@ -1,0 +1,105 @@
+<div class="tm">
+
+  <!-- ============ MAPA DOS MUNDOS ============ -->
+  <section class="tm-screen" data-tm="map">
+    <div class="tm-map-head">
+      <div data-mascot class="tm-mascot"></div>
+      <p class="speech" id="tm-map-speech" aria-live="polite">Vamos aprender a digitar com os 10 dedos?</p>
+      <div class="tm-stars-total" title="Estrelas conquistadas">⭐ <strong id="tm-total-stars">0</strong><span class="tm-stars-max">/<span id="tm-max-stars">0</span></span></div>
+    </div>
+
+    <p class="tm-notice" id="tm-touch-notice" hidden>⌨️ Este jogo precisa de um teclado de verdade. No tablet ou no celular, ligue um teclado (por exemplo, bluetooth) para jogar.</p>
+
+    <div class="tm-toolbar">
+      <button type="button" class="btn btn-primary btn-lg" id="tm-continue">▶ Continuar</button>
+      <button type="button" class="btn btn-violet" id="tm-practice-open">🎯 Treino livre</button>
+      <label class="tm-toggle" title="Quando errar, o jogo espera você apertar a tecla certa">
+        <input type="checkbox" id="tm-stop-on-error" checked />
+        <span>Esperar a tecla certa</span>
+      </label>
+    </div>
+
+    <div class="tm-worlds" id="tm-worlds"></div>
+  </section>
+
+  <!-- ============ TREINO LIVRE ============ -->
+  <section class="tm-screen" data-tm="practice" hidden>
+    <div class="tm-card tm-practice-card">
+      <h3>🎯 Treino livre</h3>
+      <p class="muted">Escolha o que treinar. O treino livre não conta estrelas — é só para praticar!</p>
+      <div class="tm-practice-grid" id="tm-practice-grid"></div>
+      <button type="button" class="btn btn-ghost" data-tm-go="map">← Mundos</button>
+    </div>
+  </section>
+
+  <!-- ============ ANTES DA FASE ============ -->
+  <section class="tm-screen" data-tm="intro" hidden>
+    <div class="tm-card tm-intro-card">
+      <p class="tm-intro-world" id="tm-intro-world">🏠 Mundo 1 · Fileira do meio</p>
+      <h3 class="tm-intro-title" id="tm-intro-title">F e J</h3>
+      <p class="tm-intro-text" id="tm-intro-world-text"></p>
+      <p class="tm-intro-tip" id="tm-intro-tip"></p>
+      <ul class="tm-intro-rules">
+        <li>👀 Olhe para a tela, não para as mãos.</li>
+        <li>🏠 Depois de cada tecla, o dedo volta para a casa (F e J).</li>
+        <li>🐢 Calma! Acertar é mais importante que ser rápido.</li>
+      </ul>
+      <div class="tm-intro-actions">
+        <button type="button" class="btn btn-ghost" data-tm-go="map">← Mundos</button>
+        <button type="button" class="btn btn-success btn-lg" id="tm-start">Começar! <span class="tm-kbd">Enter</span></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ JOGANDO ============ -->
+  <section class="tm-screen" data-tm="play" hidden>
+    <div class="tm-play-head">
+      <button type="button" class="btn-mini" id="tm-quit" title="Sair da fase (Esc)">✕ Sair</button>
+      <strong class="tm-play-title" id="tm-play-title">F e J</strong>
+      <div class="tm-stats" aria-label="Como você está indo">
+        <span class="tm-stat" title="Tempo">⏱ <b id="tm-stat-time">0:00</b></span>
+        <span class="tm-stat" title="Precisão (acertos de primeira)">🎯 <b id="tm-stat-acc">100%</b></span>
+        <span class="tm-stat" title="Palavras por minuto">⚡ <b id="tm-stat-wpm">0</b> PPM</span>
+      </div>
+    </div>
+    <div class="tm-progress" aria-hidden="true"><span id="tm-progress-bar"></span></div>
+
+    <div class="tm-stage" id="tm-stage">
+      <div class="tm-text" id="tm-text" aria-hidden="true"></div>
+      <p class="tm-hint" id="tm-hint" aria-live="polite"></p>
+      <div class="tm-alerts">
+        <span class="tm-alert tm-alert-caps" id="tm-caps" hidden>⇪ O Caps Lock está ligado! Aperte a tecla Caps para desligar.</span>
+        <span class="tm-alert tm-alert-dead" id="tm-dead" hidden>✨ Acento pronto! Agora aperte a letra.</span>
+      </div>
+      <div class="tm-kb" id="tm-kb" aria-hidden="true"></div>
+      <div class="tm-hands" id="tm-hands" aria-hidden="true"></div>
+      <textarea id="tm-input" class="tm-input" rows="1" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Digite o texto aqui"></textarea>
+      <button type="button" class="tm-focus-cover" id="tm-focus-cover" hidden>👆 Clique aqui para continuar digitando</button>
+    </div>
+  </section>
+
+  <!-- ============ RESULTADO ============ -->
+  <section class="tm-screen" data-tm="result" hidden>
+    <div class="tm-card tm-result-card">
+      <div class="tm-result-stars" id="tm-result-stars" aria-hidden="true">
+        <span class="tm-star">★</span><span class="tm-star">★</span><span class="tm-star">★</span>
+      </div>
+      <h3 class="tm-result-title" id="tm-result-title">Muito bem!</h3>
+      <p class="tm-result-msg" id="tm-result-msg"></p>
+      <div class="tm-result-stats">
+        <div><span>🎯</span><b id="tm-res-acc">100%</b><small>precisão</small></div>
+        <div><span>⚡</span><b id="tm-res-wpm">0</b><small>palavras por minuto</small></div>
+        <div><span>⏱</span><b id="tm-res-time">0:00</b><small>tempo</small></div>
+      </div>
+      <div class="tm-toughest" id="tm-toughest" hidden>
+        <p>Teclas que deram mais trabalho:</p>
+        <div class="tm-toughest-keys" id="tm-toughest-keys"></div>
+      </div>
+      <div class="tm-result-actions">
+        <button type="button" class="btn btn-ghost" data-tm-go="map">🗺 Mundos</button>
+        <button type="button" class="btn btn-violet" id="tm-retry">🔁 Repetir</button>
+        <button type="button" class="btn btn-success btn-lg" id="tm-next">Próxima fase ➜</button>
+      </div>
+    </div>
+  </section>
+</div>

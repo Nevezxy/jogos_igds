@@ -97,6 +97,18 @@
     }
     grid.innerHTML = '';
     games.forEach((game, i) => grid.appendChild(cardFor(game, i)));
+    renderSummaries();
+  }
+
+  // Progresso de cada jogo no cartão (ex.: "Fase 7 · ⭐ 18"). Se falhar, os
+  // cartões continuam funcionando sem o resumo.
+  async function renderSummaries() {
+    try {
+      const { summaries } = await window.PlataformaApi.get('/progress');
+      grid.querySelectorAll('[data-summary-for]').forEach((el) => {
+        el.textContent = summaries[el.dataset.summaryFor] || '';
+      });
+    } catch (e) { /* sem resumo */ }
   }
 
   function show() {

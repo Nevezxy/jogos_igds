@@ -108,11 +108,14 @@ jogos_igds/
 │   ├── platform/             # Núcleo da plataforma (vale para todos os jogos)
 │   │   ├── db.js             # Persistência SQLite
 │   │   ├── accounts.js       # Contas dos educandos (login por nome e sobrenome) e sessões
-│   │   ├── routes.js         # Rotas HTTP do núcleo (/api/auth/...)
+│   │   ├── routes.js         # Rotas HTTP do núcleo (/api/auth/..., /api/progress/...)
+│   │   ├── progress.js       # Progresso genérico por educando e jogo (game_progress, game_results)
 │   │   ├── idGenerator.js    # Códigos, IDs e tokens
 │   │   └── avatars.js        # Bichinhos permitidos e filtro de nomes impróprios
 │   └── games/
 │       ├── registry.js       # Lista de jogos da plataforma (o painel e o carregador leem daqui)
+│       ├── digitacao/
+│       │   └── server.js         # Teclado Mágico: valida resultados, estrelas, progresso e resumos
 │       └── bingo/
 │           ├── server.js         # Ponto de entrada do bingo para o registro
 │           ├── roomManager.js    # Fonte única da verdade do estado "ao vivo" de cada sala
@@ -144,6 +147,16 @@ jogos_igds/
 │   │       ├── router.js     # Rotas: /, /jogos, /jogos/<id>, /professor (History API)
 │   │       └── app.js        # Som, cliques e navegação comuns a todas as telas
 │   └── games/
+│       ├── digitacao/        # ⌨️ Teclado Mágico (carregado sob demanda)
+│       │   ├── game.js       # Telas do jogo: mapa, antes da fase, jogando, resultado, treino livre
+│       │   ├── view.html     # HTML das telas
+│       │   ├── game.css      # Teclado, mãos, texto e mapa (uma cor por dedo)
+│       │   ├── layouts/abnt2.js # Teclado brasileiro: teclas, dedos e como digitar cada caractere
+│       │   ├── levels.js     # 10 mundos e 58 fases, estrelas e liberação (usado também pelo servidor)
+│       │   ├── content.js    # Banco de palavras, frases, textos e gerador de exercícios
+│       │   ├── engine.js     # Motor da rodada: acertos, precisão e PPM
+│       │   ├── keyboard.js   # Teclado na tela (próxima tecla, Shift, acerto/erro)
+│       │   └── hands.js      # Mãos em SVG com o dedo da vez aceso
 │       └── bingo/
 │           ├── play.css      # Entrada com o código, espera, jogo e camadas de tela cheia
 │           ├── master.css    # Configuração visual, quadro de números e telão
@@ -155,6 +168,7 @@ jogos_igds/
 │           ├── screen.js     # Modo telão (/telao?sala=CODE)
 │           └── session.js    # Sessão da sala, reconexão automática e criação de sala
 ├── test/
+│   ├── digitacao.test.js     # Teclado Mágico sem navegador: motor, ABNT2, fases, conteúdo, validação
 │   ├── helpers.js            # Sobe um servidor de teste (porta própria, banco temporário) e cria contas
 │   ├── platform.test.js      # Contas e API da plataforma
 │   ├── integration.test.js   # Fluxo completo de uma partida
@@ -238,6 +252,23 @@ Servidor valida o BINGO → comemoração em tela cheia → 🎉 Nova partida
 ---
 
 ## 6. Funcionalidades
+
+**⌨️ Teclado Mágico (digitação)**
+- Teclado ABNT2 desenhado na tela com uma cor por dedo (mindinho rosa,
+  anelar laranja, médio verde, indicador azul, polegar violeta) e as mãos
+  em SVG: a próxima tecla pulsa e o dedo certo acende.
+- Letra maiúscula acende também o Shift do lado oposto; acentos são
+  ensinados em dois passos (aperte o acento, solte, depois a letra), com o
+  aviso "acento pronto". Dica em texto para cada tecla e aviso de Caps Lock.
+- 10 mundos, 58 fases: fileira do meio, de cima e de baixo, maiúsculas,
+  palavras, acentuação, frases, pontuação, números e símbolos e textos.
+  Cada fase de letras só usa as teclas já aprendidas.
+- Estrelas: 85% de precisão = ⭐ (libera a próxima fase), 93% = ⭐⭐,
+  97% + velocidade mínima do mundo = ⭐⭐⭐. Resultado com PPM, precisão,
+  tempo e as teclas que mais deram trabalho.
+- Progresso salvo no servidor (continua em qualquer computador), treino
+  livre que não conta estrelas e opção "Esperar a tecla certa".
+- Precisa de teclado físico; em tablet/celular aparece um aviso.
 
 **Para a criança**
 - Visual de jogo (fundo animado, botões de brinquedo, mascote Bingolino

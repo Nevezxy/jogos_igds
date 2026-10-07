@@ -123,6 +123,8 @@ async function main() {
   ms = await emitAsync(master, 'get_state', { roomCode, masterToken });
   ana = ms.state.players.find((p) => p.name === 'Ana Souza');
   assert(ana.hasWon && !ana.nearWin, 'depois do bingo, Ana não aparece mais como "quase lá"');
+  const anaProgress = await srv.api('GET', '/api/progress', null, anaToken);
+  assert(anaProgress.summaries.bingo === '🏆 1 bingo', `o bingo conta no progresso da conta ("${anaProgress.summaries.bingo}")`);
 
   // ---------- sorteio automático ----------
   const master2 = connect();

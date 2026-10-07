@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "test": "node test/platform.test.js && node test/integration.test.js && node test/features.test.js",
+    "test": "node test/digitacao.test.js && node test/platform.test.js && node test/integration.test.js && node test/features.test.js",
     "test:carga": "node test/load.test.js 40"
   },
   "engines": {

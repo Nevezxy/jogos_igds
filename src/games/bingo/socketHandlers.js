@@ -7,6 +7,7 @@
 
 const rm = require('./roomManager');
 const accounts = require('../../platform/accounts');
+const progress = require('../../platform/progress');
 
 function err(e) {
   if (e instanceof rm.RoomError || e instanceof accounts.AccountError) return { ok: false, code: e.code, message: e.message };
@@ -41,6 +42,21 @@ function broadcastRoomState(io, room) {
   // Resumo leve para quem ainda está na tela de espera / listas
   io.to(roomChannel(room.code)).emit('room_summary', rm.getRoomSummary(room));
   io.to(screenChannel(room.code)).emit('screen_state', rm.getScreenState(room));
+}
+
+// Cada BINGO conta no progresso da criança (cartão do painel e professor).
+function recordWin(player, patterns) {
+  if (!player.studentId) return;
+  try {
+    const game = require('../registry').games.find((g) => g.id === 'bingo');
+    progress.recordResult(player.studentId, game, {
+      levelId: Array.isArray(patterns) ? patterns.join(',') : String(patterns),
+      score: 1,
+      details: { patterns },
+    });
+  } catch (e) {
+    console.error('[bingo] não gravou a vitória no progresso', e);
+  }
 }
 
 function announceWin(io, room, player, patterns) {
@@ -289,6 +305,7 @@ function registerSocketHandlers(io) {
         cb && cb({ ok: true, card: player.card });
         if (newWin) {
           announceWin(io, room, player, newWin);
+          recordWin(player, newWin);
           if (room.status !== 'playing') clearAutoDraw(room); // pausa automática na vitória
         }
         broadcastRoomState(io, room);

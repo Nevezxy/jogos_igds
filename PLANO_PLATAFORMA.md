@@ -1,6 +1,6 @@
 # 🌻 Plano — De "Bingo Virtual" para Plataforma de Jogos Educativos
 
-> **Situação:** plano aprovado. Etapas **A** a **D** concluídas (reorganização, contas, painel de jogos e bingo integrado à conta); próxima: **E (Teclado Mágico: núcleo)**.
+> **Situação:** plano aprovado. Etapas **A** a **F** concluídas (reorganização, contas, painel, bingo integrado e Teclado Mágico completo); próxima: **G (área do professor)**.
 > **Decisões já tomadas** (marcadas com **[DECIDIDO]** no texto): a criança
 > cria a própria conta com confirmação; o login ignora maiúsculas, espaços
 > extras e acentos; a área do professor é protegida por PIN no `.env`; a
@@ -425,8 +425,9 @@ public/games/digitacao/
   levels.js      ← mundos e fases (dados)
   content.js     ← banco de palavras, frases e textos + gerador de exercícios
 src/games/digitacao/
-  server.js      ← validateResult e mergeProgress
-  levels.json    ← ids das fases, usados pela validação no servidor
+  server.js      ← validateResult, mergeProgress, summary e teacherSummary
+                   (usa o mesmo public/games/digitacao/levels.js do navegador:
+                   uma fonte só para fases, estrelas e liberação)
 ```
 
 ---
@@ -460,8 +461,8 @@ commit próprio.
 | **B. Contas** ✅ | Tabelas, `/api/auth/lookup`, `/login`, `/register`, `/me`, `/logout`. Tela de login com confirmação "É você?", criação de conta com bichinho, sessão salva. | `src/platform/accounts.js`, `src/platform/routes.js`, `public/js/platform/auth.js` |
 | **C. Painel de jogos** ✅ | Cartões a partir de `/api/games`, resumo do progresso, sair e trocar bichinho. Rotas `/jogos/...`. Nome "Bingo Virtual" trocado pelo da plataforma em títulos e meta tags. | `public/js/platform/hub.js`, `public/css/hub.css` |
 | **D. Bingo integrado** ✅ | Entrada com a conta (só o código), `student_id` nos jogadores, botão "← Jogos" na espera e na sala encerrada. Os testes sobem o próprio servidor com banco temporário e entram com contas. | `src/games/bingo/*`, `public/games/bingo/*`, `test/*` |
-| **E. Teclado Mágico: núcleo** | Teclado ABNT2 colorido, mãos em SVG, motor de captura (teclas mortas, Shift, Caps Lock), uma fase jogável de ponta a ponta. | `public/games/digitacao/*` |
-| **F. Teclado Mágico: conteúdo e progresso** | Os 10 mundos e as fases, gerador de exercícios, banco de palavras e frases, estrelas, mapa de mundos, tela de resultado, progresso salvo e validado no servidor, treino livre. | `levels.js`, `content.js`, `src/games/digitacao/server.js` |
+| **E. Teclado Mágico: núcleo** ✅ | Teclado ABNT2 colorido, mãos em SVG, motor de captura (teclas mortas, Shift, Caps Lock), uma fase jogável de ponta a ponta. | `public/games/digitacao/*` |
+| **F. Teclado Mágico: conteúdo e progresso** ✅ | Os 10 mundos e as fases, gerador de exercícios, banco de palavras e frases, estrelas, mapa de mundos, tela de resultado, progresso salvo e validado no servidor, treino livre. | `levels.js`, `content.js`, `src/games/digitacao/server.js` |
 | **G. Área do professor** | PIN, lista da turma com progresso, renomear, juntar, desativar e liberar fases. | `public/js/platform/teacher.js`, rotas `/api/teacher/*` |
 | **H. Polimento e docs** | Testes novos (contas, progresso, validação), acessibilidade (navegação por teclado, contraste, `prefers-reduced-motion`), README com a seção "Como criar um novo jogo", atualização do `.env.example`. | `test/platform.test.js`, `README.md` |
 

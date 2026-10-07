@@ -38,8 +38,8 @@ function lanAddresses() {
   return [...ips.filter(isPrivate), ...ips.filter((ip) => !isPrivate(ip))];
 }
 
-// Contas dos educandos (login por nome e sobrenome).
-app.use('/api', createPlatformRouter());
+// Contas dos educandos (login por nome e sobrenome) e progresso nos jogos.
+app.use('/api', createPlatformRouter(registry));
 
 // Jogos disponíveis (painel de seleção e carregador do navegador).
 app.get('/api/games', (req, res) => {
