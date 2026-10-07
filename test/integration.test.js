@@ -1,6 +1,8 @@
 const { io } = require('socket.io-client');
+const { startTestServer } = require('./helpers');
 
-const URL = 'http://localhost:3000';
+let URL;
+let srv;
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function connect() {
@@ -13,6 +15,8 @@ function emitAsync(socket, event, payload) {
 }
 
 async function main() {
+  srv = await startTestServer(3102);
+  URL = srv.url;
   const errors = [];
   const assert = (cond, msg) => { if (!cond) errors.push(msg); else console.log('OK:', msg); };
 
@@ -40,25 +44,38 @@ async function main() {
 
   // teste: nome de sala inválido
   try {
-    await emitAsync(connect(), 'join_room', { roomCode: 'ZZZZZ', name: 'Fulano' });
+    await emitAsync(connect(), 'join_room', { roomCode: 'ZZZZZ', studentToken: await srv.student('Fulano Tal') });
     errors.push('deveria falhar com sala inválida');
   } catch (e) { assert(e.code === 'SALA_NAO_ENCONTRADA', 'código de sala inválido rejeitado corretamente'); }
 
+  // sem conta não entra
+  try {
+    await emitAsync(connect(), 'join_room', { roomCode, name: 'Sem Conta' });
+    errors.push('deveria exigir conta para entrar');
+  } catch (e) { assert(e.code === 'CONTA_OBRIGATORIA', 'entrar sem conta é recusado'); }
+  try {
+    await emitAsync(connect(), 'join_room', { roomCode, studentToken: 'token-falso' });
+    errors.push('deveria recusar token de conta falso');
+  } catch (e) { assert(e.code === 'SESSAO_INVALIDA', 'token de conta falso é recusado'); }
+
+  const ana = await srv.student('Ana Souza', '🦊');
   const p1 = connect();
   await new Promise((r) => p1.on('connect', r));
-  const j1 = await emitAsync(p1, 'join_room', { roomCode, name: 'Ana' });
+  const j1 = await emitAsync(p1, 'join_room', { roomCode, studentToken: ana });
   assert(j1.ok, 'Ana entrou na sala');
+  assert(j1.state.you.name === 'Ana Souza' && j1.state.you.avatar === '🦊', 'nome e bichinho vêm da conta');
 
   const p2 = connect();
   await new Promise((r) => p2.on('connect', r));
-  const j2 = await emitAsync(p2, 'join_room', { roomCode, name: 'Bruno' });
+  const bruno = await srv.student('Bruno Lima');
+  const j2 = await emitAsync(p2, 'join_room', { roomCode, studentToken: bruno });
   assert(j2.ok, 'Bruno entrou na sala');
 
-  // nome duplicado deve falhar
-  try {
-    await emitAsync(connect(), 'join_room', { roomCode, name: 'ana' });
-    errors.push('deveria rejeitar nome duplicado (case-insensitive)');
-  } catch (e) { assert(e.code === 'NOME_DUPLICADO', 'nome duplicado (case-insensitive) rejeitado'); }
+  // a mesma conta entrando de novo (outro aparelho) volta para o mesmo jogador
+  const again = await emitAsync(connect(), 'join_room', { roomCode, studentToken: ana });
+  assert(again.reconnected && again.playerId === j1.playerId, 'mesma conta em outro aparelho volta para o mesmo jogador');
+  const roomNow = await emitAsync(master, 'get_state', { roomCode, masterToken });
+  assert(roomNow.state.players.length === 2, 'a sala não ganha jogador repetido');
 
   // player não pode iniciar partida (não é master)
   try {
@@ -116,13 +133,13 @@ async function main() {
 
   const masterStateAfterWin = await emitAsync(master, 'get_state', { roomCode, masterToken });
   assert(masterStateAfterWin.state.status === 'paused', 'partida pausada automaticamente após vitória');
-  assert(masterStateAfterWin.state.players.some((pl) => pl.name === 'Ana' && pl.hasWon), 'Mestre vê Ana como vencedora');
+  assert(masterStateAfterWin.state.players.some((pl) => pl.name === 'Ana Souza' && pl.hasWon), 'Mestre vê Ana como vencedora');
 
   // undo do último sorteio antes de continuar testes de kick
   await emitAsync(master, 'resume_game', { roomCode, masterToken });
 
   // expulsar Bruno
-  const brunoId = masterStateAfterWin.state.players.find((pl) => pl.name === 'Bruno').id;
+  const brunoId = masterStateAfterWin.state.players.find((pl) => pl.name === 'Bruno Lima').id;
   let brunoKicked = false;
   p2.on('you_were_kicked', () => { brunoKicked = true; });
   await emitAsync(master, 'kick_player', { roomCode, masterToken, playerId: brunoId });
@@ -145,7 +162,11 @@ async function main() {
   const anaAfterNew = await emitAsync(p1, 'get_state', { roomCode, playerToken: j1.playerToken });
   assert(anaAfterNew.state.card && !anaAfterNew.state.you.hasWon, 'Ana tem cartela nova e não está mais como vencedora');
   assert(anaAfterNew.state.card.cells.flat().every((c) => !c.marked || c.isFree), 'cartela nova começa sem marcações');
-  assert(!nm.state.players.some((pl) => pl.name === 'Bruno'), 'jogador expulso não volta na nova partida');
+  assert(!nm.state.players.some((pl) => pl.name === 'Bruno Lima'), 'jogador expulso não volta na nova partida');
+  try {
+    await emitAsync(connect(), 'join_room', { roomCode, studentToken: bruno });
+    errors.push('conta expulsa não deveria voltar para a sala');
+  } catch (e) { assert(e.code === 'EXPULSO', 'conta expulsa não consegue voltar com a mesma conta'); }
 
   // reiniciar partida
   const restarted = await emitAsync(master, 'restart_game', { roomCode, masterToken });
@@ -157,7 +178,7 @@ async function main() {
   // reconexão da Ana simulando refresh de página
   const p1b = connect();
   await new Promise((r) => p1b.on('connect', r));
-  const reJoin = await emitAsync(p1b, 'join_room', { roomCode, name: 'Ana', playerToken: j1.playerToken });
+  const reJoin = await emitAsync(p1b, 'join_room', { roomCode, playerToken: j1.playerToken, studentToken: ana });
   assert(reJoin.ok && reJoin.reconnected, 'Ana reconectou usando o token salvo');
 
   // encerrar sala
@@ -166,7 +187,7 @@ async function main() {
   assert(masterAfterEnd.state.status === 'ended', 'sala encerrada com sucesso');
 
   try {
-    await emitAsync(connect(), 'join_room', { roomCode, name: 'NovoAluno' });
+    await emitAsync(connect(), 'join_room', { roomCode, studentToken: await srv.student('Novo Aluno') });
     errors.push('não deveria permitir entrar em sala encerrada');
   } catch (e) { assert(e.code === 'SALA_ENCERRADA', 'entrada em sala encerrada corretamente bloqueada'); }
 
@@ -174,11 +195,17 @@ async function main() {
   if (errors.length) {
     console.log(`❌ ${errors.length} FALHA(S):`);
     errors.forEach((e) => console.log(' -', e));
+    await srv.stop();
     process.exit(1);
   } else {
     console.log('✅ TODOS OS TESTES PASSARAM');
+    await srv.stop();
     process.exit(0);
   }
 }
 
-main().catch((e) => { console.error('ERRO FATAL NO TESTE', e); process.exit(1); });
+main().catch(async (e) => {
+  console.error('ERRO FATAL NO TESTE', e);
+  if (srv) await srv.stop();
+  process.exit(1);
+});

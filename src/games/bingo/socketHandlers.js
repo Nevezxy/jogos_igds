@@ -6,9 +6,10 @@
 //   4) faz broadcast (io.to(room)) para manter todo mundo sincronizado.
 
 const rm = require('./roomManager');
+const accounts = require('../../platform/accounts');
 
 function err(e) {
-  if (e instanceof rm.RoomError) return { ok: false, code: e.code, message: e.message };
+  if (e instanceof rm.RoomError || e instanceof accounts.AccountError) return { ok: false, code: e.code, message: e.message };
   console.error('[erro inesperado]', e);
   return { ok: false, code: 'ERRO_INTERNO', message: 'Ocorreu um erro inesperado no servidor.' };
 }
@@ -130,9 +131,12 @@ function registerSocketHandlers(io) {
       } catch (e) { cb && cb(err(e)); }
     });
 
-    socket.on('join_room', ({ roomCode, name, playerToken, avatar } = {}, cb) => {
+    // A criança entra com o token da conta da plataforma (studentToken); o
+    // playerToken da sala serve para voltar depois de recarregar a página.
+    socket.on('join_room', ({ roomCode, playerToken, studentToken } = {}, cb) => {
       try {
-        const { room, player, reconnected } = rm.joinRoom(roomCode, name, playerToken, avatar);
+        const student = studentToken ? accounts.authenticate(studentToken) : null;
+        const { room, player, reconnected } = rm.joinRoom(roomCode, { student, playerToken });
         rm.attachSocket(room, player, socket.id);
         socket.join(roomChannel(room.code));
         socket.data.role = 'player';
@@ -147,6 +151,17 @@ function registerSocketHandlers(io) {
         });
         broadcastRoomState(io, room);
         if (room.masterSocketId) io.to(room.masterSocketId).emit('master_state', rm.getMasterState(room));
+      } catch (e) { cb && cb(err(e)); }
+    });
+
+    socket.on('leave_room', ({ roomCode, playerToken } = {}, cb) => {
+      try {
+        const { room } = rm.leaveRoom(roomCode, playerToken);
+        socket.leave(roomChannel(room.code));
+        socket.data.role = null;
+        socket.data.roomCode = null;
+        cb && cb({ ok: true });
+        broadcastRoomState(io, room);
       } catch (e) { cb && cb(err(e)); }
     });
 

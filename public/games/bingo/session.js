@@ -134,12 +134,15 @@
     if (saved && saved.playerToken) {
       try {
         const res = await emitAsync('join_room', {
-          roomCode: saved.roomCode, name: saved.playerName, playerToken: saved.playerToken, avatar: saved.playerAvatar,
+          roomCode: saved.roomCode, playerToken: saved.playerToken, studentToken: window.PlataformaAuth.token(),
         });
         if (mode !== 'player') return;
         Object.assign(session, saved);
         session.playerId = res.playerId;
         session.playerToken = res.playerToken;
+        // nome e bichinho podem ter mudado na conta
+        session.playerName = res.state.you.name;
+        session.playerAvatar = res.state.you.avatar;
         saveSession();
         window.BingoPlayer.render(res.state);
         toast('Você voltou para a sala! 👋', 'success', 2500);
@@ -162,6 +165,20 @@
     mode = null;
     initialPending = false;
   }
+
+  // Botão "← Jogos" da sala de espera e da sala encerrada: sai da sala de
+  // verdade (antes de começar, a criança some da lista do professor).
+  async function leaveRoomAndGoHome() {
+    if (session.role === 'player' && session.roomCode) {
+      try {
+        await emitAsync('leave_room', { roomCode: session.roomCode, playerToken: session.playerToken });
+      } catch (e) { /* a sala pode já não existir */ }
+    }
+    resetSession();
+    window.PlataformaAuth.goHome();
+  }
+  document.getElementById('waiting-leave').addEventListener('click', leaveRoomAndGoHome);
+  document.getElementById('player-leave').addEventListener('click', leaveRoomAndGoHome);
 
   socket.on('connect', () => {
     const initial = initialPending;

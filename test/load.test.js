@@ -2,13 +2,19 @@
 // Teste de carga: uma turma de N crianças (padrão 30) conectadas ao mesmo
 // tempo, cada uma marcando as casas sorteadas, enquanto o professor sorteia.
 // Mede quanto tempo cada sorteio leva para chegar a TODAS as cartelas.
-// Rode com o servidor ligado: node test/load.test.js [quantidade]
+// Sobe o próprio servidor (test/helpers.js): node test/load.test.js [quantidade]
 
 const { io } = require('socket.io-client');
+const { startTestServer } = require('./helpers');
 
-const URL = 'http://localhost:3000';
+let URL;
+let srv;
 const PLAYERS = Number(process.argv[2]) || 30;
 const DRAWS = 25;
+// nomes de conta só têm letras: combina primeiros nomes e sobrenomes
+const FIRST = ['Ana', 'Bruno', 'Carla', 'Diego', 'Elisa', 'Fabio', 'Gabi', 'Heitor', 'Iris', 'Joana'];
+const LAST = ['Souza', 'Lima', 'Rocha', 'Alves', 'Costa', 'Melo', 'Dias', 'Prado', 'Reis', 'Nunes'];
+const kidName = (i) => `${FIRST[i % FIRST.length]} ${LAST[Math.floor(i / FIRST.length) % LAST.length]}`;
 const AVATARS = ['🐶', '🐱', '🦊', '🐼', '🐸', '🦁', '🐵', '🐧', '🦄', '🐙', '🐢', '🐝', '🦖', '🐰', '🐯', '🐨'];
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -22,6 +28,9 @@ function emitAsync(socket, event, payload) {
 const percentile = (list, p) => list.slice().sort((a, b) => a - b)[Math.min(list.length - 1, Math.floor(list.length * p))];
 
 async function main() {
+  srv = await startTestServer(3104);
+  URL = srv.url;
+  const tokens = await Promise.all(Array.from({ length: PLAYERS }, (_, i) => srv.student(kidName(i), AVATARS[i % AVATARS.length])));
   const master = connect();
   await connected(master);
   const { roomCode, masterToken } = await emitAsync(master, 'create_room', { name: 'Carga' });
@@ -39,7 +48,7 @@ async function main() {
   const kids = await Promise.all(Array.from({ length: PLAYERS }, async (_, i) => {
     const s = connect();
     await connected(s);
-    const res = await emitAsync(s, 'join_room', { roomCode, name: `Criança ${i + 1}`, avatar: AVATARS[i % AVATARS.length] });
+    const res = await emitAsync(s, 'join_room', { roomCode, studentToken: tokens[i] });
     const kid = { s, token: res.playerToken, card: null, lastSeenDraws: 0, marks: 0, errors: 0 };
     s.on('player_state', (st) => {
       kid.card = st.card;
@@ -89,7 +98,12 @@ async function main() {
   await emitAsync(master, 'end_game', { roomCode, masterToken });
   const ok = withCard === PLAYERS && lost === 0 && errors === 0 && serverMarked === marks && percentile(latencies, 0.95) < 500;
   console.log(ok ? '✅ CARGA OK' : '❌ PROBLEMA NA CARGA');
+  await srv.stop();
   process.exit(ok ? 0 : 1);
 }
 
-main().catch((e) => { console.error('ERRO FATAL', e); process.exit(1); });
+main().catch(async (e) => {
+  console.error('ERRO FATAL', e);
+  if (srv) await srv.stop();
+  process.exit(1);
+});

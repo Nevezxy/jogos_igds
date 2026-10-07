@@ -239,6 +239,8 @@
   window.PlataformaAuth = {
     ready,
     student: () => student,
+    // token da sessão, para jogos que falam com o servidor por socket
+    token: () => (student ? readStoredToken() : null),
     isLoggedIn: () => Boolean(student),
     onLogin: (fn) => loginListeners.push(fn),
     onLogout: (fn) => logoutListeners.push(fn),

@@ -408,6 +408,8 @@
     // quem acabou de vencer continua vendo a própria linha dourada na pausa
     document.getElementById('pause-cover').hidden = state.status !== 'paused' || you.hasWon;
 
+    // sala encerrada: a criança volta ao painel por aqui
+    document.getElementById('player-leave').hidden = state.status !== 'ended';
     if (state.status === 'ended') setPersistentBanner('🌙 O jogo acabou! Valeu por jogar 💜');
     else if (you.hasWon) setPersistentBanner('🏆 Você fez BINGO nesta rodada! 🎉');
     else setPersistentBanner('');

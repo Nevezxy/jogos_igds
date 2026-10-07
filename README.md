@@ -145,17 +145,18 @@ jogos_igds/
 │   │       └── app.js        # Som, cliques e navegação comuns a todas as telas
 │   └── games/
 │       └── bingo/
-│           ├── play.css      # Entrada em 3 passos, espera, jogo e camadas de tela cheia
+│           ├── play.css      # Entrada com o código, espera, jogo e camadas de tela cheia
 │           ├── master.css    # Configuração visual, quadro de números e telão
 │           ├── packs.js      # Pacotes prontos de palavras, emojis e itens
 │           ├── overlays.js   # Contagem 3-2-1, bola em tela cheia e comemoração de BINGO
 │           ├── master.js     # Painel do professor
 │           ├── player.js     # Sala de espera e tela de jogo da criança
-│           ├── join.js       # Entrada da criança em 3 passos
+│           ├── join.js       # Entrada da criança na sala (só o código; nome e bichinho vêm da conta)
 │           ├── screen.js     # Modo telão (/telao?sala=CODE)
 │           └── session.js    # Sessão da sala, reconexão automática e criação de sala
 ├── test/
-│   ├── platform.test.js      # Contas e API da plataforma (sobe um servidor próprio, banco temporário)
+│   ├── helpers.js            # Sobe um servidor de teste (porta própria, banco temporário) e cria contas
+│   ├── platform.test.js      # Contas e API da plataforma
 │   ├── integration.test.js   # Fluxo completo de uma partida
 │   ├── features.test.js      # Avatar, filtro de nome, quase lá, sorteio automático, telão, QR
 │   └── load.test.js          # Turma inteira jogando ao mesmo tempo
@@ -241,8 +242,9 @@ Servidor valida o BINGO → comemoração em tela cheia → 🎉 Nova partida
 **Para a criança**
 - Visual de jogo (fundo animado, botões de brinquedo, mascote Bingolino
   com expressões) e textos em linguagem infantil.
-- Entrada em 3 passos: código em caixinhas (conferido na hora), nome e
-  escolha de bichinho. O link do QR Code já traz o código.
+- Entrada com a conta da plataforma: só o código em caixinhas (nome e
+  bichinho vêm da conta). Pelo link do QR Code, a criança entra sozinha.
+- "← Jogos" na sala de espera e na sala encerrada volta ao painel.
 - Sala de espera com a turma chegando, fala do mascote e balões.
 - Contagem 3-2-1, bola sorteada em tela cheia e últimas bolas sempre à vista.
 - Marcação manual: a criança procura e toca; carimbo com som e estrelinhas.
@@ -267,7 +269,9 @@ Servidor valida o BINGO → comemoração em tela cheia → 🎉 Nova partida
 
 ### Testes
 
-Com o servidor ligado (`npm start`), em outro terminal:
+Cada arquivo de teste sobe o próprio servidor, numa porta separada e com um
+banco SQLite temporário (`test/helpers.js`), então não é preciso deixar o
+`npm start` ligado e nenhuma conta de teste fica no banco de verdade:
 
 ```bash
 npm test
@@ -275,12 +279,11 @@ npm test
 
 Roda `test/platform.test.js` (contas: nome e sobrenome obrigatórios,
 login sem diferenciar maiúsculas, acentos e espaços, conta repetida,
-sessão, troca de bichinho e saída; ele sobe o próprio servidor na porta
-3101 com um banco temporário), `test/integration.test.js` (criação de sala, entrada, nomes
-duplicados, autenticação do professor, sorteio, marcação manual, vitória,
+sessão, troca de bichinho e saída), `test/integration.test.js` (criação de
+sala, entrada só com conta, mesma conta em dois aparelhos, autenticação do professor, sorteio, marcação manual, vitória,
 pausa automática, expulsão, nova partida, reinício, reconexão e
-encerramento) e `test/features.test.js` (avatar, filtro de nomes, casa
-travada, "quase lá", sorteio automático, telão sem tokens, QR Code e
+encerramento) e `test/features.test.js` (nome e bichinho da conta, sair
+da sala antes e durante a partida, casa travada, "quase lá", sorteio automático, telão sem tokens, QR Code e
 endereços de rede). Para o teste de carga com 40 crianças:
 
 ```bash
@@ -308,10 +311,11 @@ de 180 dias sem uso.
 
 O servidor nunca confia no cliente. Toda ação passa por `src/games/bingo/roomManager.js`,
 que valida: código de sala, autenticação do Mestre (`masterToken`),
-identidade do educando (`playerToken`), status da partida compatível com
+identidade do educando (conta da plataforma, `studentToken`, e o
+`playerToken` da sala), status da partida compatível com
 a ação (ex.: não é possível marcar casa com a partida pausada), item
 realmente sorteado antes de aceitar marcação, limites de participantes,
-nomes duplicados e sala bloqueada/encerrada.
+uma vaga por conta e sala bloqueada/encerrada.
 
 Além disso: o avatar só é aceito se estiver na lista de bichinhos, nomes
 impróprios comuns são recusados (filtro de cortesia em `src/platform/avatars.js`),

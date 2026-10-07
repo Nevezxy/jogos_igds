@@ -1,12 +1,15 @@
 // test/features.test.js
-// Testes dos recursos do redesign: avatar, filtro de nomes, casa marcada
-// travada, "quase lá", sorteio automático, telão (espectador), QR Code e
-// endereços de rede. Rode com o servidor ligado: node test/features.test.js
+// Testes dos recursos do bingo: nome e bichinho vindos da conta, sair da
+// sala, casa marcada travada, "quase lá", sorteio automático, telão
+// (espectador), QR Code e endereços de rede. Sobe o próprio servidor
+// (test/helpers.js): node test/features.test.js
 
 const http = require('http');
 const { io } = require('socket.io-client');
+const { startTestServer } = require('./helpers');
 
-const URL = 'http://localhost:3000';
+let URL;
+let srv;
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function connect() {
@@ -31,6 +34,8 @@ function httpGet(path) {
 }
 
 async function main() {
+  srv = await startTestServer(3103);
+  URL = srv.url;
   const errors = [];
   const assert = (cond, msg) => { if (!cond) errors.push(msg); else console.log('OK:', msg); };
 
@@ -54,24 +59,36 @@ async function main() {
     },
   });
 
-  // ---------- avatar e filtro de nome ----------
+  // ---------- conta: nome e bichinho ----------
+  const anaToken = await srv.student('Ana Souza', '🦊');
   const p1 = connect();
   await connected(p1);
-  const j1 = await emitAsync(p1, 'join_room', { roomCode, name: 'Ana', avatar: '🦊' });
-  assert(j1.state.you.avatar === '🦊', 'avatar escolhido é guardado');
+  const j1 = await emitAsync(p1, 'join_room', { roomCode, studentToken: anaToken });
+  assert(j1.state.you.avatar === '🦊' && j1.state.you.name === 'Ana Souza', 'bichinho e nome vêm da conta');
 
+  const brunoToken = await srv.student('Bruno Lima', '🐼');
   const p2 = connect();
   await connected(p2);
-  const j2 = await emitAsync(p2, 'join_room', { roomCode, name: 'Bruno', avatar: '💣' });
-  assert(j2.state.you.avatar && j2.state.you.avatar !== '💣', 'avatar fora da lista vira um bichinho válido');
-  assert(j2.state.players.some((p) => p.name === 'Ana' && p.avatar === '🦊'), 'sala de espera vê nomes e avatares');
+  const j2 = await emitAsync(p2, 'join_room', { roomCode, studentToken: brunoToken });
+  assert(j2.state.players.some((p) => p.name === 'Ana Souza' && p.avatar === '🦊'), 'sala de espera vê nomes e avatares');
 
-  try {
-    await emitAsync(connect(), 'join_room', { roomCode, name: 'm3rda' });
-    errors.push('nome impróprio deveria ser rejeitado');
-  } catch (e) { assert(e.code === 'NOME_IMPROPRIO', 'nome impróprio rejeitado (mesmo com número no lugar de letra)'); }
-  const j3 = await emitAsync(connect(), 'join_room', { roomCode, name: 'Carla Pinto' });
-  assert(j3.ok, 'sobrenome comum não é bloqueado pelo filtro');
+  // trocar o bichinho no painel vale na próxima vez que a criança volta à sala
+  await srv.api('POST', '/api/auth/avatar', { avatar: '🐸' }, brunoToken);
+  const back = await emitAsync(p2, 'join_room', { roomCode, playerToken: j2.playerToken, studentToken: brunoToken });
+  assert(back.state.you.avatar === '🐸', 'bichinho trocado no painel aparece na sala');
+
+  // ---------- sair da sala antes de começar ----------
+  const diegoToken = await srv.student('Diego Alves');
+  const p4 = connect();
+  await connected(p4);
+  const j4 = await emitAsync(p4, 'join_room', { roomCode, studentToken: diegoToken });
+  await emitAsync(p4, 'leave_room', { roomCode, playerToken: j4.playerToken });
+  let ms0 = await emitAsync(master, 'get_state', { roomCode, masterToken });
+  assert(!ms0.state.players.some((p) => p.name === 'Diego Alves'), 'quem sai antes de começar some da lista');
+  p4.close();
+
+  const j3 = await emitAsync(connect(), 'join_room', { roomCode, studentToken: await srv.student('Carla Pinto') });
+  assert(j3.ok, 'terceira criança entrou');
 
   // ---------- telão ----------
   const screen = connect();
@@ -95,7 +112,7 @@ async function main() {
 
   await emitAsync(p1, 'mark_cell', { roomCode, playerToken: j1.playerToken, row: 0, col: 1 });
   let ms = await emitAsync(master, 'get_state', { roomCode, masterToken });
-  let ana = ms.state.players.find((p) => p.name === 'Ana');
+  let ana = ms.state.players.find((p) => p.name === 'Ana Souza');
   assert(ana.nearWin && ana.markedCount === 2 && ana.totalCells === 9, 'professor vê Ana "quase lá" (falta 1 na linha)');
 
   let winPayload = null;
@@ -104,7 +121,7 @@ async function main() {
   await wait(100);
   assert(winPayload && winPayload.avatar === '🦊', 'anúncio de bingo leva o avatar do vencedor');
   ms = await emitAsync(master, 'get_state', { roomCode, masterToken });
-  ana = ms.state.players.find((p) => p.name === 'Ana');
+  ana = ms.state.players.find((p) => p.name === 'Ana Souza');
   assert(ana.hasWon && !ana.nearWin, 'depois do bingo, Ana não aparece mais como "quase lá"');
 
   // ---------- sorteio automático ----------
@@ -132,16 +149,30 @@ async function main() {
   const paused = await emitAsync(master2, 'get_state', { roomCode: room2.roomCode, masterToken: room2.masterToken });
   assert(paused.state.nextAutoDrawAt === null, 'pausar cancela o sorteio automático');
   await emitAsync(master2, 'end_game', { roomCode: room2.roomCode, masterToken: room2.masterToken });
+  // ---------- sair da sala com a partida andando ----------
+  await emitAsync(p2, 'leave_room', { roomCode, playerToken: j2.playerToken });
+  ms = await emitAsync(master, 'get_state', { roomCode, masterToken });
+  const brunoNow = ms.state.players.find((p) => p.name === 'Bruno Lima');
+  assert(brunoNow && !brunoNow.connected, 'quem sai no meio da partida fica na lista como desconectado');
+  const rejoin = await emitAsync(p2, 'join_room', { roomCode, studentToken: brunoToken });
+  assert(rejoin.reconnected && rejoin.playerId === j2.playerId && rejoin.state.card, 'e volta com a mesma cartela');
+
   await emitAsync(master, 'end_game', { roomCode, masterToken });
 
   console.log('\n----------------------------------------');
   if (errors.length) {
     console.log(`❌ ${errors.length} FALHA(S):`);
     errors.forEach((e) => console.log(' -', e));
+    await srv.stop();
     process.exit(1);
   }
   console.log('✅ TODOS OS TESTES PASSARAM');
+  await srv.stop();
   process.exit(0);
 }
 
-main().catch((e) => { console.error('ERRO FATAL NO TESTE', e); process.exit(1); });
+main().catch(async (e) => {
+  console.error('ERRO FATAL NO TESTE', e);
+  if (srv) await srv.stop();
+  process.exit(1);
+});

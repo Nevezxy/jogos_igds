@@ -1,39 +1,13 @@
 // Contas dos educandos e API da plataforma. Sobe um servidor próprio, numa
 // porta separada e com banco temporário, para não sujar o banco de verdade.
 
-const path = require('path');
-const os = require('os');
-const fs = require('fs');
-const { spawn } = require('child_process');
-
-const PORT = 3101;
-const URL = `http://localhost:${PORT}`;
-const DB_FILE = path.join(os.tmpdir(), `igds-test-${process.pid}-${Date.now()}.sqlite`);
-
-async function api(method, route, body, token) {
-  const headers = { 'Content-Type': 'application/json' };
-  if (token) headers['X-Student-Token'] = token;
-  const res = await fetch(URL + route, { method, headers, body: body ? JSON.stringify(body) : undefined });
-  const data = await res.json().catch(() => ({}));
-  return { status: res.status, ...data };
-}
-
-function startServer() {
-  const child = spawn(process.execPath, [path.join(__dirname, '..', 'server.js')], {
-    env: { ...process.env, PORT: String(PORT), DB_FILE },
-    stdio: ['ignore', 'pipe', 'inherit'],
-  });
-  return new Promise((resolve, reject) => {
-    child.stdout.on('data', (chunk) => { if (String(chunk).includes('rodando')) resolve(child); });
-    child.on('exit', (code) => reject(new Error(`servidor saiu com código ${code}`)));
-    setTimeout(() => reject(new Error('servidor não subiu a tempo')), 10000);
-  });
-}
+const { startTestServer } = require('./helpers');
 
 async function main() {
   const errors = [];
   const assert = (cond, msg) => { if (!cond) errors.push(msg); else console.log('OK:', msg); };
-  const server = await startServer();
+  const server = await startTestServer(3101);
+  const { api } = server;
 
   try {
     // ---- validação do nome ----
@@ -95,9 +69,7 @@ async function main() {
     r = await api('GET', '/api/nao-existe');
     assert(r.status === 404, 'rota /api desconhecida dá 404');
   } finally {
-    server.kill();
-    await new Promise((res) => server.on('exit', res));
-    for (const suffix of ['', '-wal', '-shm']) fs.rmSync(DB_FILE + suffix, { force: true });
+    await server.stop();
   }
 
   console.log('\n----------------------------------------');

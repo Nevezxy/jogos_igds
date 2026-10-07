@@ -112,39 +112,17 @@
   <div id="game-root" class="game-root"></div>
 </section>
 
-<!-- ======================= ENTRAR (educando): 3 passos ======================= -->
+<!-- ======================= ENTRAR NA SALA DE BINGO (educando logado) ======================= -->
 <section id="screen-join" class="screen screen-center">
-  <button class="btn-back" id="join-back" type="button">← voltar</button>
+  <button class="btn-back" id="join-back" type="button">← Jogos</button>
   <div class="panel-card join-card">
-    <div class="join-steps" aria-hidden="true">
-      <span class="step-dot" data-step="1">1</span>
-      <span class="step-line"></span>
-      <span class="step-dot" data-step="2">2</span>
-      <span class="step-line"></span>
-      <span class="step-dot" data-step="3">3</span>
-    </div>
     <div class="panel-head">
       <div data-mascot id="join-mascot"></div>
       <p class="speech" id="join-speech" aria-live="polite">Qual é o código da sala? 🤔</p>
     </div>
     <form id="form-join" novalidate autocomplete="off">
-      <div class="join-step" data-step="1">
-        <div class="code-boxes" id="code-boxes" role="group" aria-label="Código da sala (5 letras)"></div>
-        <input type="hidden" id="input-room-code" />
-        <button type="button" class="btn btn-success btn-block btn-lg" id="join-next-1">Próximo ➜</button>
-      </div>
-      <div class="join-step" data-step="2" hidden>
-        <label class="field">
-          <span class="sr-only">Seu nome</span>
-          <input id="input-player-name" class="input-big" type="text" maxlength="30" placeholder="Seu nome aqui" autocomplete="off" />
-        </label>
-        <button type="button" class="btn btn-success btn-block btn-lg" id="join-next-2">Próximo ➜</button>
-      </div>
-      <div class="join-step" data-step="3" hidden>
-        <div class="avatar-grid" id="avatar-grid" role="radiogroup" aria-label="Escolha seu bichinho"></div>
-        <button type="submit" class="btn btn-success btn-block btn-lg" id="join-submit">Vamos jogar! 🚀</button>
-      </div>
-      <p id="join-error" class="form-error" role="alert"></p>
+      <div class="code-boxes" id="code-boxes" role="group" aria-label="Código da sala (5 letras)"></div>
+      <button type="submit" class="btn btn-success btn-block btn-lg" id="join-submit">Entrar na sala 🚀</button>
     </form>
   </div>
 </section>
@@ -171,6 +149,7 @@
 
 <!-- ======================= ESPERA (educando) ======================= -->
 <section id="screen-waiting" class="screen screen-center">
+  <button class="btn-back" id="waiting-leave" type="button">← Jogos</button>
   <div class="balloon-layer" id="balloon-layer" aria-hidden="true"></div>
   <div class="waiting-card">
     <div class="waiting-hero">
@@ -195,6 +174,7 @@
       <span id="player-trophy" class="trophy" hidden title="Você fez BINGO nesta rodada">🏆</span>
     </div>
     <div class="game-header-right">
+      <button type="button" class="btn-mini" id="player-leave" hidden>← Jogos</button>
       <span class="pill progress-pill" title="Casas marcadas">⭐ <span id="player-progress">0/0</span></span>
       <span class="pill pill-status" id="player-status-badge">esperando</span>
     </div>

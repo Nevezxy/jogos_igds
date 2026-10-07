@@ -6,7 +6,7 @@
 const { generateRoomCode, generateId, generateToken } = require('../../platform/idGenerator');
 const { getPoolForConfig, validateConfig, generateCard, shuffle } = require('./bingoTypes');
 const { getWinningPatterns, isNearWin } = require('./winChecker');
-const { normalizeAvatar, isNameAllowed } = require('../../platform/avatars');
+const { normalizeAvatar } = require('../../platform/avatars');
 const db = require('../../platform/db');
 
 const MAX_PLAYERS_PER_ROOM = 40; // folga acima dos ~20 previstos
@@ -27,14 +27,6 @@ const DEFAULT_CONFIG = {
 };
 
 const AUTO_DRAW_OPTIONS = [0, 8, 10, 15, 20, 30];
-
-function normalizeName(name) {
-  return String(name || '').trim();
-}
-
-function slugKey(name) {
-  return normalizeName(name).toLowerCase();
-}
 
 class RoomError extends Error {
   constructor(code, message) {
@@ -108,17 +100,32 @@ function updateConfig(code, token, partialConfig) {
   return room;
 }
 
-function joinRoom(code, name, existingToken, avatar) {
+// Entrada de um educando na sala. A identidade vem da conta da plataforma
+// (`student`: { id, name, avatar }, já autenticado pelo socketHandlers):
+// nome e bichinho são os da conta, e a mesma criança entrando de novo (outra
+// aba, outro aparelho, página recarregada) volta para o mesmo jogador.
+// `playerToken` continua aceito para a reconexão rápida.
+function joinRoom(code, { student = null, playerToken = null } = {}) {
   const room = requireRoom(code);
+  const players = [...room.players.values()];
 
-  // Reconexão: se um token válido for enviado e corresponder a um jogador da sala
-  if (existingToken) {
-    const existing = [...room.players.values()].find((p) => p.token === existingToken);
-    if (existing) {
-      if (existing.kicked) throw new RoomError('EXPULSO', 'Você foi removido desta sala.');
-      return { room, player: existing, reconnected: true };
-    }
+  const refresh = (player) => {
+    if (player.kicked) throw new RoomError('EXPULSO', 'Você foi removido desta sala.');
+    // a criança pode ter trocado o bichinho no painel desde a última vez
+    if (student) { player.name = student.name; player.avatar = normalizeAvatar(student.avatar); }
+    return { room, player, reconnected: true };
+  };
+
+  if (playerToken) {
+    const existing = players.find((p) => p.token === playerToken);
+    // o token só vale para a mesma conta (aparelho compartilhado)
+    if (existing && (!student || !existing.studentId || existing.studentId === student.id)) return refresh(existing);
   }
+  if (!student) {
+    throw new RoomError('CONTA_OBRIGATORIA', 'Entre com a sua conta para jogar.');
+  }
+  const sameStudent = players.find((p) => p.studentId === student.id);
+  if (sameStudent) return refresh(sameStudent);
 
   if (room.status === 'ended') {
     throw new RoomError('SALA_ENCERRADA', 'Esta sala já foi encerrada.');
@@ -126,28 +133,16 @@ function joinRoom(code, name, existingToken, avatar) {
   if (room.locked) {
     throw new RoomError('SALA_BLOQUEADA', 'O Mestre bloqueou a entrada de novos participantes.');
   }
-  const activePlayers = [...room.players.values()].filter((p) => !p.kicked);
+  const activePlayers = players.filter((p) => !p.kicked);
   if (activePlayers.length >= MAX_PLAYERS_PER_ROOM) {
     throw new RoomError('SALA_LOTADA', 'Esta sala atingiu o limite de participantes.');
   }
 
-  const cleanName = normalizeName(name);
-  if (!cleanName || cleanName.length < 2 || cleanName.length > 30) {
-    throw new RoomError('NOME_INVALIDO', 'Informe um nome válido (2 a 30 caracteres).');
-  }
-  if (!isNameAllowed(cleanName)) {
-    throw new RoomError('NOME_IMPROPRIO', 'Esse nome não pode ser usado. Escolha outro, por favor.');
-  }
-  const key = slugKey(cleanName);
-  const duplicate = activePlayers.some((p) => slugKey(p.name) === key);
-  if (duplicate) {
-    throw new RoomError('NOME_DUPLICADO', 'Já existe um participante com esse nome nesta sala.');
-  }
-
   const player = {
     id: generateId('p_'),
-    name: cleanName,
-    avatar: normalizeAvatar(avatar),
+    studentId: student.id,
+    name: student.name,
+    avatar: normalizeAvatar(student.avatar),
     token: generateToken(),
     socketId: null,
     connected: false,
@@ -158,16 +153,29 @@ function joinRoom(code, name, existingToken, avatar) {
   };
 
   // Se a partida já estiver em andamento, o jogador entra "aguardando a próxima rodada"
-  // — não recebe cartela incompatível com o estado atual (ver seção 18 dos requisitos).
+  // — não recebe cartela incompatível com o estado atual.
   if (room.status === 'playing' || room.status === 'paused') {
     player.waitingNextMatch = true;
-  } else if (room.pool.length) {
-    // sala em waiting, mas já teve rodada anterior configurada
   }
 
   room.players.set(player.id, player);
   db.upsertPlayer(player, room.code);
   return { room, player, reconnected: false };
+}
+
+// A criança saiu da sala pelo botão "← Jogos". Antes de a partida começar ela
+// some da lista; depois, fica como desconectada (pode voltar a qualquer hora).
+function leaveRoom(code, playerToken) {
+  const room = requireRoom(code);
+  const player = [...room.players.values()].find((p) => p.token === playerToken);
+  if (!player) throw new RoomError('JOGADOR_NAO_ENCONTRADO', 'Participante não encontrado.');
+  if (room.status === 'waiting' && !player.card) {
+    room.players.delete(player.id);
+  } else {
+    player.connected = false;
+    player.socketId = null;
+  }
+  return { room, player };
 }
 
 function attachSocket(room, entity, socketId) {
@@ -453,6 +461,7 @@ module.exports = {
   authMaster,
   updateConfig,
   joinRoom,
+  leaveRoom,
   attachSocket,
   setMasterSocket,
   kickPlayer,

@@ -1,10 +1,8 @@
 // public/games/bingo/join.js
-// Entrada da criança em 3 passos, um de cada vez:
-//   1) código da sala em 5 caixinhas (pulado quando o link/QR traz ?sala=)
-//   2) nome
-//   3) bichinho (avatar)
-// O código é conferido no servidor já no passo 1, e os erros aparecem na
-// fala do mascote, em linguagem de criança, no passo em que dá para corrigir.
+// Entrada da criança na sala: só o código, em 5 caixinhas. Nome e bichinho
+// vêm da conta da plataforma (a criança já fez login). Quando o link/QR traz
+// ?sala=, a entrada acontece sozinha. Os erros aparecem na fala do mascote,
+// em linguagem de criança.
 
 (function () {
   const { emitAsync } = window.BingoSocket;
@@ -16,63 +14,36 @@
   // mesmo alfabeto do servidor (sem 0, O, 1 e I, que confundem)
   const CODE_CHARS = /[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]/;
 
-  const card = document.querySelector('.join-card');
   const speech = document.getElementById('join-speech');
   const mascot = document.getElementById('join-mascot');
-  const errorEl = document.getElementById('join-error');
   const codeWrap = document.getElementById('code-boxes');
-  const codeInput = document.getElementById('input-room-code');
-  const nameInput = document.getElementById('input-player-name');
-  const avatarGrid = document.getElementById('avatar-grid');
+  const submitBtn = document.getElementById('join-submit');
 
-  let step = 1;
-  let chosenAvatar = null;
-  let codeFromLink = false;
+  const SPEECH = 'Qual é o código da sala? 🤔';
 
-  const SPEECH = {
-    1: 'Qual é o código da sala? 🤔',
-    2: 'Como você se chama? 😊',
-    3: 'Escolha seu bichinho! 🐾',
-  };
-
-  // Mensagens do servidor traduzidas para criança, e o passo onde corrigir.
+  // Mensagens do servidor traduzidas para criança.
   const FRIENDLY_ERRORS = {
-    SALA_NAO_ENCONTRADA: [1, 'Hmm, não achei essa sala 🤔 Confere o código com o(a) professor(a)!'],
-    SALA_ENCERRADA: [1, 'Essa sala já fechou 🌙 Peça o código novo!'],
-    SALA_BLOQUEADA: [1, 'A sala está trancada 🔒 Peça ao professor(a) para abrir!'],
-    SALA_LOTADA: [1, 'A sala está cheia! 😮 Fale com o(a) professor(a).'],
-    NOME_DUPLICADO: [2, 'Já tem alguém com esse nome! Que tal colocar a inicial do sobrenome?'],
-    NOME_INVALIDO: [2, 'Seu nome precisa ter de 2 a 30 letras ✏️'],
-    NOME_IMPROPRIO: [2, 'Esse nome não pode 🙅 Escolha outro, por favor!'],
+    SALA_NAO_ENCONTRADA: 'Hmm, não achei essa sala 🤔 Confere o código com o(a) professor(a)!',
+    SALA_ENCERRADA: 'Essa sala já fechou 🌙 Peça o código novo!',
+    SALA_BLOQUEADA: 'A sala está trancada 🔒 Peça ao professor(a) para abrir!',
+    SALA_LOTADA: 'A sala está cheia! 😮 Fale com o(a) professor(a).',
+    EXPULSO: 'Você saiu dessa sala 😕 Fale com o(a) professor(a).',
   };
 
-  // ---------------- passos ----------------
-
-  function goToStep(n) {
-    step = n;
-    card.querySelectorAll('.join-step').forEach((el) => { el.hidden = Number(el.dataset.step) !== n; });
-    card.querySelectorAll('.step-dot').forEach((dot) => {
-      const s = Number(dot.dataset.step);
-      dot.classList.toggle('is-done', s < n);
-      dot.classList.toggle('is-current', s === n);
-      dot.textContent = s < n ? '⭐' : String(s);
-    });
-    speech.textContent = SPEECH[n];
+  function reset(message = SPEECH) {
+    speech.textContent = message;
     window.BingoMascot.setMood('idle', mascot);
-    errorEl.textContent = '';
-    const focusTarget = n === 1 ? firstEmptyBox() : n === 2 ? nameInput : avatarGrid.querySelector('[aria-checked="true"]');
-    setTimeout(() => focusTarget && focusTarget.focus(), 60);
+    setTimeout(() => firstEmptyBox().focus(), 60);
   }
 
-  function showError(message, atStep) {
-    if (atStep && atStep !== step) goToStep(atStep);
+  function showError(message) {
     speech.textContent = message;
     window.BingoMascot.setMood('wow', mascot);
     play('bonk');
-    shake(card.querySelector(`.join-step[data-step="${step}"]`));
+    shake(codeWrap);
   }
 
-  // ---------------- passo 1: caixinhas do código ----------------
+  // ---------------- caixinhas do código ----------------
 
   const boxes = [];
   for (let i = 0; i < CODE_LENGTH; i++) {
@@ -97,6 +68,10 @@
     return boxes.find((b) => !b.value) || boxes[CODE_LENGTH - 1];
   }
 
+  function clearBoxes() {
+    boxes.forEach((b) => { b.value = ''; b.classList.remove('is-filled'); });
+  }
+
   // Escreve a partir da caixa `start`, aceitando colar o código inteiro.
   function fillFrom(start, text) {
     const chars = [...text.toUpperCase()].filter((ch) => CODE_CHARS.test(ch));
@@ -119,7 +94,7 @@
       if (next > i) play('click');
       if (next < CODE_LENGTH) boxes[next].focus();
       else boxes[CODE_LENGTH - 1].blur();
-      if (readCode().length === CODE_LENGTH) checkCode();
+      if (readCode().length === CODE_LENGTH) join();
     });
     box.addEventListener('keydown', (ev) => {
       if (ev.key === 'Backspace' && !box.value && i > 0) {
@@ -129,116 +104,69 @@
         ev.preventDefault();
       } else if (ev.key === 'Enter') {
         ev.preventDefault();
-        checkCode();
+        join();
       }
     });
     box.addEventListener('paste', (ev) => {
       ev.preventDefault();
       const next = fillFrom(i, (ev.clipboardData || window.clipboardData).getData('text'));
       if (next < CODE_LENGTH) boxes[next].focus();
-      if (readCode().length === CODE_LENGTH) checkCode();
+      if (readCode().length === CODE_LENGTH) join();
     });
   });
 
-  let checking = false;
-  async function checkCode() {
-    if (checking) return;
+  // ---------------- entrar ----------------
+
+  let joining = false;
+  async function join() {
+    if (joining) return;
     const code = readCode();
     if (code.length < CODE_LENGTH) {
       showError(`O código tem ${CODE_LENGTH} letras 🔤`);
       return;
     }
-    checking = true;
-    try {
-      const res = await emitAsync('check_room', { roomCode: code });
-      codeInput.value = res.code;
-      play('pop');
-      goToStep(2);
-    } catch (e) {
-      const [, message] = FRIENDLY_ERRORS[e.code] || [1, e.message || 'Não consegui achar essa sala.'];
-      showError(message, 1);
-    } finally {
-      checking = false;
-    }
-  }
-
-  document.getElementById('join-next-1').addEventListener('click', checkCode);
-
-  // ---------------- passo 2: nome ----------------
-
-  function checkName() {
-    const name = nameInput.value.trim();
-    if (name.length < 2) {
-      showError(FRIENDLY_ERRORS.NOME_INVALIDO[1]);
-      return;
-    }
-    play('pop');
-    goToStep(3);
-  }
-
-  document.getElementById('join-next-2').addEventListener('click', checkName);
-  nameInput.addEventListener('keydown', (ev) => {
-    if (ev.key === 'Enter') { ev.preventDefault(); checkName(); }
-  });
-
-  // ---------------- passo 3: bichinho ----------------
-
-  const avatarPicker = window.BingoUI.createAvatarPicker(avatarGrid, {
-    onPick: (emoji) => { chosenAvatar = emoji; },
-  });
-
-  // ---------------- enviar ----------------
-
-  document.getElementById('form-join').addEventListener('submit', async (ev) => {
-    ev.preventDefault();
-    if (step !== 3) return;
-    if (!chosenAvatar) {
-      showError('Toque num bichinho para escolher 👆');
-      return;
-    }
-    const submitBtn = document.getElementById('join-submit');
+    joining = true;
     submitBtn.disabled = true;
-    const code = codeInput.value;
-    const name = nameInput.value.trim();
+    speech.textContent = 'Entrando na sala... 🚀';
     try {
-      const res = await emitAsync('join_room', { roomCode: code, name, avatar: chosenAvatar });
-      window.BingoApp.setPlayerSession(code, res.playerId, res.playerToken, name, res.state.you.avatar);
+      const res = await emitAsync('join_room', { roomCode: code, studentToken: window.PlataformaAuth.token() });
+      const { you } = res.state;
+      window.BingoApp.setPlayerSession(res.state.code, res.playerId, res.playerToken, you.name, you.avatar);
       play('start');
       window.BingoPlayer.render(res.state);
     } catch (e) {
-      const [atStep, message] = FRIENDLY_ERRORS[e.code] || [3, e.message || 'Não deu para entrar na sala.'];
-      showError(message, atStep);
+      if (e.code === 'SESSAO_INVALIDA' || e.code === 'CONTA_OBRIGATORIA' || e.code === 'CONTA_DESATIVADA') {
+        // a conta saiu deste aparelho (ou foi desativada): entra de novo
+        window.BingoUI.toast('Entre de novo com o seu nome 😊', 'info');
+        window.PlataformaAuth.logout();
+        return;
+      }
+      showError(FRIENDLY_ERRORS[e.code] || e.message || 'Não deu para entrar na sala.');
+      if (e.code === 'SALA_NAO_ENCONTRADA' || e.code === 'SALA_ENCERRADA') {
+        clearBoxes();
+        setTimeout(() => boxes[0].focus(), 60);
+      }
     } finally {
+      joining = false;
       submitBtn.disabled = false;
     }
+  }
+
+  document.getElementById('form-join').addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    join();
   });
 
-  // ---------------- navegação ----------------
+  document.getElementById('join-back').addEventListener('click', () => window.PlataformaAuth.goHome());
 
-  document.getElementById('join-back').addEventListener('click', () => {
-    const firstStep = codeFromLink ? 2 : 1;
-    if (step > firstStep) goToStep(step - 1);
-    else window.PlataformaAuth.goHome();
-  });
-
-  // Abre a entrada do zero (botão JOGAR) ou já com o código (link/QR Code).
+  // Abre a entrada do zero (cartão do bingo) ou já com o código (link/QR Code).
   function open(code) {
-    boxes.forEach((b) => { b.value = ''; b.classList.remove('is-filled'); });
-    codeInput.value = '';
-    codeFromLink = false;
-    if (!chosenAvatar) {
-      // um bichinho sorteado já vem escolhido; a criança pode trocar
-      avatarPicker.selectRandom();
-      chosenAvatar = avatarPicker.value();
-    }
+    clearBoxes();
     showScreen('screen-join');
+    reset();
     if (code) {
       fillFrom(0, code);
-      codeFromLink = true;
-      goToStep(1);
-      checkCode();
-    } else {
-      goToStep(1);
+      join();
     }
   }
 
@@ -247,14 +175,6 @@
     const code = new URLSearchParams(location.search).get('sala');
     return code ? code.trim().toUpperCase() : null;
   }
-
-  document.querySelectorAll('[data-go="screen-join"]').forEach((btn) => {
-    btn.addEventListener('click', (ev) => {
-      ev.stopImmediatePropagation(); // substitui a navegação simples do app.js
-      play('click');
-      open();
-    });
-  });
 
   window.BingoJoin = { open, codeFromUrl };
 })();

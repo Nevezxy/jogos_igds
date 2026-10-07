@@ -61,6 +61,13 @@ CREATE TABLE IF NOT EXISTS wins (
 );
 `);
 
+// Migrações simples: colunas acrescentadas depois que o banco já existia.
+function addColumnIfMissing(table, column, definition) {
+  const columns = db.prepare(`PRAGMA table_info(${table})`).all().map((c) => c.name);
+  if (!columns.includes(column)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+}
+addColumnIfMissing('players', 'student_id', 'TEXT');
+
 function upsertRoom(room) {
   const stmt = db.prepare(`
     INSERT INTO rooms (code, name, status, config_json, created_at, updated_at)
@@ -88,8 +95,8 @@ function markRoomEnded(code) {
 
 function upsertPlayer(player, roomCode) {
   const stmt = db.prepare(`
-    INSERT INTO players (id, room_code, name, token, card_json, has_won, kicked, created_at)
-    VALUES (@id, @room_code, @name, @token, @card_json, @has_won, @kicked, @created_at)
+    INSERT INTO players (id, room_code, student_id, name, token, card_json, has_won, kicked, created_at)
+    VALUES (@id, @room_code, @student_id, @name, @token, @card_json, @has_won, @kicked, @created_at)
     ON CONFLICT(id) DO UPDATE SET
       name=excluded.name,
       card_json=excluded.card_json,
@@ -99,6 +106,7 @@ function upsertPlayer(player, roomCode) {
   stmt.run({
     id: player.id,
     room_code: roomCode,
+    student_id: player.studentId || null,
     name: player.name,
     token: player.token,
     card_json: player.card ? JSON.stringify(player.card) : null,
