@@ -8,9 +8,12 @@
 const rm = require('./roomManager');
 const accounts = require('../../platform/accounts');
 const progress = require('../../platform/progress');
+const teacher = require('../../platform/teacher');
 
 function err(e) {
-  if (e instanceof rm.RoomError || e instanceof accounts.AccountError) return { ok: false, code: e.code, message: e.message };
+  if (e instanceof rm.RoomError || e instanceof accounts.AccountError || e instanceof teacher.TeacherError) {
+    return { ok: false, code: e.code, message: e.message };
+  }
   console.error('[erro inesperado]', e);
   return { ok: false, code: 'ERRO_INTERNO', message: 'Ocorreu um erro inesperado no servidor.' };
 }
@@ -112,8 +115,11 @@ function registerSocketHandlers(io) {
   io.on('connection', (socket) => {
     // ---------------- CRIAÇÃO / ENTRADA ----------------
 
+    // Com PROFESSOR_PIN configurado, só quem entrou na área do professor
+    // (teacherToken) cria sala.
     socket.on('create_room', (payload = {}, cb) => {
       try {
+        teacher.requireTeacher(payload.teacherToken);
         const room = rm.createRoom({ name: payload.name });
         rm.setMasterSocket(room, socket.id);
         socket.join(roomChannel(room.code));

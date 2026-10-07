@@ -23,9 +23,15 @@ function teacherSummary(progress) {
   return { wins: (progress && progress.wins) || 0 };
 }
 
+function mergeAccounts(a, b) {
+  if (!a || !b) return a || b;
+  return { ...a, wins: (a.wins || 0) + (b.wins || 0), lastWinAt: Math.max(a.lastWinAt || 0, b.lastWinAt || 0) };
+}
+
 module.exports = {
   registerSockets: registerSocketHandlers,
   mergeProgress,
   summary,
   teacherSummary,
+  mergeAccounts,
 };

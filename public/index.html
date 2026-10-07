@@ -127,9 +127,62 @@
   </div>
 </section>
 
+<!-- ======================= ÁREA DO PROFESSOR: PIN ======================= -->
+<section id="screen-teacher-login" class="screen screen-center">
+  <button class="btn-back" id="teacher-login-back" type="button">← voltar</button>
+  <div class="panel-card">
+    <div class="panel-head">
+      <div data-mascot></div>
+      <p class="speech" id="teacher-login-speech">Área do professor 🔒 Digite o PIN.</p>
+    </div>
+    <form id="form-teacher-login" novalidate autocomplete="off">
+      <label class="field">
+        <span class="sr-only">PIN do professor</span>
+        <input id="input-teacher-pin" class="input-big" type="password" inputmode="numeric" maxlength="40" placeholder="PIN" autocomplete="off" />
+      </label>
+      <button type="submit" class="btn btn-violet btn-block btn-lg">Entrar 🔓</button>
+      <p id="teacher-login-error" class="form-error" role="alert"></p>
+    </form>
+  </div>
+</section>
+
+<!-- ======================= ÁREA DO PROFESSOR ======================= -->
+<section id="screen-teacher" class="screen screen-top">
+  <header class="teacher-top">
+    <h1 class="title-game teacher-title">🧑‍🏫 Área do professor</h1>
+    <div class="teacher-top-actions">
+      <button type="button" class="btn-mini" id="teacher-home">🏠 Início</button>
+      <button type="button" class="btn-mini" id="teacher-logout" hidden>🔒 Sair</button>
+    </div>
+  </header>
+
+  <div class="teacher-tools" id="teacher-tools"></div>
+
+  <section class="card-block teacher-class">
+    <div class="teacher-class-head">
+      <h2>👥 Turma <span class="count-badge" id="teacher-count">0</span></h2>
+      <input type="search" id="teacher-search" class="teacher-search" placeholder="Procurar educando..." aria-label="Procurar educando" />
+      <button type="button" class="btn btn-success" id="teacher-bulk">➕ Cadastrar turma</button>
+    </div>
+    <label class="teacher-setting">
+      <input type="checkbox" id="teacher-allow-signup" />
+      <span>Educandos podem criar a própria conta no login</span>
+    </label>
+    <p class="muted teacher-empty" id="teacher-empty" hidden>Nenhum educando ainda. Use "Cadastrar turma" ou deixe as crianças criarem a conta no login.</p>
+    <div class="teacher-table-wrap">
+      <table class="teacher-table" id="teacher-table">
+        <thead>
+          <tr><th>Educando</th><th>Último acesso</th><th>⌨️ Teclado Mágico</th><th>🎯 Bingo</th><th>Ações</th></tr>
+        </thead>
+        <tbody id="teacher-rows"></tbody>
+      </table>
+    </div>
+  </section>
+</section>
+
 <!-- ======================= CRIAR (mestre) ======================= -->
 <section id="screen-create" class="screen screen-center">
-  <button class="btn-back" id="create-back" type="button">← voltar</button>
+  <button class="btn-back" id="create-back" type="button">← Professor</button>
   <div class="panel-card">
     <div class="panel-head">
       <div data-mascot></div>
@@ -216,6 +269,7 @@
       <span class="pill pill-status" id="master-status-badge">esperando</span>
       <button id="btn-voice" class="btn-mini" type="button" title="A voz lê em voz alta cada item sorteado neste computador">🗣️ voz ligada</button>
       <button id="btn-open-screen" class="btn-mini" type="button" title="Abre uma tela grande para o projetor ou TV">📺 Abrir telão</button>
+      <button id="btn-master-teacher" class="btn-mini" type="button" title="Volta à área do professor (a sala continua aberta)">🧑‍🏫 Área do professor</button>
     </div>
     <div class="game-header-right">
       <span id="master-player-count">0 participantes</span>
@@ -491,6 +545,19 @@
   </div>
 </div>
 
+<!-- ======================= janela da área do professor ======================= -->
+<div id="teacher-modal" class="modal-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="teacher-modal-title">
+  <form class="modal-box teacher-modal-box" id="teacher-modal-form" novalidate>
+    <h3 id="teacher-modal-title">Título</h3>
+    <div id="teacher-modal-body"></div>
+    <p class="form-error" id="teacher-modal-error" role="alert"></p>
+    <div class="modal-actions">
+      <button id="teacher-modal-cancel" class="btn btn-ghost" type="button">Cancelar</button>
+      <button id="teacher-modal-ok" class="btn btn-success" type="submit">Salvar</button>
+    </div>
+  </form>
+</div>
+
 <!-- ======================= modal confirmação ======================= -->
 <div id="confirm-modal" class="modal-overlay" hidden>
   <div class="modal-box">
@@ -516,6 +583,7 @@
 <script src="/js/platform/auth.js"></script>
 <script src="/js/platform/games.js"></script>
 <script src="/js/platform/hub.js"></script>
+<script src="/js/platform/teacher.js"></script>
 <script src="/js/platform/router.js"></script>
 <script src="/js/platform/app.js"></script>
 <!-- bingo (ainda carregado direto aqui; vira carregamento sob demanda na etapa D) -->

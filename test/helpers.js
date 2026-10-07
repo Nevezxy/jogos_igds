@@ -7,10 +7,11 @@ const os = require('os');
 const fs = require('fs');
 const { spawn } = require('child_process');
 
-async function startTestServer(port) {
+// `env`: variáveis extras para o servidor (ex.: { PROFESSOR_PIN: '1234' }).
+async function startTestServer(port, env = {}) {
   const dbFile = path.join(os.tmpdir(), `igds-test-${port}-${process.pid}-${Date.now()}.sqlite`);
   const child = spawn(process.execPath, [path.join(__dirname, '..', 'server.js')], {
-    env: { ...process.env, PORT: String(port), DB_FILE: dbFile },
+    env: { ...process.env, PROFESSOR_PIN: '', ...env, PORT: String(port), DB_FILE: dbFile },
     stdio: ['ignore', 'pipe', 'inherit'],
   });
   await new Promise((resolve, reject) => {
@@ -22,9 +23,11 @@ async function startTestServer(port) {
   });
   const url = `http://localhost:${port}`;
 
+  // `token`: token do educando; para o professor, passe { teacher: token }.
   async function api(method, route, body, token) {
     const headers = { 'Content-Type': 'application/json' };
-    if (token) headers['X-Student-Token'] = token;
+    if (token && typeof token === 'object') headers['X-Teacher-Token'] = token.teacher;
+    else if (token) headers['X-Student-Token'] = token;
     const res = await fetch(url + route, { method, headers, body: body ? JSON.stringify(body) : undefined });
     const data = await res.json().catch(() => ({}));
     return { status: res.status, ...data };

@@ -4,7 +4,8 @@
 //   /                 login (ou o painel, se já houver alguém logado)
 //   /jogos            painel de seleção de jogos
 //   /jogos/<id>       um jogo (ex.: /jogos/bingo?sala=CODE)
-//   /professor        área do professor
+//   /professor        área do professor (turma e ferramentas dos jogos)
+//   /professor/<id>   ferramenta de um jogo (ex.: /professor/bingo, a sala do bingo)
 //   /telao?sala=CODE  telão do bingo (cuidado pelo próprio bingo, sem login)
 // Links antigos /?sala=CODE (QR Codes já impressos) viram /jogos/bingo?sala=CODE.
 
@@ -103,12 +104,13 @@
       if (!requireLogin()) return;
       return openGame(gameMatch[1], nav);
     }
-    if (path === '/professor') {
-      const teacher = window.Plataforma.getTeacherArea();
-      if (teacher) {
-        leaveCurrent = () => teacher.leave && teacher.leave();
-        return teacher.enter();
-      }
+    if (path === '/professor') return window.PlataformaTeacher.show();
+    const toolMatch = path.match(/^\/professor\/([a-z0-9-]+)$/);
+    if (toolMatch) {
+      const tool = await window.PlataformaTeacher.enterTool(toolMatch[1]);
+      if (tool && nav === navId) leaveCurrent = () => tool.leave && tool.leave();
+      else if (tool) tool.leave && tool.leave();
+      return;
     }
     return go('/', { replace: true });
   }

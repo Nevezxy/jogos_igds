@@ -228,3 +228,116 @@
 .game-top .btn-back { position: static; }
 .game-title { margin: 0; color: #fff; font-size: 1.6rem; text-shadow: 0 2px 0 rgba(30, 18, 64, .4); }
 .game-root { max-width: 1100px; margin: 0 auto; }
+
+/* ================= ÁREA DO PROFESSOR ================= */
+
+#screen-teacher { padding: 20px 16px 96px; }
+.teacher-top {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  max-width: 1200px;
+  margin: 0 auto 16px;
+}
+.teacher-title { margin: 0; font-size: clamp(1.8rem, 5vw, 2.6rem); }
+.teacher-top-actions { margin-left: auto; display: flex; gap: 8px; }
+
+.teacher-tools {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  max-width: 1200px;
+  margin: 0 auto 18px;
+}
+.teacher-tool {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 14px;
+  align-items: center;
+  padding: 16px 18px;
+  background: var(--surface);
+  border: var(--stroke) solid var(--ink);
+  border-radius: var(--radius-md);
+  box-shadow: 0 6px 0 var(--ink);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform .12s var(--ease-bounce);
+}
+.teacher-tool:hover { transform: translateY(-3px); }
+.teacher-tool:focus-visible { outline: 3px solid var(--yellow); outline-offset: 3px; }
+.teacher-tool-icon { grid-row: span 2; font-size: 2.6rem; }
+.teacher-tool-name { font-family: var(--font-display); font-weight: 800; font-size: 1.3rem; }
+.teacher-tool-desc { color: var(--ink-soft); font-weight: 600; font-size: .92rem; }
+
+.teacher-class { max-width: 1200px; margin: 0 auto; }
+.teacher-class-head { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.teacher-class-head h2 { margin: 0; font-size: 1.6rem; }
+.teacher-search {
+  flex: 1 1 200px;
+  min-width: 0;
+  padding: 10px 14px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  font: inherit;
+  font-weight: 700;
+}
+.teacher-setting { display: inline-flex; align-items: center; gap: 8px; margin: 12px 0 4px; font-weight: 800; cursor: pointer; }
+.teacher-setting input { width: 20px; height: 20px; accent-color: var(--green-dark); }
+.teacher-empty { margin: 16px 0 0; }
+
+.teacher-table-wrap { overflow-x: auto; margin-top: 12px; }
+.teacher-table { width: 100%; border-collapse: collapse; min-width: 760px; }
+.teacher-table th {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 3px solid var(--ink);
+  font-family: var(--font-display);
+  font-size: .95rem;
+  white-space: nowrap;
+}
+.teacher-table td { padding: 10px; border-bottom: 1px solid var(--line); vertical-align: top; font-weight: 600; }
+.teacher-table td:first-child { white-space: nowrap; }
+.teacher-table td .avatar-badge { width: 34px; height: 34px; font-size: 1.2rem; vertical-align: middle; margin-right: 4px; }
+.teacher-table tr.is-inactive td { opacity: .55; }
+.teacher-game { display: flex; flex-direction: column; gap: 2px; font-size: .9rem; }
+.teacher-keys { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 2px; }
+.teacher-keys span {
+  min-width: 24px;
+  padding: 0 6px;
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+  background: #fff;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+}
+.teacher-badge {
+  display: inline-block;
+  width: fit-content;
+  padding: 1px 8px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--yellow);
+  font-size: .78rem;
+  font-weight: 800;
+}
+.teacher-badge-off { background: var(--surface-3); margin-left: 6px; }
+.teacher-actions { display: flex; flex-wrap: wrap; gap: 6px; min-width: 250px; }
+.teacher-actions .btn-mini { min-height: 30px; padding: 4px 10px; font-size: .8rem; }
+
+.teacher-modal-box { text-align: left; max-width: 480px; }
+.teacher-modal-box textarea,
+.teacher-modal-box select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-weight: 700;
+  background: var(--surface-2);
+}
+.teacher-modal-box textarea { resize: vertical; }

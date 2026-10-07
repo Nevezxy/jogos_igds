@@ -79,7 +79,7 @@
     const submitBtn = ev.target.querySelector('button[type="submit"]');
     submitBtn.disabled = true;
     try {
-      const res = await emitAsync('create_room', { name });
+      const res = await emitAsync('create_room', { name, teacherToken: window.PlataformaTeacher.token() });
       setMasterSession(res.roomCode, res.masterToken);
       window.BingoMaster.render(res.state);
       toast(`Sala criada! Código: ${res.roomCode}`, 'success', 5000);
@@ -94,7 +94,7 @@
 
   // Onde o bingo está aberto neste aparelho (quem decide é o roteador da
   // plataforma): null = fora do bingo, 'player' = /jogos/bingo (criança
-  // logada), 'master' = /professor.
+  // logada), 'master' = /professor/bingo (ferramenta da área do professor).
   let mode = null;
   let initialPending = false; // a primeira retomada desta entrada ainda não rodou
 
@@ -190,7 +190,14 @@
   window.PlataformaAuth.onLogout(() => { if (session.role === 'player') resetSession(); });
 
   window.Plataforma.registerGame('bingo', { enter: () => enter('player'), leave });
-  window.Plataforma.registerTeacherArea({ enter: () => enter('master'), leave });
+  window.PlataformaTeacher.registerTool({
+    id: 'bingo',
+    icon: '🎯',
+    name: 'Bingo',
+    description: 'Crie uma sala (ou volte para a sala aberta) e comande os sorteios. Tem QR Code e telão.',
+    enter: () => enter('master'),
+    leave,
+  });
 
   socket.on('disconnect', () => {
     toast('Conexão perdida. Tentando reconectar...', 'error', 4000);

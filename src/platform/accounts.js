@@ -7,6 +7,7 @@
 const { db } = require('./db');
 const { generateId, generateToken } = require('./idGenerator');
 const { normalizeAvatar, isNameAllowed, AVATARS } = require('./avatars');
+const settings = require('./settings');
 
 db.exec(`
 CREATE TABLE IF NOT EXISTS students (
@@ -66,6 +67,7 @@ function nameKey(name) {
 function formatDisplayName(name) {
   const capitalize = (part) => (part ? part[0].toUpperCase() + part.slice(1) : part);
   return cleanName(name).split(' ').map((word, i) => {
+    if (/\p{N}/u.test(word)) return word.toUpperCase(); // turma: "5a" -> "5A"
     const lower = word.toLowerCase();
     const mixed = word !== lower && word !== word.toUpperCase();
     if (mixed) return word;
@@ -80,11 +82,14 @@ function validateName(name) {
   if (clean.length < NAME_MIN || clean.length > NAME_MAX) {
     throw new AccountError('NOME_INVALIDO', `O nome precisa ter de ${NAME_MIN} a ${NAME_MAX} letras.`);
   }
-  if (!/^[\p{L}][\p{L}' -]*$/u.test(clean)) {
-    throw new AccountError('NOME_INVALIDO', 'Use só letras no nome (sem números ou símbolos).');
+  // letras, espaço, hífen e apóstrofo; números só junto de letras, para
+  // diferenciar a turma ("Ana Souza 5A"), nunca sozinhos ("Ana 123")
+  const words = clean.split(' ');
+  if (!/^[\p{L}][\p{L}\p{N}' -]*$/u.test(clean) || !words.every((w) => /\p{L}/u.test(w))) {
+    throw new AccountError('NOME_INVALIDO', 'Use só letras no nome (a turma pode ir junto, como 5A).');
   }
   // nome + sobrenome: pelo menos duas palavras com duas letras ou mais
-  const realWords = clean.split(' ').filter((w) => w.replace(/['-]/g, '').length >= 2);
+  const realWords = words.filter((w) => w.replace(/['\-\p{N}]/gu, '').length >= 2);
   if (realWords.length < 2) {
     throw new AccountError('NOME_SEM_SOBRENOME', 'Escreva o nome e o sobrenome.');
   }
@@ -109,7 +114,7 @@ const stmts = {
   byId: db.prepare('SELECT * FROM students WHERE id = ?'),
   insertStudent: db.prepare(`
     INSERT INTO students (id, display_name, name_key, avatar, active, created_at, last_login_at)
-    VALUES (@id, @display_name, @name_key, @avatar, 1, @now, @now)
+    VALUES (@id, @display_name, @name_key, @avatar, 1, @now, @last_login_at)
   `),
   touchLogin: db.prepare('UPDATE students SET last_login_at = ? WHERE id = ?'),
   setAvatar: db.prepare('UPDATE students SET avatar = ? WHERE id = ?'),
@@ -122,6 +127,11 @@ const stmts = {
   touchSession: db.prepare('UPDATE student_sessions SET last_seen_at = ? WHERE token = ?'),
   deleteSession: db.prepare('DELETE FROM student_sessions WHERE token = ?'),
   purgeSessions: db.prepare('DELETE FROM student_sessions WHERE last_seen_at < ?'),
+  list: db.prepare('SELECT * FROM students ORDER BY display_name COLLATE NOCASE'),
+  rename: db.prepare('UPDATE students SET display_name = ?, name_key = ? WHERE id = ?'),
+  setActive: db.prepare('UPDATE students SET active = ? WHERE id = ?'),
+  deleteSessionsOf: db.prepare('DELETE FROM student_sessions WHERE student_id = ?'),
+  deleteStudent: db.prepare('DELETE FROM students WHERE id = ?'),
 };
 
 stmts.purgeSessions.run(Date.now() - SESSION_MAX_IDLE_MS);
@@ -140,11 +150,12 @@ function requireActive(row) {
   }
 }
 
-// Só diz se a conta existe (e mostra o bichinho, para a criança se reconhecer).
+// Só diz se a conta existe (e mostra o bichinho, para a criança se
+// reconhecer) e se ela pode criar uma conta nova.
 function lookup(name) {
   const { display, key } = validateName(name);
   const row = stmts.byKey.get(key);
-  if (!row || !row.active) return { exists: false, name: display };
+  if (!row || !row.active) return { exists: false, name: display, canRegister: Boolean(settings.get('allowSignup')) };
   return { exists: true, name: row.display_name, avatar: row.avatar };
 }
 
@@ -156,7 +167,12 @@ function login(name) {
   return { token: createSession(row.id), student: publicStudent(row) };
 }
 
-function register(name, avatar) {
+// `byTeacher`: cadastro feito pela área do professor (vale mesmo com o
+// autocadastro desligado e não abre sessão).
+function register(name, avatar, { byTeacher = false } = {}) {
+  if (!byTeacher && !settings.get('allowSignup')) {
+    throw new AccountError('CADASTRO_FECHADO', 'Peça ao professor(a) para criar a sua conta.', 403);
+  }
   const { display, key } = validateName(name);
   if (stmts.byKey.get(key)) {
     throw new AccountError('CONTA_JA_EXISTE', 'Já existe uma conta com esse nome.', 409);
@@ -167,6 +183,8 @@ function register(name, avatar) {
     name_key: key,
     avatar: normalizeAvatar(avatar),
     now: Date.now(),
+    // cadastrada pelo professor: a criança ainda não entrou
+    last_login_at: byTeacher ? null : Date.now(),
   };
   try {
     stmts.insertStudent.run(row);
@@ -178,6 +196,7 @@ function register(name, avatar) {
     throw e;
   }
   const created = stmts.byId.get(row.id);
+  if (byTeacher) return { student: publicStudent(created) };
   return { token: createSession(created.id), student: publicStudent(created) };
 }
 
@@ -204,7 +223,54 @@ function setAvatar(studentId, avatar) {
   return publicStudent(stmts.byId.get(studentId));
 }
 
+// ---------------- área do professor ----------------
+
+function requireStudentRow(id) {
+  const row = stmts.byId.get(String(id || ''));
+  if (!row) throw new AccountError('CONTA_NAO_ENCONTRADA', 'Educando não encontrado.', 404);
+  return row;
+}
+
+function listStudents() {
+  return stmts.list.all().map((row) => ({
+    ...publicStudent(row),
+    active: Boolean(row.active),
+    createdAt: row.created_at,
+    lastLoginAt: row.last_login_at,
+  }));
+}
+
+// Corrige o nome (ex.: erro de digitação, ou "Ana Souza 5A" para diferenciar).
+function renameStudent(id, name) {
+  const row = requireStudentRow(id);
+  const { display, key } = validateName(name);
+  const other = stmts.byKey.get(key);
+  if (other && other.id !== row.id) {
+    throw new AccountError('CONTA_JA_EXISTE', 'Já existe uma conta com esse nome.', 409);
+  }
+  stmts.rename.run(display, key, row.id);
+  return publicStudent(stmts.byId.get(row.id));
+}
+
+// Desativar: a conta não entra mais (e quem estava logado sai).
+function setActive(id, active) {
+  const row = requireStudentRow(id);
+  stmts.setActive.run(active ? 1 : 0, row.id);
+  if (!active) stmts.deleteSessionsOf.run(row.id);
+}
+
+// Apaga a conta `fromId` depois que o progresso dela foi juntado em outra.
+function removeMergedStudent(fromId) {
+  stmts.deleteSessionsOf.run(fromId);
+  stmts.deleteStudent.run(fromId);
+}
+
 module.exports = {
+  requireStudentRow,
+  listStudents,
+  renameStudent,
+  setActive,
+  removeMergedStudent,
   AccountError,
   nameKey,
   formatDisplayName,

@@ -112,4 +112,32 @@ function setUnlockedAll(old, value) {
   return { levels: {}, ...(old || {}), unlockedAll: Boolean(value) };
 }
 
-module.exports = { validateResult, mergeProgress, summary, teacherSummary, setUnlockedAll };
+// Duas contas da mesma criança viram uma: fica o melhor de cada fase.
+function mergeAccounts(a, b) {
+  if (!a) return b;
+  if (!b) return a;
+  const levels = { ...a.levels };
+  for (const [id, lb] of Object.entries(b.levels || {})) {
+    const la = levels[id];
+    levels[id] = !la ? lb : {
+      stars: Math.max(la.stars || 0, lb.stars || 0),
+      bestWpm: Math.max(la.bestWpm || 0, lb.bestWpm || 0),
+      bestAccuracy: Math.max(la.bestAccuracy || 0, lb.bestAccuracy || 0),
+      plays: (la.plays || 0) + (lb.plays || 0),
+      lastPlayedAt: Math.max(la.lastPlayedAt || 0, lb.lastPlayedAt || 0),
+    };
+  }
+  const keyErrors = { ...a.keyErrors };
+  for (const [c, n] of Object.entries(b.keyErrors || {})) keyErrors[c] = (keyErrors[c] || 0) + n;
+  return {
+    ...a,
+    levels,
+    keyErrors,
+    totalChars: (a.totalChars || 0) + (b.totalChars || 0),
+    totalTimeMs: (a.totalTimeMs || 0) + (b.totalTimeMs || 0),
+    plays: (a.plays || 0) + (b.plays || 0),
+    unlockedAll: Boolean(a.unlockedAll || b.unlockedAll),
+  };
+}
+
+module.exports = { validateResult, mergeProgress, summary, teacherSummary, setUnlockedAll, mergeAccounts };

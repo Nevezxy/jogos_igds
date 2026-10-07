@@ -18,8 +18,6 @@
   // enquanto os arquivos de um jogo ainda baixam, esse jogo não é montado.
   let mountSeq = 0;
 
-  let teacherArea = null; // { enter(), leave() } — por enquanto, a do bingo
-
   function registerGame(id, module) {
     if (!module || (typeof module.mount !== 'function' && typeof module.enter !== 'function')) {
       throw new Error(`O jogo "${id}" precisa ter mount(container, ctx) ou enter(ctx).`);
@@ -135,8 +133,6 @@
     registerGame,
     getModule: (id) => modules.get(id),
     createContext,
-    registerTeacherArea: (area) => { teacherArea = area; },
-    getTeacherArea: () => teacherArea,
     listGames,
     mountGame,
     unmountGame,

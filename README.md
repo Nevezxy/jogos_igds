@@ -110,6 +110,8 @@ jogos_igds/
 │   │   ├── accounts.js       # Contas dos educandos (login por nome e sobrenome) e sessões
 │   │   ├── routes.js         # Rotas HTTP do núcleo (/api/auth/..., /api/progress/...)
 │   │   ├── progress.js       # Progresso genérico por educando e jogo (game_progress, game_results)
+│   │   ├── teacher.js        # Área do professor: PIN, turma, juntar contas, liberar fases, cadastro em lote
+│   │   ├── settings.js       # Configurações da plataforma (ex.: autocadastro ligado/desligado)
 │   │   ├── idGenerator.js    # Códigos, IDs e tokens
 │   │   └── avatars.js        # Bichinhos permitidos e filtro de nomes impróprios
 │   └── games/
@@ -144,7 +146,8 @@ jogos_igds/
 │   │       ├── auth.js       # Login "É você?", criação de conta e sessão (window.PlataformaAuth)
 │   │       ├── games.js      # Registro e carregador de jogos sob demanda (window.Plataforma)
 │   │       ├── hub.js        # Painel de jogos: cartões do registro, trocar bichinho, sair
-│   │       ├── router.js     # Rotas: /, /jogos, /jogos/<id>, /professor (History API)
+│   │       ├── router.js     # Rotas: /, /jogos, /jogos/<id>, /professor, /professor/<id> (History API)
+│   │       ├── teacher.js    # Área do professor: PIN, ferramentas dos jogos e a turma
 │   │       └── app.js        # Som, cliques e navegação comuns a todas as telas
 │   └── games/
 │       ├── digitacao/        # ⌨️ Teclado Mágico (carregado sob demanda)
@@ -171,6 +174,7 @@ jogos_igds/
 │   ├── digitacao.test.js     # Teclado Mágico sem navegador: motor, ABNT2, fases, conteúdo, validação
 │   ├── helpers.js            # Sobe um servidor de teste (porta própria, banco temporário) e cria contas
 │   ├── platform.test.js      # Contas e API da plataforma
+│   ├── teacher.test.js       # Área do professor (com PIN)
 │   ├── integration.test.js   # Fluxo completo de uma partida
 │   ├── features.test.js      # Avatar, filtro de nome, quase lá, sorteio automático, telão, QR
 │   └── load.test.js          # Turma inteira jogando ao mesmo tempo
@@ -189,7 +193,8 @@ jogos_igds/
 | `/` | Login (ou o painel, se já houver alguém logado) |
 | `/jogos` | Painel de jogos |
 | `/jogos/<id>` | Um jogo (ex.: `/jogos/bingo?sala=CODE`) |
-| `/professor` | Área do professor (hoje: criar/retomar sala de bingo) |
+| `/professor` | Área do professor: turma e ferramentas dos jogos |
+| `/professor/bingo` | Criar ou retomar a sala de bingo |
 | `/telao?sala=CODE` | Telão do bingo, sem login |
 
 O QR Code e o link da sala continuam no formato curto `/?sala=CODE`, mais
@@ -285,6 +290,14 @@ Servidor valida o BINGO → comemoração em tela cheia → 🎉 Nova partida
 - Pausa com o mascote dormindo; botão 🔊/🔇 em todas as telas.
 
 **Para o professor**
+- Área do professor (`/professor`), protegida pelo PIN de `PROFESSOR_PIN`
+  (sem PIN, fica aberta). Com PIN, só o professor cria salas de bingo.
+- Turma: cada educando com bichinho, último acesso, mundo/fase atual no
+  Teclado Mágico, estrelas, PPM médio, teclas com mais erro e bingos.
+- Renomear (ex.: "Ana Souza 5A" para diferenciar), juntar duas contas da
+  mesma criança (fica o melhor progresso de cada fase), liberar todas as
+  fases, desativar/reativar, cadastrar a turma de uma vez (um nome por
+  linha) e ligar/desligar o autocadastro no login.
 - QR Code e link da rede local (com escolha da rede, se houver mais de uma).
 - Configuração em cartões: tipo (números, palavras, emojis, personalizado),
   pacotes prontos (301 palavras, 240 emojis, 214 itens), tamanho 3×3 a

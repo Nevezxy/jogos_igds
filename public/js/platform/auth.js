@@ -43,6 +43,7 @@
     NOME_IMPROPRIO: 'Esse nome não pode 🙅 Escreva o seu nome de verdade!',
     CONTA_DESATIVADA: 'Essa conta está desligada. Fale com o(a) professor(a) 🙋',
     SEM_CONEXAO: 'Não consegui falar com o servidor 😵 Tente de novo!',
+    CADASTRO_FECHADO: 'Peça ao(à) professor(a) para criar a sua conta 🙋',
   };
 
   function readStoredToken() {
@@ -113,8 +114,12 @@
           document.getElementById('login-who-name').textContent = res.name;
           goToStep('confirm');
         } else {
+          // o professor pode ter desligado o autocadastro: aí só ele cria contas
           document.getElementById('login-new-name').textContent = res.name;
-          goToStep('new');
+          document.getElementById('login-first-time').hidden = res.canRegister === false;
+          goToStep('new', res.canRegister === false
+            ? 'Não achei ninguém com esse nome 🤔 Confira se escreveu certinho ou peça ao(à) professor(a) para criar a sua conta 🙋'
+            : SPEECH.new);
         }
       } catch (e) {
         showError(friendly(e));
@@ -211,8 +216,6 @@
   function goHome() {
     window.PlataformaRouter.go(student ? '/jogos' : '/');
   }
-
-  document.getElementById('create-back').addEventListener('click', goHome);
 
   async function init() {
     // o telão do bingo não tem login: ele só assiste a sala
