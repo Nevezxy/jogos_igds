@@ -26,8 +26,9 @@ function checkLetras() {
   const layout = loadLayout();
   const ACCENT = /[áéíóúãõâêôàüç]/i;
   const bad = [];
-  assert(Letras.LEVELS.length === 72 && Letras.WORLDS.every((w) => w.levels.length === 12), 'Letras Cadentes: 6 mundos com 12 fases');
-  assert(Letras.getWorld('l1').levels.every((l) => l.gen.t === 'chars'), 'letras e números num mundo só');
+  assert(Letras.LEVELS.length >= 30 && Letras.WORLDS.every((w) => w.levels.length >= 4), `Letras Cadentes: ${Letras.LEVELS.length} fases, todas diferentes`);
+  assert(new Set(Letras.LEVELS.map((l) => JSON.stringify(l.gen))).size === Letras.LEVELS.length, 'nenhuma fase repete o conteúdo de outra');
+  assert(Letras.getWorld('l1').contents.every((c) => c.gen.t === 'chars'), 'letras e números num mundo só');
   assert(new Set(Letras.LEVELS.map((l) => l.id)).size === Letras.LEVELS.length, 'ids de fase sem repetir');
   for (const level of Letras.LEVELS) {
     for (let s = 1; s <= 40; s++) {
@@ -44,16 +45,19 @@ function checkLetras() {
     }
   }
   assert(bad.length === 0, `peças certas em todas as fases${bad.length ? `: ${bad.slice(0, 5).join(' / ')}` : ''}`);
-  const lv = Letras.getLevel('l7b2');
+  const lv = Letras.getLevel('l4b');
   assert(JSON.stringify(LetrasItems.makeItems(lv, 9)) === JSON.stringify(LetrasItems.makeItems(lv, 9)), 'mesma semente = mesmas peças');
-  assert(Letras.LEVELS.filter((l) => l.caseSensitive).every((l) => ['l5', 'l9'].includes(l.world)), 'maiúscula só conta nos mundos de maiúsculas e desafio');
-  const speeds = Letras.getWorld('l1').levels.slice(0, 3).map((l) => l.fallMs);
-  assert(speeds[0] > speeds[1] && speeds[1] > speeds[2], 'cada conteúdo tem 3 velocidades, da mais lenta para a mais rápida');
+  assert(Letras.LEVELS.filter((l) => l.caseSensitive).every((l) => ['l2', 'l6'].includes(l.world)), 'maiúscula só conta nos mundos de maiúsculas e no grande final');
+  const l1 = Letras.getLevel('l1a');
+  const first = Letras.paceAt(l1, 0); const last = Letras.paceAt(l1, l1.count - 1);
+  assert(first.fallMs > last.fallMs && first.intervalMs > last.intervalMs && first.maxOnScreen < last.maxOnScreen, 'a rodada acelera da primeira à última peça');
+  assert(Letras.WORLDS.slice(0, -1).every((w) => w.levels[w.levels.length - 1].challenge), 'cada mundo termina com um desafio');
 }
 
 function checkNumeros() {
   const bad = [];
-  assert(Numeros.LEVELS.length === 96 && Numeros.WORLDS.every((w) => w.levels.length === 12), 'Números Cadentes: 8 mundos com 12 fases');
+  assert(Numeros.LEVELS.length >= 40 && Numeros.WORLDS.every((w) => w.levels.length >= 4 && w.levels[w.levels.length - 1].challenge), `Números Cadentes: ${Numeros.LEVELS.length} fases, cada mundo com desafio`);
+  assert(new Set(Numeros.LEVELS.map((l) => JSON.stringify(l.gen))).size === Numeros.LEVELS.length, 'nenhuma fase repete o conteúdo de outra');
   for (const level of Numeros.LEVELS) {
     const world = Numeros.getWorld(level.world);
     const distinct = new Set();
@@ -76,7 +80,7 @@ function checkNumeros() {
     if (distinct.size < 6) bad.push(`${level.id}: só ${distinct.size} peças diferentes`);
   }
   assert(bad.length === 0, `contas certas em todas as fases${bad.length ? `: ${bad.slice(0, 5).join(' / ')}` : ''}`);
-  const lv = Numeros.getLevel('n4c2');
+  const lv = Numeros.getLevel('n4f');
   assert(JSON.stringify(NumerosItems.makeItems(lv, 9)) === JSON.stringify(NumerosItems.makeItems(lv, 9)), 'mesma semente = mesmas contas');
 }
 
@@ -90,7 +94,7 @@ async function checkServer() {
       'jogos com assunto (seções do painel)');
 
     const kid = await srv.student('Nina Prado');
-    const level = Letras.getLevel('l7b1');
+    const level = Letras.getLevel('l4b');
     const seed = 4242;
     const items = LetrasItems.makeItems(level, seed);
     const chars = items.reduce((n, it) => n + [...it].length, 0);
@@ -116,11 +120,15 @@ async function checkServer() {
     assert(r.ok && r.result.stars === 1, 'deixou cair 30% = 1 estrela');
     r = await send({ lost: [...Array(items.length).keys()], durationMs: 1000 });
     assert(r.ok && r.result.stars === 0, 'deixou cair tudo = 0 estrela (e não precisa de tempo mínimo)');
-    assert(r.progress.levels.l7b1.stars === 3 && r.progress.trouble[items[0]] >= 1 && r.progress.trouble.q === 3,
+    r = await send({ score: 999999999 });
+    assert(r.code === 'RESULTADO_INVALIDO', 'pontos impossíveis são recusados');
+    r = await send({ score: 1234, lost: [...Array(items.length).keys()], durationMs: 1000 });
+    assert(r.ok && r.progress.levels.l4b.bestScore === 1234, 'o recorde de pontos da fase fica guardado');
+    assert(r.progress.levels.l4b.stars === 3 && r.progress.trouble[items[0]] >= 1 && r.progress.trouble.q === 3,
       'progresso guarda as melhores estrelas e o que mais caiu');
 
     // Números Cadentes: contam os algarismos das respostas
-    const nl = Numeros.getLevel('n4a1');
+    const nl = Numeros.getLevel('n4b');
     const nItems = NumerosItems.makeItems(nl, 777);
     const digits = nItems.reduce((n, it) => n + String(it.answer).length, 0);
     const nsend = (body) => api('POST', '/api/progress/numeros/results', { levelId: nl.id, seed: 777, lost: [], wrong: 0, durationMs: 60000, ...body }, kid);
@@ -140,8 +148,8 @@ async function checkServer() {
     r = await api('GET', '/api/teacher/students', null, { teacher: t });
     const row = r.students.find((s) => s.name === 'Nina Prado').games.letras;
     const nrow = r.students.find((x) => x.name === 'Nina Prado').games.numeros;
-    assert(nrow && nrow.totalLevels === 96 && nrow.toughest.length > 0, 'área do professor mostra o Números Cadentes');
-    assert(row && row.levelsDone === 1 && row.totalLevels === 72 && row.toughest.length > 0 && typeof row.caughtPct === 'number',
+    assert(nrow && nrow.totalLevels === Numeros.LEVELS.length && nrow.toughest.length > 0, 'área do professor mostra o Números Cadentes');
+    assert(row && row.levelsDone === 1 && row.totalLevels === Letras.LEVELS.length && row.toughest.length > 0 && typeof row.caughtPct === 'number',
       'área do professor mostra fases, quanto pega e o que mais cai');
   } finally {
     await srv.stop();

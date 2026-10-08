@@ -1,8 +1,10 @@
 // public/games/numeros/levels.js
 // Mundos e fases do 🔢 Números Cadentes. Fonte única das fases: o navegador
 // usa para o mapa e o servidor (src/games/numeros/server.js) para conferir
-// os resultados. Cada mundo tem 4 conteúdos, e cada conteúdo vira 3 fases,
-// uma por velocidade (🐢 devagar, 🐇 médio, 🚀 rápido): 12 fases por mundo.
+// os resultados. Cada fase é um conteúdo diferente, e a rodada acelera:
+// começa devagar e vai ficando mais rápida até a última conta (`paceAt`).
+// Cada mundo termina com um 🏆 Desafio, que mistura tudo do mundo e já
+// começa mais rápido.
 //
 // Conteúdo (`gen`, gerado em items.js):
 //   { t: 'dice', n }        n dados (1 a 3): a criança conta os pontinhos
@@ -15,28 +17,21 @@
 
 (function (root) {
   const SMALL = 100;
+  // Ritmo: do começo (`from`) ao fim (`to`) da rodada.
   const PACES = {
-    dado: [
-      { fallMs: 11000, intervalMs: 2600, maxOnScreen: 2, count: 18 },
-      { fallMs: 8500, intervalMs: 2000, maxOnScreen: 3, count: 21 },
-      { fallMs: 6500, intervalMs: 1500, maxOnScreen: 3, count: 24 },
-    ],
-    conta: [
-      { fallMs: 15000, intervalMs: 3400, maxOnScreen: 2, count: 15 },
-      { fallMs: 11500, intervalMs: 2600, maxOnScreen: 3, count: 18 },
-      { fallMs: 8500, intervalMs: 1900, maxOnScreen: 3, count: 21 },
-    ],
-    longa: [
-      { fallMs: 19000, intervalMs: 4500, maxOnScreen: 2, count: 12 },
-      { fallMs: 15000, intervalMs: 3500, maxOnScreen: 2, count: 14 },
-      { fallMs: 11500, intervalMs: 2700, maxOnScreen: 3, count: 16 },
-    ],
+    dado: { count: 21, from: { fallMs: 11000, intervalMs: 2600, maxOnScreen: 2 }, to: { fallMs: 6500, intervalMs: 1500, maxOnScreen: 3 } },
+    conta: { count: 18, from: { fallMs: 15000, intervalMs: 3400, maxOnScreen: 2 }, to: { fallMs: 8500, intervalMs: 1900, maxOnScreen: 3 } },
+    longa: { count: 14, from: { fallMs: 19000, intervalMs: 4500, maxOnScreen: 2 }, to: { fallMs: 11500, intervalMs: 2700, maxOnScreen: 3 } },
   };
-  const SPEEDS = [
-    { label: '🐢 Devagar', tip: 'Sem pressa: as contas caem devagar.' },
-    { label: '🐇 Médio', tip: 'Um pouco mais rápido, e mais contas ao mesmo tempo.' },
-    { label: '🚀 Rápido', tip: 'Rapidinho! Olhe primeiro para a conta mais perto do chão.' },
-  ];
+  // o Desafio começa no meio do caminho e termina 15% mais rápido
+  function challengePace(p) {
+    const mid = (k) => Math.round((p.from[k] + p.to[k]) / 2);
+    return {
+      count: p.count + 4,
+      from: { fallMs: mid('fallMs'), intervalMs: mid('intervalMs'), maxOnScreen: p.to.maxOnScreen - 1 },
+      to: { fallMs: Math.round(p.to.fallMs * 0.85), intervalMs: Math.round(p.to.intervalMs * 0.85), maxOnScreen: p.to.maxOnScreen },
+    };
+  }
 
   const calc = (gen) => ({ t: 'calc', gen });
   const table = (list) => calc({ t: 'mul', a: { list }, b: [0, 10], swap: true });
@@ -50,7 +45,6 @@
         { title: 'Um dado', gen: { t: 'dice', n: 1 }, tip: 'Conte os pontinhos do dado: de 1 a 6.' },
         { title: 'Dois dados e dominós', gen: { t: 'diceMix', of: ['d2', 'domino'] }, tip: 'Some os pontinhos das duas partes. No dominó, um lado pode estar vazio: vale 0.' },
         { title: 'Três dados', gen: { t: 'dice', n: 3 }, tip: 'Some dois dados primeiro e depois o terceiro.' },
-        { title: 'Tudo misturado', gen: { t: 'diceMix', of: ['d1', 'd2', 'd3', 'domino'] }, tip: 'Um, dois ou três dados, e dominós.' },
       ],
     },
     {
@@ -59,8 +53,8 @@
       contents: [
         { title: 'Somas até 10', gen: calc({ t: 'add', a: [0, 10], b: [0, 10], max: 10 }), tip: 'Conte nos dedos a partir do maior número.' },
         { title: 'Subtrações até 10', gen: calc({ t: 'sub', a: [1, 10], b: [0, 10] }), tip: 'Comece no maior e volte.' },
-        { title: 'Somas até 20', gen: calc({ t: 'add', a: [0, 20], b: [0, 20], max: 20 }), tip: 'Complete o 10 primeiro e some o que sobra.' },
-        { title: 'Mais e menos até 20', gen: calc({ t: 'pick', of: [{ t: 'add', a: [0, 20], b: [0, 20], max: 20 }, { t: 'sub', a: [0, 20], b: [0, 20] }] }), tip: 'Olhe o sinal antes de responder!' },
+        { title: 'Somas até 20', gen: calc({ t: 'add', a: [0, 20], b: [0, 20], max: 20, min: 8 }), tip: 'Complete o 10 primeiro e some o que sobra.' },
+        { title: 'Subtrações até 20', gen: calc({ t: 'sub', a: [10, 20], b: [1, 15] }), tip: 'Volte até o 10 primeiro e depois o resto.' },
       ],
     },
     {
@@ -77,17 +71,22 @@
       id: 'n4', icon: '✖️', name: 'Tabuadas', color: 'orange', pace: 'conta', maxAbs: SMALL,
       intro: 'As tabuadas caindo do céu! Quanto mais você souber de cabeça, mais rápido estoura.',
       contents: [
-        { title: '×2, ×5 e ×10', gen: table([2, 5, 10]), tip: 'As tabuadas mais fáceis.' },
-        { title: '×3 e ×4', gen: table([3, 4]), tip: 'Vezes 4 é o dobro do dobro.' },
-        { title: '×6 e ×7', gen: table([6, 7]), tip: 'Vezes 6 é o dobro da tabuada do 3.' },
-        { title: '×8 e ×9', gen: table([8, 9]), tip: 'Truque do 9: vezes 10, menos o número.' },
+        { title: '×2', gen: table([2]), tip: 'Vezes 2 é o dobro.' },
+        { title: '×5 e ×10', gen: table([5, 10]), tip: 'A do 5 termina em 0 ou 5; a do 10 ganha um zero.' },
+        { title: '×3', gen: table([3]), tip: '3 × 4 é 4 + 4 + 4.' },
+        { title: '×4', gen: table([4]), tip: 'Vezes 4 é o dobro do dobro.' },
+        { title: '×6', gen: table([6]), tip: 'Vezes 6 é o dobro da tabuada do 3.' },
+        { title: '×7', gen: table([7]), tip: 'A do 7: use a do 5 e some mais 2 grupos.' },
+        { title: '×8', gen: table([8]), tip: 'Vezes 8 é o dobro da tabuada do 4.' },
+        { title: '×9', gen: table([9]), tip: 'Truque do 9: vezes 10, menos o número.' },
       ],
     },
     {
       id: 'n5', icon: '➗', name: 'Divisão', color: 'violet', pace: 'conta', maxAbs: SMALL,
       intro: 'Divisões caindo! Pense na tabuada ao contrário.',
       contents: [
-        { title: '÷2, ÷5 e ÷10', gen: divBy([2, 5, 10]), tip: 'Dividir por 2 é achar a metade.' },
+        { title: '÷2', gen: divBy([2]), tip: 'Dividir por 2 é achar a metade.' },
+        { title: '÷5 e ÷10', gen: divBy([5, 10]), tip: 'Pense na tabuada do 5 e do 10.' },
         { title: '÷3 e ÷4', gen: divBy([3, 4]), tip: 'Pense na tabuada do 3 e do 4.' },
         { title: '÷6 e ÷7', gen: divBy([6, 7]), tip: 'Pense na tabuada do 6 e do 7.' },
         { title: '÷8 e ÷9', gen: divBy([8, 9]), tip: 'Pense na tabuada do 8 e do 9.' },
@@ -97,9 +96,8 @@
       id: 'n6', icon: '🎯', name: 'Misturadas', color: 'pink', pace: 'conta', maxAbs: SMALL,
       intro: 'As quatro operações misturadas. Olhe bem o sinal!',
       contents: [
-        { title: 'Mais e menos', gen: calc({ t: 'pick', of: [{ t: 'add', a: [5, 60], b: [5, 39], max: 99 }, { t: 'sub', a: [20, 99], b: [5, 60] }] }), tip: 'Somar ou tirar?' },
+        { title: 'Mais e menos', gen: calc({ t: 'pick', of: [{ t: 'add', a: [5, 60], b: [5, 39], max: 99 }, { t: 'sub', a: [20, 99], b: [5, 60] }] }), tip: 'Somar ou tirar? Olhe o sinal!' },
         { title: 'Vezes e dividir', gen: calc({ t: 'pick', of: [{ t: 'mul', a: [2, 10], b: [2, 10] }, { t: 'div', d: [2, 10], q: [1, 10], amax: 99 }] }), tip: 'Tabuada para os dois lados.' },
-        { title: 'As quatro operações', gen: calc({ t: 'pick', of: [{ t: 'add', a: [0, 20], b: [0, 20], max: 20 }, { t: 'sub', a: [0, 20], b: [0, 20] }, { t: 'mul', a: [2, 10], b: [2, 10] }, { t: 'div', d: [2, 10], q: [1, 10], amax: 99 }] }), tip: '+, −, × e ÷ juntos.' },
         { title: 'Dobro e metade', gen: calc({ t: 'pick', of: [{ t: 'mul', a: 2, b: [2, 50], swap: true }, { t: 'div', d: 2, q: [2, 50] }] }), tip: 'Dobro é ×2. Metade é ÷2.' },
       ],
     },
@@ -117,10 +115,9 @@
       id: 'n8', icon: '🚀', name: 'Potências e raízes', color: 'red', pace: 'conta', maxAbs: SMALL,
       intro: 'Potências e raízes caindo! 7² = 49, e √49 = 7.',
       contents: [
-        { title: 'Quadrados', gen: calc({ t: 'pow', base: [0, 10], exp: 2 }), tip: 'O número vezes ele mesmo.' },
-        { title: 'Raízes quadradas', gen: calc({ t: 'root', n: 2, r: [0, 10] }), tip: 'Que número vezes ele mesmo dá esse?' },
+        { title: 'Quadrados', gen: calc({ t: 'pow', base: [0, 10], exp: 2 }), tip: 'O número vezes ele mesmo: 7² = 49.' },
+        { title: 'Raízes quadradas', gen: calc({ t: 'root', n: 2, r: [0, 10] }), tip: 'Que número vezes ele mesmo dá esse? √49 = 7.' },
         { title: 'Cubos e raízes cúbicas', gen: calc({ t: 'pick', of: [{ t: 'pow', base: [1, 4], exp: 3 }, { t: 'root', n: 3, r: [1, 4] }, { t: 'pow', base: { list: [2, 3] }, exp: [0, 6], max: 100 }] }), tip: '3³ = 27, e ∛27 = 3.' },
-        { title: 'Tudo junto', gen: calc({ t: 'pick', of: [{ t: 'pow', base: [0, 10], exp: 2 }, { t: 'root', n: 2, r: [0, 10] }, { t: 'pow', base: [1, 4], exp: 3 }, { t: 'root', n: 3, r: [1, 4] }] }), tip: 'Potências e raízes misturadas.' },
       ],
     },
   ];
@@ -132,36 +129,59 @@
     { stars: 1, caught: 0.6 },
   ];
 
+  // 🏆 Desafio do mundo: mistura todos os conteúdos do mundo
+  function challengeGen(contents) {
+    if (contents.every((c) => c.gen.t === 'calc')) return calc({ t: 'pick', of: contents.map((c) => c.gen.gen) });
+    const kinds = contents.flatMap((c) => (c.gen.t === 'diceMix' ? c.gen.of : c.gen.t === 'domino' ? ['domino'] : [`d${c.gen.n}`]));
+    return { t: 'diceMix', of: [...new Set(kinds)] };
+  }
+
   const LEVELS = [];
   WORLDS.forEach((world, w) => {
     world.levels = [];
-    world.contents.forEach((content, c) => {
-      const pace = PACES[content.pace || world.pace];
-      SPEEDS.forEach((speed, s) => {
-        const level = {
-          id: `${world.id}${'abcd'[c]}${s + 1}`,
-          title: speed.label,
-          topic: content.title,
-          fullTitle: `${content.title} · ${speed.label}`,
-          section: s === 0 ? content.title : undefined,
-          tip: `${content.tip} ${speed.tip}`,
-          gen: content.gen,
-          maxAbs: world.maxAbs,
-          speed: s,
-          ...pace[s],
-          world: world.id,
-          worldIndex: w,
-          indexInWorld: world.levels.length,
-          index: LEVELS.length,
-        };
-        world.levels.push(level);
-        LEVELS.push(level);
-      });
-    });
+    const add = (content, pace, extra = {}) => {
+      const level = {
+        id: `${world.id}${extra.idSuffix || 'abcdefghi'[world.levels.length]}`,
+        title: content.title,
+        topic: content.title,
+        fullTitle: content.title,
+        tip: content.tip,
+        gen: content.gen,
+        maxAbs: world.maxAbs,
+        count: pace.count,
+        from: pace.from,
+        to: pace.to,
+        world: world.id,
+        worldIndex: w,
+        indexInWorld: world.levels.length,
+        index: LEVELS.length,
+        ...extra,
+      };
+      delete level.idSuffix;
+      world.levels.push(level);
+      LEVELS.push(level);
+    };
+    world.contents.forEach((content) => add(content, PACES[content.pace || world.pace]));
+    add({
+      title: '🏆 Desafio do mundo',
+      gen: challengeGen(world.contents),
+      tip: 'Tudo o que caiu neste mundo, misturado e mais rápido!',
+    }, challengePace(PACES[world.pace]), { idSuffix: 'x', fullTitle: `Desafio: ${world.name}`, challenge: true });
   });
   const BY_ID = Object.fromEntries(LEVELS.map((l) => [l.id, l]));
   const getLevel = (id) => BY_ID[id] || null;
   const getWorld = (id) => WORLDS.find((w) => w.id === id) || null;
+
+  // Ritmo da conta `index`: vai do `from` ao `to` ao longo da rodada.
+  function paceAt(level, index) {
+    const k = level.count > 1 ? Math.min(1, index / (level.count - 1)) : 1;
+    const mix = (a, b) => a + (b - a) * k;
+    return {
+      fallMs: Math.round(mix(level.from.fallMs, level.to.fallMs)),
+      intervalMs: Math.round(mix(level.from.intervalMs, level.to.intervalMs)),
+      maxOnScreen: Math.round(mix(level.from.maxOnScreen, level.to.maxOnScreen)),
+    };
+  }
 
   function starsFor(levelId, { caught, count, accuracy }) {
     if (!getLevel(levelId) || !count) return 0;
@@ -179,7 +199,7 @@
 
   const api = {
     WORLDS, LEVELS, PACES, MAX_STARS: LEVELS.length * 3,
-    getLevel, getWorld, starsFor, isUnlocked, nextLevel, totalStars,
+    getLevel, getWorld, starsFor, isUnlocked, nextLevel, totalStars, paceAt,
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.NumerosLevels = api;

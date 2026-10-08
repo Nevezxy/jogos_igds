@@ -122,6 +122,10 @@
       worldText.hidden = level.indexInWorld !== 0;
       $('#tm-intro-tip').textContent = `💡 ${level.tip}`;
       $('#tm-intro-mode').hidden = !uppercase;
+      // recorde de velocidade da fase (só conta com a fase bem feita)
+      const best = (progress.levels && progress.levels[level.id] && progress.levels[level.id].bestWpm) || 0;
+      $('#tm-intro-record').hidden = !best;
+      $('#tm-intro-record').textContent = best ? `🏆 Seu recorde nesta fase: ${Math.round(best)} PPM. Consegue bater?` : '';
       show('intro');
       setTimeout(() => $('#tm-start').focus(), 60);
     }
@@ -317,7 +321,15 @@
       const result = run.result();
       const { level } = current;
       const stars = level ? Levels.starsFor(level.id, result.accuracy, result.wpm) : 0;
+      const prevBest = level && progress.levels && progress.levels[level.id] ? progress.levels[level.id].bestWpm || 0 : 0;
       showResult(result, stars);
+      // novo recorde de velocidade (com pelo menos 1 estrela: rápido e certo)
+      const rec = $('#tm-record');
+      const beat = level && stars >= 1 && Math.round(result.wpm) > Math.round(prevBest);
+      rec.classList.toggle('is-new', Boolean(beat));
+      rec.textContent = !level ? '' : beat
+        ? (prevBest ? `🏆 Novo recorde de velocidade! (antes: ${Math.round(prevBest)} PPM)` : '🏆 Primeiro recorde desta fase!')
+        : prevBest ? `Seu recorde nesta fase: ${Math.round(prevBest)} PPM` : '';
 
       if (!level) return;
       try {

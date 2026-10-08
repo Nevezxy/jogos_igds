@@ -141,6 +141,9 @@
         renderThemes();
       }
       $('#cc-intro-review').hidden = reviewKeys(level).length === 0;
+      const bestStreak = levelData(level.id).bestStreak || 0;
+      $('#cc-intro-record').hidden = bestStreak < 2;
+      $('#cc-intro-record').textContent = `🔥 Seu recorde: ${bestStreak} contas certas seguidas. Consegue bater?`;
       show('intro');
       setTimeout(() => $('#cc-start').focus(), 60);
     }
@@ -192,8 +195,11 @@
         startedAt: Date.now(),
         emoji: Boolean(Levels.getWorld(level.world).emoji),
         picture: Emoji.pickEmoji(theme),
+        streak: 0,
+        bestStreak: 0,
       };
       $('#cc-play-title').textContent = level.title;
+      $('#cc-streak').hidden = true;
       $('#cc-say').hidden = !voice;
       const dots = $('#cc-dots');
       dots.innerHTML = '';
@@ -358,6 +364,7 @@
         const first = round.tries.length === 1;
         dot.classList.add(first ? 'is-right' : 'is-second');
         $('#cc-feedback').textContent = first ? pickPraise() : 'Isso! Na segunda tentativa 👍';
+        if (first) bumpStreak(); else resetStreak();
         $('#cc-feedback').className = 'cc-feedback is-right';
         sound.play('ding');
         fillHole(value);
@@ -366,6 +373,7 @@
       }
       sound.play('bonk');
       window.BingoFx.shake($('#cc-answer'));
+      resetStreak();
       if (round.tries.length === 1) {
         $('#cc-feedback').textContent = `💡 ${P.hint(p)}`;
         $('#cc-feedback').className = 'cc-feedback is-hint';
@@ -386,6 +394,27 @@
       $('#cc-pad').hidden = true;
       $('#cc-next-problem').hidden = false;
       $('#cc-next-problem').focus();
+    }
+
+    // 🔥 sequência: contas certas de primeira, uma atrás da outra
+    function bumpStreak() {
+      round.streak++;
+      round.bestStreak = Math.max(round.bestStreak, round.streak);
+      const el = $('#cc-streak');
+      el.hidden = round.streak < 2;
+      el.textContent = `🔥 ${round.streak}`;
+      el.classList.remove('is-hot');
+      void el.offsetWidth;
+      el.classList.add('is-hot');
+      if (round.streak === 5 || round.streak === 10) {
+        $('#cc-feedback').textContent = round.streak === 10 ? '🔥 10 seguidas! Que fera! 🏆' : '🔥 5 seguidas! Pegando fogo!';
+        fx.confetti({ amount: 30, origin: { x: innerWidth / 2, y: innerHeight / 3 }, power: 0.6 });
+        sound.play('tada');
+      }
+    }
+    function resetStreak() {
+      round.streak = 0;
+      $('#cc-streak').hidden = true;
     }
 
     const PRAISE = ['Isso! 🎉', 'Muito bem! ⭐', 'Certinho! ✅', 'Mandou bem! 💪', 'Acertou! 🙌', 'Show! 🚀'];
@@ -475,6 +504,13 @@
       $('#cc-res-first').textContent = `${firstTry}/${r.problems.length}`;
       $('#cc-res-second').textContent = secondTry;
       $('#cc-res-time').textContent = `${Math.round(avgSec)} s`;
+      const prevStreak = levelData(level.id).bestStreak || 0;
+      const rec = $('#cc-record');
+      const beat = r.bestStreak >= 2 && r.bestStreak > prevStreak;
+      rec.classList.toggle('is-new', beat);
+      rec.textContent = beat
+        ? `🔥 Novo recorde: ${r.bestStreak} contas certas seguidas!${prevStreak ? ` (antes: ${prevStreak})` : ''}`
+        : r.bestStreak >= 2 ? `🔥 Melhor sequência: ${r.bestStreak} (recorde: ${prevStreak})` : '';
 
       const missed = r.problems.filter((p, i) => !P.isCorrect(p, r.answers[i].tries[0]));
       $('#cc-missed').hidden = missed.length === 0;

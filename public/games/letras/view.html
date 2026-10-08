@@ -28,12 +28,14 @@
       <h3 class="lc-intro-title" id="lc-intro-title"></h3>
       <p class="lc-intro-text" id="lc-intro-world-text"></p>
       <p class="lc-intro-tip" id="lc-intro-tip"></p>
+      <p class="cad-record" id="lc-intro-record" hidden></p>
       <div class="lc-intro-example" id="lc-intro-example" aria-label="Exemplos do que vai cair"></div>
       <ul class="lc-intro-rules">
         <li>☁️ As peças caem do céu. Digite cada uma antes que chegue ao chão.</li>
         <li>🎯 Comece pela peça mais perto do chão: a primeira letra escolhe a peça.</li>
         <li id="lc-intro-case">🔡 Maiúscula ou minúscula, tanto faz.</li>
         <li id="lc-intro-upper" hidden>🔠 Modo <strong>apenas maiúsculas</strong>: tudo cai em MAIÚSCULA. Ligue o Caps Lock (ou segure o Shift do lado contrário da letra).</li>
+        <li>🔥 Acertos seguidos multiplicam os pontos. Peças especiais: ⭐ vale mais, 🧊 congela o céu, 💥 estoura tudo!</li>
         <li>⏸ Precisa parar? Aperte Esc ou o botão de pausa.</li>
       </ul>
       <div class="lc-intro-actions">
@@ -54,6 +56,10 @@
         <span class="lc-stat" title="Peças que caíram no chão">💥 <b id="lc-stat-lost">0</b></span>
         <span class="lc-stat" title="Peças que ainda vão cair">☁️ <b id="lc-stat-left">0</b></span>
       </div>
+      <span class="cad-hud">
+        <span class="cad-score" title="Pontos">⭐ <b id="lc-score">0</b></span>
+        <span class="cad-combo" id="lc-combo" hidden title="Acertos seguidos multiplicam os pontos">🔥 ×2</span>
+      </span>
       <button type="button" class="btn-mini" id="lc-pause-btn" title="Pausar (Esc)">⏸ Pausar</button>
     </div>
     <div class="lc-progress" aria-hidden="true"><span id="lc-progress-bar"></span></div>
@@ -84,7 +90,9 @@
       </div>
       <h3 class="lc-result-title" id="lc-result-title"></h3>
       <p class="lc-result-msg" id="lc-result-msg"></p>
+      <p class="cad-record" id="lc-record"></p>
       <div class="lc-result-stats">
+        <div><b id="lc-res-score">0</b><small>⭐ pontos</small></div>
         <div><b id="lc-res-caught">0</b><small>✅ pegas</small></div>
         <div><b id="lc-res-acc">100%</b><small>🎯 teclas certas</small></div>
         <div><b id="lc-res-time">0:00</b><small>⏱ tempo</small></div>

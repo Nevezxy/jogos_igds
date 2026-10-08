@@ -593,3 +593,41 @@
 
 /* peça que cai (js/shared/falling.js): o motor mexe só no transform */
 .fall-piece { position: absolute; top: 0; left: 0; will-change: transform; }
+
+/* jogos "Cadentes" (js/shared/cadentes.js): peças especiais, pontos que sobem */
+.fall-piece.is-gold { background: linear-gradient(135deg, #FFE27A, #FFC21A) !important; box-shadow: 0 4px 0 var(--ink), 0 0 18px rgba(255, 194, 26, .8) !important; }
+.fall-piece.is-ice { background: linear-gradient(135deg, #E3F7FF, #9EDCFF) !important; }
+.fall-piece.is-bomb { background: linear-gradient(135deg, #FFE1E4, #FF9AA5) !important; }
+.cad-badge {
+  position: absolute;
+  top: -6px;
+  right: -10px;
+  font-size: 1.3rem;
+  line-height: 1;
+  filter: drop-shadow(0 2px 0 rgba(30, 18, 64, .35));
+  animation: cadBadge 1s ease-in-out infinite alternate;
+}
+@keyframes cadBadge { to { transform: scale(1.18) rotate(8deg); } }
+.cad-float {
+  position: absolute;
+  z-index: 6;
+  transform: translateX(-50%);
+  pointer-events: none;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.4rem;
+  color: var(--green-dark);
+  text-shadow: 0 2px 0 #fff, 0 -2px 0 #fff, 2px 0 0 #fff, -2px 0 0 #fff;
+  animation: cadFloat 1s ease-out forwards;
+}
+.cad-float.is-big { font-size: 2.2rem; color: var(--pink-dark); }
+@keyframes cadFloat { to { transform: translate(-50%, -70px); opacity: 0; } }
+.is-frozen-sky { box-shadow: inset 0 0 0 6px #9EDCFF, 0 8px 0 var(--ink) !important; filter: saturate(.75); }
+.cad-hud { display: inline-flex; align-items: center; gap: 10px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.cad-score { padding: 2px 10px; background: var(--yellow); border: 2px solid var(--ink); border-radius: 999px; }
+.cad-combo { padding: 2px 10px; background: var(--pink); color: #fff; border: 2px solid var(--ink); border-radius: 999px; }
+.cad-combo[hidden] { display: none; }
+.cad-record { margin: 0 0 10px; font-weight: 800; color: var(--ink-soft); }
+.cad-record:empty { display: none; }
+.cad-record.is-new { color: var(--pink-dark); font-size: 1.2rem; animation: bounceIn .5s var(--ease-bounce); }
+@media (prefers-reduced-motion: reduce) { .cad-badge { animation: none; } }

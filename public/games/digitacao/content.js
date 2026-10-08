@@ -102,6 +102,8 @@
     grandes: ['100', '365', '1.000', '2.500', '10.000', '25.000', '100.000', '1.500.000', '7.000', '999', '12.345', '60.000'],
   };
 
+  LISTS.lugares = [...LISTS.cidades, ...LISTS.estados];
+
   // ---------------- frases ----------------
   const SENTENCES = {
     curtas: [
@@ -378,8 +380,11 @@
         parts = [...alone, ...sample(pool, level.count || 10)];
         break;
       }
-      case 'sentences':
-        return sample(SENTENCES[level.list], level.count || 4).join(' ');
+      case 'sentences': {
+        // `lists`: junta duas ou mais listas de frases (ex.: bichos e natureza)
+        const pool = level.lists ? level.lists.flatMap((name) => SENTENCES[name]) : SENTENCES[level.list];
+        return sample(pool, level.count || 4).join(' ');
+      }
       case 'text':
         return TEXTS[level.text];
       default:

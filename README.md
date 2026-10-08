@@ -10,10 +10,10 @@ Jogos de hoje:
 
 | Jogo | Modo | O que é |
 |------|------|---------|
-| ⌨️ **Teclado Mágico** | sozinho(a) | Digitação com os 10 dedos: teclado ABNT2 na tela com uma cor por dedo, mãos que mostram o dedo certo e 127 fases (letras, palavras, acentos, frases, pontuação, números e textos). |
-| 🔤 **Letras Cadentes** | sozinho(a) | Letras, números, sílabas e palavras caem do céu e a criança digita cada uma antes que chegue ao chão. 72 fases, opção "apenas maiúsculas" e o céu ocupando a tela toda. |
-| 🔢 **Conta Comigo** | sozinho(a) | Matemática: mundo das figurinhas, adição e subtração da unidade ao milhar, multiplicação e divisão até a dezena, depois números negativos, potências, raízes e expressões. 152 fases e teclado numérico na tela (funciona no tablet). |
-| ☄️ **Números Cadentes** | sozinho(a) | Contas, dados e dominós caem do céu e a criança digita o resultado antes que cheguem ao chão (sem Enter). 96 fases e teclado numérico na tela. |
+| ⌨️ **Teclado Mágico** | sozinho(a) | Digitação com os 10 dedos: teclado ABNT2 na tela com uma cor por dedo, mãos que mostram o dedo certo e 99 fases (letras, palavras, acentos, frases, pontuação, números e textos). |
+| 🔤 **Letras Cadentes** | sozinho(a) | Letras, números, sílabas e palavras caem do céu e a criança digita cada uma antes que chegue ao chão. 31 fases que aceleram durante a rodada, combo, peças especiais (⭐ 🧊 💥), recorde, opção "apenas maiúsculas" e o céu ocupando a tela toda. |
+| 🔢 **Conta Comigo** | sozinho(a) | Matemática: mundo das figurinhas, adição e subtração da unidade ao milhar, multiplicação e divisão até a dezena, depois números negativos, potências, raízes e expressões. 143 fases, sequência 🔥 e teclado numérico na tela (funciona no tablet). |
+| ☄️ **Números Cadentes** | sozinho(a) | Contas, dados e dominós caem do céu e a criança digita o resultado antes que cheguem ao chão (sem Enter). 42 fases que aceleram, combo, peças especiais, recorde e teclado numérico na tela. |
 | 🏁 **Desafio de Digitação** | com a turma | Corrida de digitação ao vivo: o professor escolhe o texto (uma fase do Teclado Mágico ou um texto dele) e o modo, a turma digita junta e o telão mostra a pista com os bichinhos e o pódio. |
 | 🎯 **Bingo** | com a turma | Bingo em tempo real conduzido pelo professor, com ~20 crianças em celulares, tablets ou computadores, e um telão opcional para o projetor. |
 
@@ -129,10 +129,13 @@ CMD ["node", "server.js"]
 - Maiúsculas acendem também o **Shift do lado oposto**; **acentos** são
   ensinados em dois passos (aperte o acento, solte, depois a letra), com o
   aviso "acento pronto". Dica em texto para cada tecla e aviso de Caps Lock.
-- **10 mundos, 127 fases** (12 a 14 por mundo): fileira do meio → de cima →
-  de baixo → maiúsculas → palavras → acentuação → frases → pontuação →
-  números e símbolos → textos. As fases de letras só usam as teclas já
-  aprendidas.
+- **10 mundos, 99 fases:** fileira do meio → de cima → de baixo →
+  maiúsculas → palavras → acentuação → frases → pontuação → números e
+  símbolos → textos. As fases de letras só usam as teclas já aprendidas.
+  Nenhuma fase repete outra (saíram os treinos que repetiam letras já
+  treinadas e as revisões duplicadas).
+- **Recorde de velocidade** por fase: aparece antes de começar ("Consegue
+  bater?") e no resultado ("🏆 Novo recorde!"), só com a fase bem feita.
 - **Mapa de fases** (o mesmo do Conta Comigo, em `js/shared/levelmap.js`):
   fase feita em verde com ✓, tentada sem estrela em laranja com ↻,
   pendente em branco tracejado, e a próxima em amarelo ("agora"). Cada mundo
@@ -160,11 +163,17 @@ CMD ["node", "server.js"]
   seguintes completam aquela peça; letra errada faz a peça tremer e conta
   um erro, mas não perde a peça. Esc ou Backspace soltam o alvo. Cada
   acerto solta um estourinho de confetes no lugar da peça.
-- **6 mundos, 72 fases:** letras e números (todas as letras e todos os
-  números juntos, sem separar por fileira), maiúsculas, sílabas, palavras
-  simples, palavras com acento e desafio. Cada mundo tem 4 conteúdos, e cada conteúdo vem em 3 velocidades
-  (🐢 devagar, 🐇 médio, 🚀 rápido: tempo de queda, intervalo e quantas
-  peças ao mesmo tempo).
+- **6 mundos, 31 fases, todas diferentes:** letras e números, maiúsculas,
+  sílabas, palavras, palavras com acento e o grande final. **A rodada
+  acelera:** começa devagar e vai ficando mais rápida (tempo de queda,
+  intervalo e quantas peças na tela) até a última peça. Cada mundo termina
+  com um 🏆 Desafio, que mistura tudo do mundo e já começa mais rápido.
+- **Pontos e combo:** acertos seguidos multiplicam os pontos (×2 a cada 5,
+  até ×5); errar ou deixar cair zera o combo. O "+20" sobe do lugar do
+  acerto. **Peças especiais** de vez em quando: ⭐ dourada (bônus), 🧊 gelo
+  (o céu congela 3 s) e 💥 bomba (estoura todas as peças da tela).
+  **Recorde de pontos** por fase (antes de começar e no resultado). Isso é
+  o mesmo nos dois jogos Cadentes (`js/shared/cadentes.js`).
 - **Sem game over:** a rodada vai até a última peça. Estrelas: pegar 60% =
   ⭐, 80% = ⭐⭐, 95% com até 10% de teclas erradas = ⭐⭐⭐.
 - Acentos como no Teclado Mágico; maiúscula só conta nos mundos de
@@ -180,8 +189,10 @@ CMD ["node", "server.js"]
   e o que mais cai (ou mais erra).
 
 ### 🔢 Conta Comigo (matemática)
-- **9 mundos, 152 fases** (12 a 37 por mundo, com etapas no mapa; toda fase
-  tem pelo menos 10 contas diferentes, para não repetir conta na rodada):
+- **9 mundos, 143 fases** (11 a 33 por mundo, com etapas no mapa; toda fase
+  tem pelo menos 10 contas diferentes, para não repetir conta na rodada, e
+  nada de fase trivial ou picada demais: as divisões vêm em pares, como
+  "Dividir por 3 e por 4"):
   🍎 contando com figurinhas, ➕ adição e subtração juntas (unidade até 10,
   unidade até 20, dezena, centena e milhar, sem e com vai-um/empréstimo,
   número que falta), ✖️ multiplicação (tabuadas das mais fáceis às mais
@@ -197,6 +208,8 @@ CMD ["node", "server.js"]
   empréstimo, tabuada, regra dos sinais...) e uma 2ª tentativa. Errou de
   novo: o jogo mostra a resposta e a conta volta nas próximas rodadas
   daquela fase (revisão).
+- **🔥 Sequência:** contas certas de primeira, seguidas (com festa no 5 e
+  no 10); a melhor sequência de cada fase vira recorde.
 - **Estrelas:** acerto de primeira vale 1 e na 2ª tentativa vale ½;
   6 = ⭐, 8 = ⭐⭐, 9 + tempo médio dentro do alvo da fase = ⭐⭐⭐. Não há
   cronômetro na tela.
@@ -223,7 +236,9 @@ CMD ["node", "server.js"]
   mesma resposta). Se outra resposta na tela começa com o mesmo número (1 e
   12), o jogo espera 0,8 s pelo próximo algarismo. Número que não leva a
   nenhuma resposta pisca vermelho, apaga e conta um erro.
-- **8 mundos, 96 fases** (4 conteúdos × 🐢 🐇 🚀): dados e dominós (contar
+- **8 mundos, 42 fases** que aceleram durante a rodada, cada mundo com um 🏆
+  Desafio no fim, com os mesmos pontos, combo, peças especiais e recorde
+  do Letras Cadentes: dados e dominós (contar
   os pontinhos: um dado, dois dados e dominós, três dados), somar e tirar com unidades, somar e tirar com dezenas e
   centenas, tabuadas, divisão, misturadas, números negativos (tecla −) e
   potências e raízes. As contas vêm do gerador do Conta Comigo, com as

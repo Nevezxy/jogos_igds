@@ -52,6 +52,21 @@
     return el;
   }
 
+  // recorde da fase: no resultado e antes de começar
+  function showRecord(el, score, best) {
+    if (score > best && score > 0) {
+      el.textContent = best ? `🏆 Novo recorde! (antes: ${best} pontos)` : '🏆 Primeiro recorde desta fase!';
+      el.classList.add('is-new');
+    } else {
+      el.textContent = best ? `Seu recorde nesta fase: ${best} pontos` : '';
+      el.classList.remove('is-new');
+    }
+  }
+  function introRecord(el, best) {
+    el.hidden = !best;
+    el.textContent = best ? `🏆 Seu recorde: ${best} pontos. Consegue bater?` : '';
+  }
+
   function createGame(container, ctx) {
     const { sound, fx, ui } = ctx;
     const $ = (sel) => container.querySelector(sel);
@@ -103,6 +118,7 @@
       $('#nc-intro-world-text').textContent = level.indexInWorld === 0 ? world.intro : '';
       $('#nc-intro-tip').textContent = `💡 ${level.tip}`;
       $('#nc-intro-minus').hidden = !world.minus;
+      introRecord($('#nc-intro-record'), levelData(level.id).bestScore);
       const ex = $('#nc-intro-example');
       ex.innerHTML = '';
       const seen = new Set();
@@ -116,6 +132,47 @@
       show('intro');
       setTimeout(() => $('#nc-start').focus(), 60);
     }
+
+    // ---------------- pontos, combo e peças especiais ----------------
+    const Kit = window.CadentesKit;
+    function updateHud() {
+      $('#nc-score').textContent = round.scorer.score;
+      const m = round.scorer.multiplier;
+      $('#nc-combo').hidden = m < 2;
+      $('#nc-combo').textContent = `🔥 ×${m}`;
+    }
+    function onMultiplier(m) {
+      sound.play('tada');
+      const c = $('#nc-combo');
+      c.classList.remove('fx-shake');
+      void c.offsetWidth;
+      c.classList.add('fx-shake');
+      Kit.floatText(sky, sky.querySelector('.nc-ground'), `Combo ×${m}! 🔥`, 'is-big');
+    }
+    // acerto: pontos (com combo), confete e o efeito da peça especial
+    function scoreCatch(piece, base, { chain = false } = {}) {
+      const special = round.specials[piece.index];
+      const points = round.scorer.hit(base, { gold: special === 'gold' });
+      round.caught++;
+      burst(piece.el);
+      Kit.floatText(sky, piece.el, `+${points}`, special === 'gold' ? 'is-big' : '');
+      round.engine.catchPiece(piece);
+      if (chain) return;
+      if (special === 'ice') {
+        round.engine.freeze(Kit.FREEZE_MS);
+        sky.classList.add('is-frozen-sky');
+        setTimeout(() => sky.classList.remove('is-frozen-sky'), Kit.FREEZE_MS);
+        Kit.floatText(sky, piece.el, '🧊 Congelou!', 'is-big');
+        sound.play('whoosh');
+      } else if (special === 'bomb') {
+        Kit.floatText(sky, piece.el, '💥 BUM!', 'is-big');
+        sound.play('fanfare');
+        round.engine.pieces().forEach((other) => scoreCatch(other, baseFor(other.item), { chain: true }));
+        afterBomb();
+      }
+    }
+    const baseFor = (item) => 10 + 3 * (String(Math.abs(item.answer)).length - 1);
+    function afterBomb() { setTyped(''); updateStats(); }
 
     // ---------------- jogando ----------------
     const minusAllowed = () => Boolean(round && Levels.getWorld(round.level.world).minus);
@@ -150,14 +207,23 @@
       sky.querySelectorAll('.nc-piece').forEach((el) => el.remove());
       round = {
         level, seed, items, typed: '', caught: 0, lost: [], wrong: 0, started: false,
+        specials: Kit.pickSpecials(items.length),
+        scorer: Kit.createScorer({ onMultiplier }),
+        // a rodada acelera: cada conta cai um pouco mais rápido que a anterior
         engine: window.FallingEngine.create(sky, {
           items,
-          fallMs: level.fallMs,
-          intervalMs: level.intervalMs,
-          maxOnScreen: level.maxOnScreen,
-          render: renderPiece,
+          fallMs: (i) => Levels.paceAt(level, i).fallMs,
+          intervalMs: (i) => Levels.paceAt(level, i).intervalMs,
+          maxOnScreen: (i) => Levels.paceAt(level, i).maxOnScreen,
+          render: (item, index) => {
+            const el = renderPiece(item);
+            Kit.decorate(el, round.specials[index]);
+            return el;
+          },
           onLand(piece) {
             round.lost.push(piece.index);
+            round.scorer.miss();
+            updateHud();
             sound.play('bonk');
             const g = $('#nc-ground');
             g.classList.remove('is-hit');
@@ -175,6 +241,7 @@
       renderPad();
       setTyped('');
       updateStats();
+      updateHud();
       show('play');
       fitSky();
       countdown(() => {
@@ -284,12 +351,11 @@
     }
 
     function pop(piece) {
-      round.caught++;
-      burst(piece.el);
-      round.engine.catchPiece(piece);
       setTyped('');
       sound.play('ding');
+      scoreCatch(piece, baseFor(piece.item));
       updateStats();
+      updateHud();
     }
 
     // estourinho de confetes onde a peça estava
@@ -300,6 +366,8 @@
 
     function miss() {
       round.wrong++;
+      round.scorer.miss();
+      updateHud();
       sound.play('bonk');
       const box = $('#nc-typed');
       box.classList.remove('is-wrong');
@@ -367,10 +435,11 @@
       const accuracy = typed + r.wrong ? Math.round((typed / (typed + r.wrong)) * 1000) / 10 : 0;
       const durationMs = Math.round(r.engine.elapsed());
       const stars = Levels.starsFor(r.level.id, { caught: r.caught, count: r.items.length, accuracy });
-      showResult({ stars, accuracy, durationMs });
+      const best = levelData(r.level.id).bestScore || 0;
+      showResult({ stars, accuracy, durationMs, best });
       try {
         const res = await ctx.api.post('/progress/numeros/results', {
-          levelId: r.level.id, seed: r.seed, lost: r.lost, wrong: r.wrong, durationMs,
+          levelId: r.level.id, seed: r.seed, lost: r.lost, wrong: r.wrong, durationMs, score: r.scorer.score,
         });
         progress = res.progress;
       } catch (e) {
@@ -378,9 +447,11 @@
       }
     }
 
-    function showResult({ stars, accuracy, durationMs }) {
+    function showResult({ stars, accuracy, durationMs, best }) {
       const r = round;
       show('result');
+      showRecord($('#nc-record'), r.scorer.score, best);
+      $('#nc-res-score').textContent = r.scorer.score;
       const starEls = [...container.querySelectorAll('.nc-star')];
       starEls.forEach((el) => el.classList.remove('is-on'));
       starEls.forEach((el, i) => {

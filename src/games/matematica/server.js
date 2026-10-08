@@ -55,6 +55,8 @@ function validateResult(body, progress) {
 
   let firstTry = 0;
   let secondTry = 0;
+  let streak = 0;
+  let bestStreak = 0; // contas certas de primeira, seguidas
   const missed = [];
   const right = [];
   problems.forEach((p, i) => {
@@ -64,7 +66,10 @@ function validateResult(body, progress) {
     if (Problems.isCorrect(p, values[0])) {
       firstTry++;
       right.push(p.key);
+      streak++;
+      bestStreak = Math.max(bestStreak, streak);
     } else {
+      streak = 0;
       if (values[1] !== undefined && Problems.isCorrect(p, values[1])) secondTry++;
       missed.push(p.key);
     }
@@ -84,6 +89,7 @@ function validateResult(body, progress) {
     durationMs,
     firstTry,
     secondTry,
+    bestStreak,
     count: problems.length,
     emoji,
     missed,
@@ -117,6 +123,7 @@ function mergeProgress(old, r) {
   p.levels[r.levelId] = {
     stars: Math.max(prev.stars || 0, r.stars),
     bestAccuracy: Math.max(prev.bestAccuracy || 0, r.accuracy),
+    bestStreak: Math.max(prev.bestStreak || 0, r.bestStreak),
     plays: (prev.plays || 0) + 1,
     lastPlayedAt: Date.now(),
     review: trim(review, MAX_REVIEW_PER_LEVEL),
@@ -169,6 +176,7 @@ function mergeAccounts(a, b) {
     levels[id] = !la ? lb : {
       stars: Math.max(la.stars || 0, lb.stars || 0),
       bestAccuracy: Math.max(la.bestAccuracy || 0, lb.bestAccuracy || 0),
+      bestStreak: Math.max(la.bestStreak || 0, lb.bestStreak || 0),
       plays: (la.plays || 0) + (lb.plays || 0),
       lastPlayedAt: Math.max(la.lastPlayedAt || 0, lb.lastPlayedAt || 0),
       review: trim({ ...(lb.review || {}), ...(la.review || {}) }, MAX_REVIEW_PER_LEVEL),

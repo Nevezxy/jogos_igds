@@ -3,8 +3,9 @@
 // usa para o mapa e o servidor (src/games/letras/server.js) para conferir os
 // resultados e calcular as estrelas.
 //
-// Cada mundo tem 4 conteúdos, e cada conteúdo vira 3 fases, uma por
-// velocidade (🐢 devagar, 🐇 médio, 🚀 rápido): 12 fases por mundo.
+// Cada fase é um conteúdo diferente, e a rodada acelera: começa devagar e
+// vai ficando mais rápida até a última peça (`paceAt`). Cada mundo termina
+// com um 🏆 Desafio, que mistura tudo do mundo e já começa mais rápido.
 // Conteúdo (`gen`, gerado em items.js):
 //   { t: 'chars', chars }          letras ou números soltos
 //   { t: 'words', ...filtros }     palavras do banco do Teclado Mágico:
@@ -21,37 +22,25 @@
   const ALL = 'abcdefghijklmnopqrstuvwxyzç';
   const DIGITS = '0123456789';
 
-  // Ritmo de cada velocidade: tempo de queda, intervalo entre peças,
-  // quantas ao mesmo tempo e quantas na fase.
+  // Ritmo: do começo (`from`) ao fim (`to`) da rodada.
   const PACES = {
-    letra: [
-      { fallMs: 11000, intervalMs: 2400, maxOnScreen: 2, count: 20 },
-      { fallMs: 8000, intervalMs: 1700, maxOnScreen: 3, count: 24 },
-      { fallMs: 5500, intervalMs: 1100, maxOnScreen: 4, count: 28 },
-    ],
-    silaba: [
-      { fallMs: 13000, intervalMs: 2800, maxOnScreen: 2, count: 18 },
-      { fallMs: 10000, intervalMs: 2100, maxOnScreen: 3, count: 22 },
-      { fallMs: 7500, intervalMs: 1500, maxOnScreen: 3, count: 26 },
-    ],
-    palavra: [
-      { fallMs: 16000, intervalMs: 3600, maxOnScreen: 2, count: 14 },
-      { fallMs: 12500, intervalMs: 2800, maxOnScreen: 3, count: 17 },
-      { fallMs: 9500, intervalMs: 2100, maxOnScreen: 3, count: 20 },
-    ],
-    longa: [
-      { fallMs: 19000, intervalMs: 4500, maxOnScreen: 2, count: 12 },
-      { fallMs: 15000, intervalMs: 3500, maxOnScreen: 2, count: 14 },
-      { fallMs: 11500, intervalMs: 2700, maxOnScreen: 3, count: 16 },
-    ],
+    letra: { count: 24, from: { fallMs: 11000, intervalMs: 2400, maxOnScreen: 2 }, to: { fallMs: 5500, intervalMs: 1100, maxOnScreen: 4 } },
+    silaba: { count: 22, from: { fallMs: 13000, intervalMs: 2800, maxOnScreen: 2 }, to: { fallMs: 7500, intervalMs: 1500, maxOnScreen: 3 } },
+    palavra: { count: 17, from: { fallMs: 16000, intervalMs: 3600, maxOnScreen: 2 }, to: { fallMs: 9500, intervalMs: 2100, maxOnScreen: 3 } },
+    longa: { count: 14, from: { fallMs: 19000, intervalMs: 4500, maxOnScreen: 2 }, to: { fallMs: 11500, intervalMs: 2700, maxOnScreen: 3 } },
   };
-  const SPEEDS = [
-    { label: '🐢 Devagar', tip: 'Sem pressa: as peças caem devagar.' },
-    { label: '🐇 Médio', tip: 'Um pouco mais rápido, e mais peças ao mesmo tempo.' },
-    { label: '🚀 Rápido', tip: 'Rapidinho! Olhe primeiro para a peça mais perto do chão.' },
-  ];
+  // o Desafio começa no meio do caminho e termina 15% mais rápido
+  function challengePace(p) {
+    const mid = (k) => Math.round((p.from[k] + p.to[k]) / 2);
+    return {
+      count: p.count + 4,
+      from: { fallMs: mid('fallMs'), intervalMs: mid('intervalMs'), maxOnScreen: p.to.maxOnScreen - 1 },
+      to: { fallMs: Math.round(p.to.fallMs * 0.85), intervalMs: Math.round(p.to.intervalMs * 0.85), maxOnScreen: p.to.maxOnScreen },
+    };
+  }
 
   const SYL_CH = ['cha', 'che', 'chi', 'cho', 'chu', 'lha', 'lhe', 'lhi', 'lho', 'nha', 'nhe', 'nhi', 'nho', 'nhu'];
+  const SYL_QU = ['que', 'qui', 'qua', 'quo', 'gue', 'gui', 'gua', 'ce', 'ci', 'ça', 'ço', 'çu', 'ge', 'gi'];
 
   const WORLDS = [
     {
@@ -61,57 +50,60 @@
         { title: 'Letras', gen: { t: 'chars', chars: ALL }, tip: 'Todas as letras, de A a Z, e o Ç.' },
         { title: 'Números', gen: { t: 'chars', chars: DIGITS }, tip: 'Todos os números, do 0 ao 9, na fileira de cima.' },
         { title: 'Letras e números', gen: { t: 'chars', chars: ALL + DIGITS }, tip: 'Letras e números misturados.' },
-        { title: 'Letras, números, vírgula e ponto', gen: { t: 'chars', chars: `${ALL}${DIGITS},.` }, tip: 'Tudo junto, com a vírgula e o ponto.' },
+        { title: 'Com vírgula e ponto', gen: { t: 'chars', chars: `${ALL}${DIGITS},.` }, tip: 'Tudo junto, com a vírgula e o ponto.' },
       ],
     },
     {
-      id: 'l5', icon: '🔠', name: 'Maiúsculas', color: 'violet', pace: 'letra', caseSensitive: true,
+      id: 'l2', icon: '🔠', name: 'Maiúsculas', color: 'violet', pace: 'letra', caseSensitive: true,
       intro: 'Agora a letra tem que ser MAIÚSCULA: segure o Shift do lado contrário da letra (ou ligue o Caps Lock).',
       contents: [
         { title: 'Letras maiúsculas', gen: { t: 'chars', chars: 'ABCDEFGHIJKLMNOPQRSTUVWXYZÇ' }, tip: 'Shift + a letra.' },
         { title: 'Nomes', gen: { t: 'list', list: 'nomes' }, pace: 'palavra', tip: 'Nomes começam com letra maiúscula.' },
+        { title: 'Lugares do Brasil', gen: { t: 'list', list: 'lugares' }, pace: 'palavra', tip: 'Cidades e estados, com maiúscula.' },
         { title: 'Siglas', gen: { t: 'list', list: 'siglas' }, pace: 'silaba', tip: 'Siglas são todas em maiúscula.' },
         { title: 'PALAVRAS GRITADAS', gen: { t: 'words', min: 3, max: 6, accents: 'none', upper: 'all' }, pace: 'palavra', tip: 'A palavra inteira em maiúscula.' },
       ],
     },
     {
-      id: 'l6', icon: '🔡', name: 'Sílabas', color: 'pink', pace: 'silaba',
+      id: 'l3', icon: '🔡', name: 'Sílabas', color: 'pink', pace: 'silaba',
       intro: 'Sílabas caindo! Ba, me, pra, lha... são os pedacinhos das palavras.',
       contents: [
         { title: 'Sílabas simples', gen: { t: 'list', list: 'syllables' }, tip: 'Ba, be, bi, bo, bu...' },
         { title: 'Sílabas com R e L', gen: { t: 'list', list: 'silabasRL' }, tip: 'Bra, pla, tre: duas consoantes juntas.' },
         { title: 'CH, LH e NH', gen: { t: 'list', items: SYL_CH }, tip: 'Duas letras que fazem um som só.' },
-        { title: 'Sílabas misturadas', gen: { t: 'mix', of: [{ t: 'list', list: 'syllables' }, { t: 'list', list: 'silabasRL' }, { t: 'list', items: SYL_CH }] }, tip: 'Todas as sílabas juntas.' },
+        { title: 'QU, GU, Ç e G', gen: { t: 'list', items: SYL_QU }, tip: 'Que, gui, ça, ge: sílabas que enganam!' },
       ],
     },
     {
-      id: 'l7', icon: '📝', name: 'Palavras simples', color: 'sky', pace: 'palavra',
+      id: 'l4', icon: '📝', name: 'Palavras', color: 'sky', pace: 'palavra',
       intro: 'Palavras inteiras caindo! Comece pela primeira letra e vá até o fim.',
       contents: [
         { title: 'Palavras de 2 e 3 letras', gen: { t: 'words', min: 2, max: 3, accents: 'none' }, pace: 'silaba', tip: 'Palavras curtinhas.' },
         { title: 'Palavras de 4 e 5 letras', gen: { t: 'words', min: 4, max: 5, accents: 'none' }, tip: 'Palavras médias.' },
         { title: 'Palavras de 6 letras ou mais', gen: { t: 'words', min: 6, max: 9, accents: 'none' }, pace: 'longa', tip: 'Palavras compridas: letra por letra.' },
         { title: 'Letras difíceis', gen: { t: 'words', min: 3, max: 8, accents: 'none', has: ['q', 'z', 'x', 'k', 'w', 'y'] }, tip: 'Palavras com Q, Z, X, K, W e Y.' },
+        { title: 'Ações', gen: { t: 'list', list: 'verbos' }, tip: 'Correr, pular, cantar: palavras de ação.' },
       ],
     },
     {
-      id: 'l8', icon: '✨', name: 'Palavras com acento', color: 'violet', pace: 'palavra',
+      id: 'l5', icon: '✨', name: 'Palavras com acento', color: 'violet', pace: 'palavra',
       intro: 'Palavras com acento: aperte a tecla do acento, solte, e depois a letra.',
       contents: [
         { title: 'Acento agudo ´', gen: { t: 'words', min: 2, max: 8, accents: 'need', acc: 'áéíóú' }, tip: 'O acento agudo fica à direita do P.' },
         { title: 'Til ~', gen: { t: 'words', min: 2, max: 8, accents: 'need', acc: 'ãõ' }, tip: 'O til fica à direita do Ç.' },
         { title: 'Circunflexo ^', gen: { t: 'words', min: 2, max: 9, accents: 'need', acc: 'âêô' }, tip: 'O circunflexo é Shift + a tecla do til.' },
-        { title: 'Todos os acentos e Ç', gen: { t: 'words', min: 2, max: 9, accents: 'need', acc: 'áéíóúãõâêôç' }, tip: 'Todos os acentos misturados.' },
+        { title: 'Cedilha ç', gen: { t: 'words', min: 3, max: 9, has: ['ç'] }, tip: 'O Ç tem tecla própria, à direita do L.' },
       ],
     },
     {
-      id: 'l9', icon: '🏆', name: 'Desafio', color: 'red', pace: 'longa',
-      intro: 'O grande desafio: maiúsculas, acentos, palavras longas e duas palavras de uma vez.',
+      id: 'l6', icon: '🏆', name: 'Grande final', color: 'red', pace: 'longa',
+      intro: 'O grande final: maiúsculas, acentos, palavras gigantes e duas palavras de uma vez.',
+      noChallenge: true, // o mundo inteiro já é desafio
       contents: [
         { title: 'Maiúscula e acento', gen: { t: 'words', min: 3, max: 9, accents: 'need', acc: 'áéíóúãõâêô', upper: 'first' }, caseSensitive: true, pace: 'palavra', tip: 'Primeiro a maiúscula, e não esqueça o acento.' },
         { title: 'Duas palavras', gen: { t: 'two' }, tip: 'Duas palavras com um espaço no meio.' },
         { title: 'Palavras gigantes', gen: { t: 'words', min: 8, max: 14 }, tip: 'As maiores palavras do banco.' },
-        { title: 'Tudo misturado', gen: { t: 'mix', of: [{ t: 'words', min: 3, max: 9 }, { t: 'two' }, { t: 'list', list: 'nomes' }, { t: 'chars', chars: '1234567890' }] }, caseSensitive: true, tip: 'Um pouco de tudo!' },
+        { title: 'Tudo misturado', gen: { t: 'mix', of: [{ t: 'words', min: 3, max: 9 }, { t: 'two' }, { t: 'list', list: 'nomes' }, { t: 'chars', chars: DIGITS }] }, caseSensitive: true, tip: 'Um pouco de tudo!' },
       ],
     },
   ];
@@ -123,37 +115,56 @@
     { stars: 1, caught: 0.6 },
   ];
 
-  // cada conteúdo vira 3 fases, uma por velocidade
   const LEVELS = [];
   WORLDS.forEach((world, w) => {
     world.levels = [];
-    world.contents.forEach((content, c) => {
-      const pace = PACES[content.pace || world.pace];
-      SPEEDS.forEach((speed, s) => {
-        const level = {
-          id: `${world.id}${'abcd'[c]}${s + 1}`,
-          title: speed.label,
-          topic: content.title,
-          fullTitle: `${content.title} · ${speed.label}`,
-          section: s === 0 ? content.title : undefined,
-          tip: `${content.tip} ${speed.tip}`,
-          gen: content.gen,
-          caseSensitive: Boolean(content.caseSensitive ?? world.caseSensitive),
-          speed: s,
-          ...pace[s],
-          world: world.id,
-          worldIndex: w,
-          indexInWorld: world.levels.length,
-          index: LEVELS.length,
-        };
-        world.levels.push(level);
-        LEVELS.push(level);
-      });
-    });
+    const add = (content, pace, extra = {}) => {
+      const level = {
+        id: `${world.id}${extra.idSuffix || 'abcdefgh'[world.levels.length]}`,
+        title: content.title,
+        topic: content.title,
+        fullTitle: content.title,
+        tip: content.tip,
+        gen: content.gen,
+        caseSensitive: Boolean(content.caseSensitive ?? world.caseSensitive),
+        count: pace.count,
+        from: pace.from,
+        to: pace.to,
+        world: world.id,
+        worldIndex: w,
+        indexInWorld: world.levels.length,
+        index: LEVELS.length,
+        ...extra,
+      };
+      delete level.idSuffix;
+      world.levels.push(level);
+      LEVELS.push(level);
+    };
+    world.contents.forEach((content) => add(content, PACES[content.pace || world.pace]));
+    if (!world.noChallenge) {
+      // 🏆 Desafio do mundo: tudo junto, começando mais rápido
+      add({
+        title: '🏆 Desafio do mundo',
+        gen: { t: 'mix', of: world.contents.map((c) => c.gen) },
+        tip: 'Tudo o que caiu neste mundo, misturado e mais rápido!',
+        caseSensitive: world.caseSensitive,
+      }, challengePace(PACES[world.pace]), { idSuffix: 'x', fullTitle: `Desafio: ${world.name}`, challenge: true });
+    }
   });
   const BY_ID = Object.fromEntries(LEVELS.map((l) => [l.id, l]));
   const getLevel = (id) => BY_ID[id] || null;
   const getWorld = (id) => WORLDS.find((w) => w.id === id) || null;
+
+  // Ritmo da peça `index`: vai do `from` ao `to` ao longo da rodada.
+  function paceAt(level, index) {
+    const k = level.count > 1 ? Math.min(1, index / (level.count - 1)) : 1;
+    const mix = (a, b) => a + (b - a) * k;
+    return {
+      fallMs: Math.round(mix(level.from.fallMs, level.to.fallMs)),
+      intervalMs: Math.round(mix(level.from.intervalMs, level.to.intervalMs)),
+      maxOnScreen: Math.round(mix(level.from.maxOnScreen, level.to.maxOnScreen)),
+    };
+  }
 
   // `caught` e `count`: peças pegas e total; `accuracy`: % de teclas certas.
   function starsFor(levelId, { caught, count, accuracy }) {
@@ -173,7 +184,7 @@
 
   const api = {
     WORLDS, LEVELS, PACES, MAX_STARS: LEVELS.length * 3,
-    getLevel, getWorld, starsFor, isUnlocked, nextLevel, totalStars,
+    getLevel, getWorld, starsFor, isUnlocked, nextLevel, totalStars, paceAt,
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.LetrasLevels = api;

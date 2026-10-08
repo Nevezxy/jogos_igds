@@ -8,14 +8,17 @@
 //   fallMs,         tempo para uma peça ir do topo ao chão
 //   intervalMs,     tempo entre uma peça e a próxima
 //   maxOnScreen,    quantas peças podem estar caindo ao mesmo tempo
-//   render(item),   devolve o elemento da peça
+//                   (os três aceitam um número ou uma função (índice) => valor:
+//                   assim a rodada pode acelerar da primeira à última peça)
+//   render(item, index), devolve o elemento da peça
 //   onSpawn(piece), nasceu uma peça (opcional)
 //   onLand(piece),  a peça chegou ao chão (já foi tirada da tela)
 //   onEnd(),        não há mais peças para cair nem caindo
 // })
 // round.start() · pause() · resume() · destroy() · pieces() (as que estão
 // caindo, a mais perto do chão primeiro) · catchPiece(piece) · elapsed()
-// (tempo jogado, sem as pausas).
+// (tempo jogado, sem as pausas) · freeze(ms) (tudo para de cair por um
+// tempo; o 🧊 dos jogos) · isFrozen().
 //
 // Sem peça na tela, a próxima nasce na hora (ninguém fica esperando). A
 // animação mexe só em `transform`, para rodar bem nos computadores da escola.
@@ -31,6 +34,8 @@
     let last = 0; // último quadro
     let sinceSpawn = Infinity;
     let playedMs = 0;
+    let frozenUntil = 0;
+    const at = (v, i) => (typeof v === 'function' ? v(i) : v);
 
     const skySize = () => ({ w: sky.clientWidth, h: sky.clientHeight });
 
@@ -50,12 +55,12 @@
 
     function spawn() {
       const item = items[next];
-      const el = render(item);
+      const el = render(item, next);
       el.classList.add('fall-piece');
       el.style.transform = 'translate(-9999px, 0)';
       sky.appendChild(el);
       const width = el.offsetWidth;
-      const piece = { el, item, index: next, x: pickX(width), t: 0, width };
+      const piece = { el, item, index: next, x: pickX(width), t: 0, width, fallMs: at(fallMs, next) };
       active.push(piece);
       next++;
       sinceSpawn = 0;
@@ -86,9 +91,10 @@
       const dt = Math.min(100, now - last); // aba voltando do fundo não pula
       last = now;
       playedMs += dt;
+      if (playedMs < frozenUntil) { raf = requestAnimationFrame(frame); return; } // congelado
       sinceSpawn += dt;
       for (const piece of active.slice()) {
-        piece.t += dt / fallMs;
+        piece.t += dt / piece.fallMs;
         if (piece.t >= 1) {
           piece.t = 1;
           remove(piece);
@@ -99,8 +105,8 @@
           place(piece);
         }
       }
-      const canSpawn = next < items.length && active.length < maxOnScreen;
-      if (canSpawn && (active.length === 0 || sinceSpawn >= intervalMs)) spawn();
+      const canSpawn = next < items.length && active.length < at(maxOnScreen, next);
+      if (canSpawn && (active.length === 0 || sinceSpawn >= at(intervalMs, next))) spawn();
       checkEnd();
       if (running) raf = requestAnimationFrame(frame);
     }
@@ -122,6 +128,8 @@
       pause: stopLoop,
       resume: startLoop,
       isRunning: () => running,
+      freeze(ms) { frozenUntil = playedMs + ms; },
+      isFrozen: () => playedMs < frozenUntil,
       isEnded: () => ended,
       elapsed: () => playedMs,
       pieces: () => active.slice().sort((a, b) => b.t - a.t),

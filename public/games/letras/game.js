@@ -29,6 +29,21 @@
     try { return crypto.getRandomValues(new Uint32Array(1))[0]; } catch (e) { return Math.floor(Math.random() * 0xFFFFFFFF); }
   }
 
+  // recorde da fase: no resultado e antes de começar
+  function showRecord(el, score, best) {
+    if (score > best && score > 0) {
+      el.textContent = best ? `🏆 Novo recorde! (antes: ${best} pontos)` : '🏆 Primeiro recorde desta fase!';
+      el.classList.add('is-new');
+    } else {
+      el.textContent = best ? `Seu recorde nesta fase: ${best} pontos` : '';
+      el.classList.remove('is-new');
+    }
+  }
+  function introRecord(el, best) {
+    el.hidden = !best;
+    el.textContent = best ? `🏆 Seu recorde: ${best} pontos. Consegue bater?` : '';
+  }
+
   function createGame(container, ctx) {
     const { sound, fx, ui } = ctx;
     const $ = (sel) => container.querySelector(sel);
@@ -90,6 +105,7 @@
       [...new Set(Items.makeItems(level, randomSeed()))].slice(0, 8).forEach((it) => {
         ex.appendChild(Object.assign(document.createElement('span'), { className: 'lc-chip', textContent: uppercase ? upper(it) : it }));
       });
+      introRecord($('#lc-intro-record'), levelData(level.id).bestScore);
       $('#lc-intro-case').hidden = uppercase;
       $('#lc-intro-upper').hidden = !uppercase;
       $('#lc-intro-case').textContent = level.caseSensitive
@@ -99,12 +115,53 @@
       setTimeout(() => $('#lc-start').focus(), 60);
     }
 
+    // ---------------- pontos, combo e peças especiais ----------------
+    const Kit = window.CadentesKit;
+    function updateHud() {
+      $('#lc-score').textContent = round.scorer.score;
+      const m = round.scorer.multiplier;
+      $('#lc-combo').hidden = m < 2;
+      $('#lc-combo').textContent = `🔥 ×${m}`;
+    }
+    function onMultiplier(m) {
+      sound.play('tada');
+      const c = $('#lc-combo');
+      c.classList.remove('fx-shake');
+      void c.offsetWidth;
+      c.classList.add('fx-shake');
+      Kit.floatText(sky, sky.querySelector('.lc-ground'), `Combo ×${m}! 🔥`, 'is-big');
+    }
+    // acerto: pontos (com combo), confete e o efeito da peça especial
+    function scoreCatch(piece, base, { chain = false } = {}) {
+      const special = round.specials[piece.index];
+      const points = round.scorer.hit(base, { gold: special === 'gold' });
+      round.caught++;
+      burst(piece.el);
+      Kit.floatText(sky, piece.el, `+${points}`, special === 'gold' ? 'is-big' : '');
+      round.engine.catchPiece(piece);
+      if (chain) return;
+      if (special === 'ice') {
+        round.engine.freeze(Kit.FREEZE_MS);
+        sky.classList.add('is-frozen-sky');
+        setTimeout(() => sky.classList.remove('is-frozen-sky'), Kit.FREEZE_MS);
+        Kit.floatText(sky, piece.el, '🧊 Congelou!', 'is-big');
+        sound.play('whoosh');
+      } else if (special === 'bomb') {
+        Kit.floatText(sky, piece.el, '💥 BUM!', 'is-big');
+        sound.play('fanfare');
+        round.engine.pieces().forEach((other) => scoreCatch(other, baseFor(other.item), { chain: true }));
+        afterBomb();
+      }
+    }
+    const baseFor = (text) => 10 + 2 * ([...text].length - 1);
+    function afterBomb() { round.target = null; updateStats(); }
+
     // ---------------- jogando ----------------
     const norm = (s) => String(s).normalize('NFC');
     const strict = () => round.level.caseSensitive || round.uppercase;
     const same = (a, b) => (strict() ? a === b : a.toLocaleLowerCase('pt-BR') === b.toLocaleLowerCase('pt-BR'));
 
-    function renderPiece(text) {
+    function renderPiece(text, index) {
       const el = document.createElement('div');
       el.className = 'lc-piece';
       el.classList.toggle('is-long', [...text].length > 1);
@@ -114,6 +171,7 @@
       rest.className = 'lc-rest';
       rest.textContent = text.replace(/ /g, '␣');
       el.append(done, rest);
+      if (round) Kit.decorate(el, round.specials[index]);
       return el;
     }
 
@@ -135,15 +193,20 @@
       sky.querySelectorAll('.lc-piece').forEach((el) => el.remove());
       round = {
         level, seed, items, uppercase, target: null, caught: 0, lost: [], wrong: 0, errors: {}, started: false,
+        specials: Kit.pickSpecials(items.length),
+        scorer: Kit.createScorer({ onMultiplier }),
+        // a rodada acelera: cada peça cai um pouco mais rápido que a anterior
         engine: window.FallingEngine.create(sky, {
           items,
-          fallMs: level.fallMs,
-          intervalMs: level.intervalMs,
-          maxOnScreen: level.maxOnScreen,
+          fallMs: (i) => Levels.paceAt(level, i).fallMs,
+          intervalMs: (i) => Levels.paceAt(level, i).intervalMs,
+          maxOnScreen: (i) => Levels.paceAt(level, i).maxOnScreen,
           render: renderPiece,
           onLand(piece) {
             if (round.target === piece) round.target = null;
             round.lost.push(piece.index);
+            round.scorer.miss();
+            updateHud();
             sound.play('bonk');
             const g = $('#lc-ground');
             g.classList.remove('is-hit');
@@ -160,6 +223,7 @@
       $('#lc-caps').hidden = true;
       $('#lc-caps-off').hidden = true;
       updateStats();
+      updateHud();
       show('play');
       fitSky();
       focusInput();
@@ -240,11 +304,10 @@
       sound.play('click');
       if (target.pos >= [...target.item].length) {
         round.target = null;
-        round.caught++;
-        burst(target.el);
-        round.engine.catchPiece(target);
         sound.play('ding');
+        scoreCatch(target, baseFor(target.item));
         updateStats();
+        updateHud();
       } else {
         paintPiece(target);
       }
@@ -259,6 +322,8 @@
 
     function miss(expected) {
       round.wrong++;
+      round.scorer.miss();
+      updateHud();
       if (expected) round.errors[expected] = (round.errors[expected] || 0) + 1;
       sound.play('bonk');
     }
@@ -362,10 +427,11 @@
       const accuracy = typed + r.wrong ? Math.round((typed / (typed + r.wrong)) * 1000) / 10 : 0;
       const durationMs = Math.round(r.engine.elapsed());
       const stars = Levels.starsFor(r.level.id, { caught: r.caught, count: r.items.length, accuracy });
-      showResult({ stars, accuracy, durationMs });
+      const best = levelData(r.level.id).bestScore || 0;
+      showResult({ stars, accuracy, durationMs, best });
       try {
         const res = await ctx.api.post('/progress/letras/results', {
-          levelId: r.level.id, seed: r.seed, lost: r.lost, wrong: r.wrong, durationMs, errorsByChar: r.errors,
+          levelId: r.level.id, seed: r.seed, lost: r.lost, wrong: r.wrong, durationMs, errorsByChar: r.errors, score: r.scorer.score,
         });
         progress = res.progress;
       } catch (e) {
@@ -373,9 +439,11 @@
       }
     }
 
-    function showResult({ stars, accuracy, durationMs }) {
+    function showResult({ stars, accuracy, durationMs, best }) {
       const r = round;
       show('result');
+      showRecord($('#lc-record'), r.scorer.score, best);
+      $('#lc-res-score').textContent = r.scorer.score;
       const starEls = [...container.querySelectorAll('.lc-star')];
       starEls.forEach((el) => el.classList.remove('is-on'));
       starEls.forEach((el, i) => {

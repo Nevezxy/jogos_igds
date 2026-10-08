@@ -48,19 +48,22 @@ function validateResult(body) {
   const durationMs = int(Math.floor(Number(body.durationMs)), 0, 2 * 60 * 60 * 1000);
   if (durationMs < typedChars * MIN_MS_PER_CHAR) throw invalid();
 
+  // pontos (com combo e peças especiais): só para o recorde; teto folgado
+  const score = int(Math.floor(Number(body.score) || 0), 0, items.length * 2000);
   const accuracy = typedChars + wrong ? Math.round((typedChars / (typedChars + wrong)) * 1000) / 10 : 0;
   const stars = Levels.starsFor(level.id, { caught: caughtItems.length, count: items.length, accuracy });
   const lostItems = lost.map((i) => items[i]);
   return {
     levelId: level.id,
     stars,
-    score: stars,
     accuracy,
     speed: Math.round((caughtItems.length / items.length) * 100),
     durationMs,
     count: items.length,
     caught: caughtItems.length,
     wrong,
+    score: stars,
+    points: score,
     lostItems,
     errorsByChar: cleanErrors(body.errorsByChar),
     details: { caught: caughtItems.length, count: items.length, wrong, lost: lostItems.slice(0, 30) },
@@ -83,6 +86,7 @@ function mergeProgress(old, r) {
     stars: Math.max(prev.stars || 0, r.stars),
     bestCaught: Math.max(prev.bestCaught || 0, Math.round((r.caught / r.count) * 100)),
     bestAccuracy: Math.max(prev.bestAccuracy || 0, r.accuracy),
+    bestScore: Math.max(prev.bestScore || 0, r.points),
     plays: (prev.plays || 0) + 1,
     lastPlayedAt: Date.now(),
   };
@@ -135,6 +139,7 @@ function mergeAccounts(a, b) {
       stars: Math.max(la.stars || 0, lb.stars || 0),
       bestCaught: Math.max(la.bestCaught || 0, lb.bestCaught || 0),
       bestAccuracy: Math.max(la.bestAccuracy || 0, lb.bestAccuracy || 0),
+      bestScore: Math.max(la.bestScore || 0, lb.bestScore || 0),
       plays: (la.plays || 0) + (lb.plays || 0),
       lastPlayedAt: Math.max(la.lastPlayedAt || 0, lb.lastPlayedAt || 0),
     };

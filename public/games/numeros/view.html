@@ -20,11 +20,13 @@
       <h3 class="nc-intro-title" id="nc-intro-title"></h3>
       <p class="nc-intro-text" id="nc-intro-world-text"></p>
       <p class="nc-intro-tip" id="nc-intro-tip"></p>
+      <p class="cad-record" id="nc-intro-record" hidden></p>
       <div class="nc-intro-example" id="nc-intro-example" aria-label="Exemplos do que vai cair"></div>
       <ul class="nc-intro-rules">
         <li>☁️ As contas caem do céu. Digite o resultado antes que cheguem ao chão.</li>
         <li>💥 Não precisa apertar Enter: acertou, a conta estoura sozinha.</li>
         <li id="nc-intro-minus" hidden>➖ Resultado negativo: aperte − antes do número.</li>
+        <li>🔥 Acertos seguidos multiplicam os pontos. Peças especiais: ⭐ vale mais, 🧊 congela o céu, 💥 estoura tudo!</li>
         <li>⏸ Precisa parar? Aperte Esc ou o botão de pausa.</li>
       </ul>
       <div class="nc-intro-actions">
@@ -44,6 +46,10 @@
         <span class="nc-stat" title="Contas que caíram no chão">💥 <b id="nc-stat-lost">0</b></span>
         <span class="nc-stat" title="Contas que ainda vão cair">☁️ <b id="nc-stat-left">0</b></span>
       </div>
+      <span class="cad-hud">
+        <span class="cad-score" title="Pontos">⭐ <b id="nc-score">0</b></span>
+        <span class="cad-combo" id="nc-combo" hidden title="Acertos seguidos multiplicam os pontos">🔥 ×2</span>
+      </span>
       <button type="button" class="btn-mini" id="nc-pause-btn" title="Pausar (Esc)">⏸ Pausar</button>
     </div>
     <div class="nc-progress" aria-hidden="true"><span id="nc-progress-bar"></span></div>
@@ -73,7 +79,9 @@
       </div>
       <h3 class="nc-result-title" id="nc-result-title"></h3>
       <p class="nc-result-msg" id="nc-result-msg"></p>
+      <p class="cad-record" id="nc-record"></p>
       <div class="nc-result-stats">
+        <div><b id="nc-res-score">0</b><small>⭐ pontos</small></div>
         <div><b id="nc-res-caught">0</b><small>✅ resolvidas</small></div>
         <div><b id="nc-res-acc">100%</b><small>🎯 números certos</small></div>
         <div><b id="nc-res-time">0:00</b><small>⏱ tempo</small></div>

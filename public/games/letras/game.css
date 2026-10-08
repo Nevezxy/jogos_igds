@@ -157,7 +157,7 @@
 .lc-star.is-on { color: var(--yellow-dark); display: inline-block; animation: bounceIn .4s var(--ease-bounce); }
 .lc-result-title { font-size: 2rem; margin: 4px 0; }
 .lc-result-msg { font-weight: 700; margin: 0 0 14px; }
-.lc-result-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+.lc-result-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
 .lc-result-stats div { display: flex; flex-direction: column; padding: 10px; background: var(--surface-2); border: 2px solid var(--ink); border-radius: var(--radius-sm); }
 .lc-result-stats b { font-family: var(--font-display); font-size: 1.6rem; }
 .lc-result-stats small { font-weight: 700; color: var(--ink-soft); }
@@ -170,7 +170,7 @@
   .lc-stats { margin-left: 0; }
   .lc-piece { font-size: 1.7rem; }
   .lc-piece.is-long { font-size: 1.3rem; }
-  .lc-result-stats { grid-template-columns: 1fr; }
+  .lc-result-stats { grid-template-columns: repeat(2, 1fr); }
 }
 @media (prefers-reduced-motion: reduce) {
   .lc-piece.is-wrong, .lc-ground.is-hit { animation: none; }

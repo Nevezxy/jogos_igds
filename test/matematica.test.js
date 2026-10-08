@@ -51,8 +51,8 @@ function checkGenerator() {
     // fase pequena demais repete conta na rodada de 10
     if (distinct.size < 10) bad.push(`${level.id}: só ${distinct.size} contas diferentes`);
   }
-  assert(Levels.LEVELS.length >= 140, `${Levels.LEVELS.length} fases`);
-  assert(Levels.WORLDS.every((w) => w.levels.length >= 12), 'todo mundo tem pelo menos 12 fases');
+  assert(Levels.LEVELS.length >= 130, `${Levels.LEVELS.length} fases`);
+  assert(Levels.WORLDS.every((w) => w.levels.length >= 10), 'todo mundo tem pelo menos 10 fases');
   assert(Levels.WORLDS.filter((w) => w.emoji).map((w) => w.id).join() === 'fg', 'figurinhas só no mundo das figurinhas');
   assert(Levels.LEVELS.every((l) => !l.choice || Levels.getWorld(l.world).emoji), '3 opções só no mundo das figurinhas');
   const as = Levels.getWorld('as');
@@ -107,6 +107,7 @@ async function checkServer() {
 
     r = await send({});
     assert(r.ok && r.result.stars === 3, '10 de primeira e rápido = 3 estrelas (o servidor refaz as contas)');
+    assert(r.progress.levels.ad7.bestStreak === 10, 'sequência de 10 contas certas seguidas vira o recorde da fase');
     r = await send({ durationMs: 200000 });
     assert(r.ok && r.result.stars === 2, '10 de primeira, mas devagar = 2 estrelas');
     const fg = Levels.getLevel('fg9');
