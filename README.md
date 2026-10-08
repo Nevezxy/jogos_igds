@@ -11,7 +11,7 @@ Jogos de hoje:
 | Jogo | Modo | O que é |
 |------|------|---------|
 | ⌨️ **Teclado Mágico** | sozinho(a) | Digitação com os 10 dedos: teclado ABNT2 na tela com uma cor por dedo, mãos que mostram o dedo certo e 127 fases (letras, palavras, acentos, frases, pontuação, números e textos). |
-| 🔤 **Letras Cadentes** | sozinho(a) | Letras, números, sílabas e palavras caem do céu e a criança digita cada uma antes que chegue ao chão. 108 fases, com teclado de ajuda na tela. |
+| 🔤 **Letras Cadentes** | sozinho(a) | Letras, números, sílabas e palavras caem do céu e a criança digita cada uma antes que chegue ao chão. 72 fases, opção "apenas maiúsculas" e o céu ocupando a tela toda. |
 | 🔢 **Conta Comigo** | sozinho(a) | Matemática: mundo das figurinhas, adição e subtração da unidade ao milhar, multiplicação e divisão até a dezena, depois números negativos, potências, raízes e expressões. 152 fases e teclado numérico na tela (funciona no tablet). |
 | 🏁 **Desafio de Digitação** | com a turma | Corrida de digitação ao vivo: o professor escolhe o texto (uma fase do Teclado Mágico ou um texto dele) e o modo, a turma digita junta e o telão mostra a pista com os bichinhos e o pódio. |
 | 🎯 **Bingo** | com a turma | Bingo em tempo real conduzido pelo professor, com ~20 crianças em celulares, tablets ou computadores, e um telão opcional para o projetor. |
@@ -158,17 +158,19 @@ CMD ["node", "server.js"]
   a peça mais perto do chão que começa com ela (fica amarela) e as letras
   seguintes completam aquela peça; letra errada faz a peça tremer e conta
   um erro, mas não perde a peça. Esc ou Backspace soltam o alvo.
-- **9 mundos, 108 fases:** letras do meio, de cima e de baixo, letras e
-  números, maiúsculas, sílabas, palavras simples, palavras com acento e
-  desafio. Cada mundo tem 4 conteúdos, e cada conteúdo vem em 3 velocidades
+- **6 mundos, 72 fases:** letras e números (todas as letras e todos os
+  números juntos, sem separar por fileira), maiúsculas, sílabas, palavras
+  simples, palavras com acento e desafio. Cada mundo tem 4 conteúdos, e cada conteúdo vem em 3 velocidades
   (🐢 devagar, 🐇 médio, 🚀 rápido: tempo de queda, intervalo e quantas
   peças ao mesmo tempo).
 - **Sem game over:** a rodada vai até a última peça. Estrelas: pegar 60% =
   ⭐, 80% = ⭐⭐, 95% com até 10% de teclas erradas = ⭐⭐⭐.
 - Acentos como no Teclado Mágico; maiúscula só conta nos mundos de
   maiúsculas e desafio (nos outros, o Caps Lock ligado não atrapalha).
-- **Teclado de ajuda** (pode desligar): mostra a próxima tecla e o dedo
-  certo, com a dica em texto.
+- **🔠 Apenas maiúsculas** (opção no mapa, guardada no aparelho): tudo cai
+  em MAIÚSCULA e tem que ser digitado em maiúscula; o jogo sugere ligar o
+  Caps Lock.
+- Durante o jogo, o céu ocupa toda a largura e a altura que sobra na tela.
 - Pausa com Esc, pelo botão ⏸, ou sozinha quando a criança troca de aba
   ou a página perde o foco.
 - O servidor refaz a lista de peças pela semente e confere o resultado;
@@ -323,7 +325,7 @@ jogos_igds/
 │   │       ├── router.js     # Rotas (History API)
 │   │       └── app.js        # Som, cliques e navegação comuns a todas as telas
 │   └── games/
-│       ├── letras/           # 🔤 Letras Cadentes (usa teclado, dica e palavras do Teclado Mágico)
+│       ├── letras/           # 🔤 Letras Cadentes (usa o banco de palavras do Teclado Mágico)
 │       │   ├── levels.js     # Mundos, conteúdos × velocidades e estrelas (também no servidor)
 │       │   ├── items.js      # O que cai em cada fase, com semente (também no servidor)
 │       │   └── game.js, view.html, game.css

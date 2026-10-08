@@ -12,9 +12,9 @@
 
     <div class="lc-toolbar">
       <button type="button" class="btn btn-primary btn-lg" id="lc-continue">▶ Continuar</button>
-      <label class="lc-toggle" title="Mostra no teclado da tela a próxima tecla e o dedo certo">
-        <input type="checkbox" id="lc-show-kb" checked />
-        <span>⌨️ Teclado de ajuda</span>
+      <label class="lc-toggle" title="Tudo cai em MAIÚSCULA (digite com o Shift ou com o Caps Lock ligado)">
+        <input type="checkbox" id="lc-uppercase" />
+        <span>🔠 Apenas maiúsculas</span>
       </label>
     </div>
 
@@ -33,6 +33,7 @@
         <li>☁️ As peças caem do céu. Digite cada uma antes que chegue ao chão.</li>
         <li>🎯 Comece pela peça mais perto do chão: a primeira letra escolhe a peça.</li>
         <li id="lc-intro-case">🔡 Maiúscula ou minúscula, tanto faz.</li>
+        <li id="lc-intro-upper" hidden>🔠 Modo <strong>apenas maiúsculas</strong>: tudo cai em MAIÚSCULA. Ligue o Caps Lock (ou segure o Shift do lado contrário da letra).</li>
         <li>⏸ Precisa parar? Aperte Esc ou o botão de pausa.</li>
       </ul>
       <div class="lc-intro-actions">
@@ -47,6 +48,7 @@
     <div class="lc-play-head">
       <button type="button" class="btn-mini" id="lc-quit" title="Sair da fase">✕ Sair</button>
       <strong class="lc-play-title" id="lc-play-title"></strong>
+      <span class="lc-mode-chip" id="lc-upper-chip" hidden title="Modo apenas maiúsculas">🔠 MAIÚSCULAS</span>
       <div class="lc-stats">
         <span class="lc-stat" title="Peças pegas">✅ <b id="lc-stat-caught">0</b></span>
         <span class="lc-stat" title="Peças que caíram no chão">💥 <b id="lc-stat-lost">0</b></span>
@@ -58,6 +60,11 @@
 
     <div class="lc-sky" id="lc-sky">
       <div class="lc-ground" id="lc-ground" aria-hidden="true"></div>
+      <div class="lc-alerts">
+        <span class="lc-alert" id="lc-caps" hidden>⇪ O Caps Lock está ligado.</span>
+        <span class="lc-alert" id="lc-caps-off" hidden>⇪ Ligue o Caps Lock para escrever em MAIÚSCULA.</span>
+        <span class="lc-alert lc-alert-dead" id="lc-dead" hidden>✨ Acento pronto! Agora aperte a letra.</span>
+      </div>
       <div class="lc-overlay" id="lc-countdown" hidden><span id="lc-countdown-n">3</span></div>
       <button type="button" class="lc-overlay lc-pause" id="lc-pause" hidden>
         <span class="lc-pause-icon">⏸</span>
@@ -67,14 +74,6 @@
     </div>
     <textarea id="lc-input" class="lc-input" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Digite aqui"></textarea>
 
-    <div class="lc-help" id="lc-help">
-      <p class="lc-hint" id="lc-hint" aria-live="polite"></p>
-      <div class="lc-alerts">
-        <span class="lc-alert" id="lc-caps" hidden>⇪ O Caps Lock está ligado.</span>
-        <span class="lc-alert lc-alert-dead" id="lc-dead" hidden>✨ Acento pronto! Agora aperte a letra.</span>
-      </div>
-      <div class="lc-kb" id="lc-kb" aria-hidden="true"></div>
-    </div>
   </section>
 
   <!-- ============ RESULTADO ============ -->

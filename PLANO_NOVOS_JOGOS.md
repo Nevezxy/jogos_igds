@@ -2,6 +2,10 @@
 
 > **Situação:** etapa **A** concluída (motor de queda, Letras Cadentes e o
 > painel por assunto). Próximas: B (Números Cadentes) e C (Clik).
+> Ajustes pedidos depois: sem teclado de ajuda na tela; o céu ocupa a tela
+> toda; opção "apenas maiúsculas"; os mundos de letras (meio, cima, baixo) e
+> de números viraram um só ("Letras e números", sem separar por fileira nem
+> por grupos de números): 6 mundos e 72 fases.
 > **Decisões tomadas:** nas "Cadentes" não há game over (a rodada vai até o
 > fim e as estrelas dependem de quantas peças a criança pegou); o painel de
 > jogos passa a ser separado por assunto; a ordem é Letras Cadentes →

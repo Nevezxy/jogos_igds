@@ -10,16 +10,16 @@
 //
 // As teclas chegam por um <textarea> escondido (evento `input`), como no
 // Teclado Mágico: é o jeito de receber "á", "ã" e "ç" montados pelo sistema.
+//
+// O céu ocupa todo o espaço que sobra na tela. "Apenas maiúsculas": tudo cai
+// em MAIÚSCULA e tem que ser digitado em maiúscula (como no Teclado Mágico).
 
 (function () {
   const Levels = window.LetrasLevels;
   const Items = window.LetrasItems;
-  const layout = window.DigitacaoLayouts.abnt2;
-  const { createKeyboard } = window.DigitacaoKeyboard;
-  const { fingerName } = window.DigitacaoHands;
-  const Hint = window.DigitacaoHint;
 
-  const KB_KEY = 'lc_show_kb';
+  const UPPER_KEY = 'lc_uppercase';
+  const upper = (s) => s.toLocaleUpperCase('pt-BR');
 
   function formatTime(ms) {
     const s = Math.floor(ms / 1000);
@@ -33,16 +33,15 @@
     const { sound, fx, ui } = ctx;
     const $ = (sel) => container.querySelector(sel);
     const screens = [...container.querySelectorAll('[data-lc]')];
-    const keyboard = createKeyboard($('#lc-kb'), layout);
     const input = $('#lc-input');
     const sky = $('#lc-sky');
 
     let progress = { levels: {} };
     let screen = 'map';
     let destroyed = false;
-    let showKb = true;
-    try { showKb = localStorage.getItem(KB_KEY) !== '0'; } catch (e) { /* ignore */ }
-    $('#lc-show-kb').checked = showKb;
+    let uppercase = false;
+    try { uppercase = localStorage.getItem(UPPER_KEY) === '1'; } catch (e) { /* ignore */ }
+    $('#lc-uppercase').checked = uppercase;
 
     let current = null; // fase escolhida
     let round = null; // { level, seed, items, engine, target, caught, lost, wrong, errors, startedAt }
@@ -89,8 +88,10 @@
       const ex = $('#lc-intro-example');
       ex.innerHTML = '';
       [...new Set(Items.makeItems(level, randomSeed()))].slice(0, 8).forEach((it) => {
-        ex.appendChild(Object.assign(document.createElement('span'), { className: 'lc-chip', textContent: it }));
+        ex.appendChild(Object.assign(document.createElement('span'), { className: 'lc-chip', textContent: uppercase ? upper(it) : it }));
       });
+      $('#lc-intro-case').hidden = uppercase;
+      $('#lc-intro-upper').hidden = !uppercase;
       $('#lc-intro-case').textContent = level.caseSensitive
         ? '🔠 Atenção: maiúscula e minúscula contam! Use o Shift (ou o Caps Lock).'
         : '🔡 Maiúscula ou minúscula, tanto faz.';
@@ -100,7 +101,8 @@
 
     // ---------------- jogando ----------------
     const norm = (s) => String(s).normalize('NFC');
-    const same = (a, b) => (round.level.caseSensitive ? a === b : a.toLocaleLowerCase('pt-BR') === b.toLocaleLowerCase('pt-BR'));
+    const strict = () => round.level.caseSensitive || round.uppercase;
+    const same = (a, b) => (strict() ? a === b : a.toLocaleLowerCase('pt-BR') === b.toLocaleLowerCase('pt-BR'));
 
     function renderPiece(text) {
       const el = document.createElement('div');
@@ -128,17 +130,17 @@
     function start(level) {
       if (round) round.engine.destroy();
       const seed = randomSeed();
-      const items = Items.makeItems(level, seed);
+      // em maiúsculas é só o jeito de mostrar: a lista (e o servidor) é a mesma
+      const items = Items.makeItems(level, seed).map((it) => (uppercase ? upper(it) : it));
       sky.querySelectorAll('.lc-piece').forEach((el) => el.remove());
       round = {
-        level, seed, items, target: null, caught: 0, lost: [], wrong: 0, errors: {}, started: false,
+        level, seed, items, uppercase, target: null, caught: 0, lost: [], wrong: 0, errors: {}, started: false,
         engine: window.FallingEngine.create(sky, {
           items,
           fallMs: level.fallMs,
           intervalMs: level.intervalMs,
           maxOnScreen: level.maxOnScreen,
           render: renderPiece,
-          onSpawn: () => updateHint(),
           onLand(piece) {
             if (round.target === piece) round.target = null;
             round.lost.push(piece.index);
@@ -148,22 +150,22 @@
             void g.offsetWidth;
             g.classList.add('is-hit');
             updateStats();
-            updateHint();
           },
           onEnd: finish,
         }),
       };
       $('#lc-play-title').textContent = `${Levels.getWorld(level.world).icon} ${level.fullTitle}`;
-      $('#lc-help').hidden = !showKb;
+      $('#lc-upper-chip').hidden = !uppercase;
       $('#lc-pause').hidden = true;
+      $('#lc-caps').hidden = true;
+      $('#lc-caps-off').hidden = true;
       updateStats();
-      updateHint();
       show('play');
+      fitSky();
       focusInput();
       countdown(() => {
         round.started = true;
         round.engine.start();
-        updateHint();
       });
     }
 
@@ -207,13 +209,13 @@
       return lowest ? [...lowest.item][0] : null;
     }
 
-    function updateHint() {
-      if (!showKb || !round) return;
-      const ch = nextChar();
-      const info = ch ? Hint.describe(layout, ch, { deadArmed, capsOn, fingerName }) : null;
-      keyboard.highlight(info ? info.stroke : null);
-      $('#lc-hint').textContent = info ? info.text : '';
+    // O céu vai até o fim da tela (a página não rola durante o jogo).
+    function fitSky() {
+      const top = sky.getBoundingClientRect().top;
+      sky.style.height = `${Math.max(280, Math.floor(window.innerHeight - top - 14))}px`;
     }
+    function onResize() { if (screen === 'play') fitSky(); }
+    window.addEventListener('resize', onResize);
 
     function handleChar(raw) {
       if (!round || !round.started || !round.engine.isRunning()) return;
@@ -247,7 +249,6 @@
         paintPiece(target);
       }
       round.engine.pieces().forEach(paintPiece);
-      updateHint();
     }
 
     function miss(expected) {
@@ -262,7 +263,6 @@
       paintPiece(round.target);
       round.target = null;
       round.engine.pieces().forEach(paintPiece);
-      updateHint();
     }
 
     // ---------------- teclas ----------------
@@ -292,18 +292,19 @@
       }
       if (ev.key === 'Backspace') { ev.preventDefault(); releaseTarget(); return; }
       updateCaps(ev);
-      keyboard.press(ev.code, true);
       if (ev.key === 'Dead') {
         deadArmed = true;
         $('#lc-dead').hidden = false;
-        updateHint();
       }
     });
-    input.addEventListener('keyup', (ev) => { keyboard.press(ev.code, false); updateCaps(ev); });
+    input.addEventListener('keyup', updateCaps);
+    // Caps Lock: nas fases normais avisa que está ligado; no modo "apenas
+    // maiúsculas" é uma ajuda, e o aviso sugere ligar.
     function updateCaps(ev) {
-      const on = Boolean(ev.getModifierState && ev.getModifierState('CapsLock'));
-      $('#lc-caps').hidden = !on || Boolean(round && round.level.caseSensitive);
-      if (on !== capsOn) { capsOn = on; updateHint(); }
+      if (!round || !ev.getModifierState) return;
+      capsOn = ev.getModifierState('CapsLock');
+      $('#lc-caps').hidden = !capsOn || strict();
+      $('#lc-caps-off').hidden = capsOn || !round.uppercase;
     }
 
     function focusInput() { input.focus({ preventScroll: true }); }
@@ -312,7 +313,6 @@
     function pause() {
       if (!round || !round.started || round.engine.isEnded() || !round.engine.isRunning()) return;
       round.engine.pause();
-      keyboard.releaseAll();
       $('#lc-pause').hidden = false;
     }
     function resume() {
@@ -351,7 +351,6 @@
     // ---------------- resultado ----------------
     async function finish() {
       const r = round;
-      keyboard.highlight(null);
       input.blur();
       const typed = r.items.filter((_, i) => !r.lost.includes(i)).reduce((n, it) => n + [...it].length, 0);
       const accuracy = typed + r.wrong ? Math.round((typed / (typed + r.wrong)) * 1000) / 10 : 0;
@@ -414,9 +413,9 @@
       show('map');
       renderMap();
     }));
-    $('#lc-show-kb').addEventListener('change', (ev) => {
-      showKb = ev.target.checked;
-      try { localStorage.setItem(KB_KEY, showKb ? '1' : '0'); } catch (e) { /* ignore */ }
+    $('#lc-uppercase').addEventListener('change', (ev) => {
+      uppercase = ev.target.checked;
+      try { localStorage.setItem(UPPER_KEY, uppercase ? '1' : '0'); } catch (e) { /* ignore */ }
       sound.play('pop');
     });
 
@@ -447,6 +446,7 @@
       round = null;
       document.removeEventListener('keydown', onDocKeydown);
       document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('resize', onResize);
     }
 
     return { load, destroy };
@@ -455,6 +455,8 @@
   let game = null;
   window.Plataforma.registerGame('letras', {
     async mount(container, ctx) {
+      // o céu usa toda a largura da tela
+      container.classList.add('is-wide');
       ctx.mascot.mount(container);
       game = createGame(container, ctx);
       await game.load();
@@ -462,6 +464,7 @@
     unmount() {
       if (game) game.destroy();
       game = null;
+      document.getElementById('game-root').classList.remove('is-wide');
     },
   });
 })();

@@ -53,14 +53,11 @@ const games = [
     color: 'violet',
     isNew: true,
     requiresKeyboard: true,
-    // usa o teclado, a dica e o banco de palavras do Teclado Mágico
+    // usa o banco de palavras do Teclado Mágico
     client: {
-      styles: ['../digitacao/game.css', 'game.css'],
+      styles: ['game.css'],
       view: 'view.html',
-      scripts: [
-        '../digitacao/layouts/abnt2.js', '../digitacao/content.js', '../digitacao/keyboard.js',
-        '../digitacao/hands.js', '../digitacao/hint.js', 'levels.js', 'items.js', 'game.js',
-      ],
+      scripts: ['../digitacao/content.js', 'levels.js', 'items.js', 'game.js'],
     },
     server: require('./letras/server'),
   },

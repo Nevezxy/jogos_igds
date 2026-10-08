@@ -18,9 +18,8 @@
 // outros, tanto faz (o Caps Lock ligado não atrapalha).
 
 (function (root) {
-  const HOME = 'asdfghjklç';
-  const TOP = 'qwertyuiop';
   const ALL = 'abcdefghijklmnopqrstuvwxyzç';
+  const DIGITS = '0123456789';
 
   // Ritmo de cada velocidade: tempo de queda, intervalo entre peças,
   // quantas ao mesmo tempo e quantas na fase.
@@ -56,43 +55,13 @@
 
   const WORLDS = [
     {
-      id: 'l1', icon: '🏠', name: 'Letras do meio', color: 'yellow', pace: 'letra',
-      intro: 'As letras da fileira do meio caem do céu. Dedos na casa: indicadores no F e no J!',
+      id: 'l1', icon: '🔤', name: 'Letras e números', color: 'yellow', pace: 'letra',
+      intro: 'Letras e números caem do céu. Dedos na casa (indicadores no F e no J) e digite cada um antes que chegue ao chão!',
       contents: [
-        { title: 'A S D F', gen: { t: 'chars', chars: 'asdf' }, tip: 'Mão esquerda na casa: A, S, D e F.' },
-        { title: 'J K L Ç', gen: { t: 'chars', chars: 'jklç' }, tip: 'Mão direita na casa: J, K, L e Ç.' },
-        { title: 'F G H J', gen: { t: 'chars', chars: 'fghj' }, tip: 'Os indicadores esticam para o G e o H.' },
-        { title: 'Fileira do meio', gen: { t: 'chars', chars: HOME }, tip: 'A fileira do meio inteira.' },
-      ],
-    },
-    {
-      id: 'l2', icon: '⬆️', name: 'Letras de cima', color: 'sky', pace: 'letra',
-      intro: 'Agora as letras da fileira de cima. O dedo sobe, aperta e volta para a casa.',
-      contents: [
-        { title: 'Q W E R T', gen: { t: 'chars', chars: 'qwert' }, tip: 'Mão esquerda em cima: Q, W, E, R e T.' },
-        { title: 'Y U I O P', gen: { t: 'chars', chars: 'yuiop' }, tip: 'Mão direita em cima: Y, U, I, O e P.' },
-        { title: 'Vogais', gen: { t: 'chars', chars: 'aeiou' }, tip: 'A, E, I, O e U.' },
-        { title: 'Meio e cima', gen: { t: 'chars', chars: HOME + TOP }, tip: 'A fileira do meio e a de cima juntas.' },
-      ],
-    },
-    {
-      id: 'l3', icon: '⬇️', name: 'Letras de baixo', color: 'green', pace: 'letra',
-      intro: 'As letras da fileira de baixo. O dedo desce, aperta e volta.',
-      contents: [
-        { title: 'Z X C V B', gen: { t: 'chars', chars: 'zxcvb' }, tip: 'Mão esquerda embaixo: Z, X, C, V e B.' },
-        { title: 'N M , .', gen: { t: 'chars', chars: 'nm,.' }, tip: 'Mão direita embaixo: N, M, vírgula e ponto.' },
-        { title: 'Alfabeto', gen: { t: 'chars', chars: ALL }, tip: 'Todas as letras!' },
-        { title: 'Alfabeto, vírgula e ponto', gen: { t: 'chars', chars: `${ALL},.` }, tip: 'Todas as letras, a vírgula e o ponto.' },
-      ],
-    },
-    {
-      id: 'l4', icon: '🔢', name: 'Letras e números', color: 'orange', pace: 'letra',
-      intro: 'Os números moram na fileira mais alta. Cada dedo cuida dos números acima da sua tecla.',
-      contents: [
-        { title: '1 a 5', gen: { t: 'chars', chars: '12345' }, tip: 'A mão esquerda cuida do 1 ao 5.' },
-        { title: '6 a 0', gen: { t: 'chars', chars: '67890' }, tip: 'A mão direita cuida do 6 ao 0.' },
-        { title: 'Todos os números', gen: { t: 'chars', chars: '1234567890' }, tip: 'Do 1 ao 0.' },
-        { title: 'Letras e números', gen: { t: 'chars', chars: `${ALL}1234567890` }, tip: 'Letras e números misturados.' },
+        { title: 'Letras', gen: { t: 'chars', chars: ALL }, tip: 'Todas as letras, de A a Z, e o Ç.' },
+        { title: 'Números', gen: { t: 'chars', chars: DIGITS }, tip: 'Todos os números, do 0 ao 9, na fileira de cima.' },
+        { title: 'Letras e números', gen: { t: 'chars', chars: ALL + DIGITS }, tip: 'Letras e números misturados.' },
+        { title: 'Letras, números, vírgula e ponto', gen: { t: 'chars', chars: `${ALL}${DIGITS},.` }, tip: 'Tudo junto, com a vírgula e o ponto.' },
       ],
     },
     {

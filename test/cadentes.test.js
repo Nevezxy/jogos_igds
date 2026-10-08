@@ -23,7 +23,8 @@ function checkLetras() {
   const layout = loadLayout();
   const ACCENT = /[áéíóúãõâêôàüç]/i;
   const bad = [];
-  assert(Letras.LEVELS.length === 108 && Letras.WORLDS.every((w) => w.levels.length === 12), 'Letras Cadentes: 9 mundos com 12 fases');
+  assert(Letras.LEVELS.length === 72 && Letras.WORLDS.every((w) => w.levels.length === 12), 'Letras Cadentes: 6 mundos com 12 fases');
+  assert(Letras.getWorld('l1').levels.every((l) => l.gen.t === 'chars'), 'letras e números num mundo só');
   assert(new Set(Letras.LEVELS.map((l) => l.id)).size === Letras.LEVELS.length, 'ids de fase sem repetir');
   for (const level of Letras.LEVELS) {
     for (let s = 1; s <= 40; s++) {
@@ -91,7 +92,7 @@ async function checkServer() {
     const t = (await api('POST', '/api/teacher/login', {})).token;
     r = await api('GET', '/api/teacher/students', null, { teacher: t });
     const row = r.students.find((s) => s.name === 'Nina Prado').games.letras;
-    assert(row && row.levelsDone === 1 && row.totalLevels === 108 && row.toughest.length > 0 && typeof row.caughtPct === 'number',
+    assert(row && row.levelsDone === 1 && row.totalLevels === 72 && row.toughest.length > 0 && typeof row.caughtPct === 'number',
       'área do professor mostra fases, quanto pega e o que mais cai');
   } finally {
     await srv.stop();

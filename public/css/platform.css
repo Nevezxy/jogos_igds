@@ -587,3 +587,6 @@
   .lm-level.is-next { animation: none; }
 }
 .teacher-facts span { font-family: var(--font-body); font-weight: 800; font-size: .8rem; white-space: nowrap; }
+
+/* jogo que pede a tela toda (ex.: Letras Cadentes) */
+#game-root.is-wide { max-width: none; }

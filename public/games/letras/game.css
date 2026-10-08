@@ -1,16 +1,8 @@
 /* ============================================================
    🔤 Letras Cadentes — céu, peças caindo, chão e as telas.
-   O teclado de ajuda usa os estilos do Teclado Mágico (.kb-*).
+   Durante o jogo o céu ocupa toda a largura e a altura que sobra.
    ============================================================ */
 
-/* cores dos dedos no teclado de ajuda (as mesmas do Teclado Mágico) */
-.lc {
-  --f5: var(--pink);
-  --f4: var(--orange);
-  --f3: var(--green);
-  --f2: var(--sky);
-  --fp: var(--violet);
-}
 .lc-screen[hidden] { display: none; }
 .lc-card {
   background: var(--surface);
@@ -71,8 +63,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 8px 14px;
-  max-width: 980px;
-  margin: 0 auto 8px;
+  margin: 0 0 8px;
   padding: 8px 14px;
   background: var(--surface);
   border: var(--stroke) solid var(--ink);
@@ -80,15 +71,15 @@
   box-shadow: 0 4px 0 var(--ink);
 }
 .lc-play-title { font-family: var(--font-display); font-size: 1.15rem; }
+.lc-mode-chip { padding: 2px 10px; background: var(--yellow); border: 2px solid var(--ink); border-radius: 999px; font-weight: 800; font-size: .85rem; }
+.lc-mode-chip[hidden] { display: none; }
 .lc-stats { display: flex; gap: 12px; margin-left: auto; font-weight: 800; font-variant-numeric: tabular-nums; }
-.lc-progress { max-width: 980px; height: 8px; margin: 0 auto 8px; background: rgba(255, 255, 255, .4); border-radius: 999px; overflow: hidden; }
+.lc-progress { height: 8px; margin: 0 0 8px; background: rgba(255, 255, 255, .4); border-radius: 999px; overflow: hidden; }
 .lc-progress span { display: block; height: 100%; width: 0; background: var(--green); transition: width .3s ease; }
 
 .lc-sky {
   position: relative;
-  max-width: 980px;
-  height: clamp(320px, 52vh, 560px);
-  margin: 0 auto;
+  height: 60vh; /* ajustado pelo jogo para ir até o fim da tela */
   overflow: hidden;
   background: linear-gradient(180deg, #BDEBFF 0%, #E8F7FF 70%, #F7FCFF 100%);
   border: var(--stroke) solid var(--ink);
@@ -158,10 +149,7 @@
 /* textarea escondido que recebe as teclas */
 .lc-input { position: absolute; left: -9999px; top: 0; width: 1px; height: 1px; opacity: 0; }
 
-.lc-help { max-width: 980px; margin: 12px auto 0; }
-.lc-help[hidden] { display: none; }
-.lc-hint { min-height: 1.5em; margin: 0 0 6px; text-align: center; font-weight: 800; color: #fff; text-shadow: 0 2px 0 rgba(30, 18, 64, .4); }
-.lc-alerts { display: flex; justify-content: center; gap: 8px; margin-bottom: 6px; }
+.lc-alerts { position: absolute; top: 8px; left: 0; right: 0; display: flex; justify-content: center; gap: 8px; z-index: 4; pointer-events: none; }
 .lc-alert { padding: 4px 12px; background: #fff4cc; border: 2px solid var(--ink); border-radius: 999px; font-weight: 800; }
 .lc-alert[hidden] { display: none; }
 
