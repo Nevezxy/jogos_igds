@@ -149,6 +149,15 @@
       return `<div class="teacher-game"><strong>${escapeHtml(d.current)}</strong>
         <span>⭐ ${d.stars}/${d.maxStars} · ${d.levelsDone}/${d.totalLevels} fases · resolve ${d.caughtPct}%</span>${tough}</div>`;
     },
+    click(d) {
+      if (!d || !d.targets) return '<span class="muted">—</span>';
+      // % de acerto em cada ação: dá para ver quem ainda sofre com o duplo clique
+      const kinds = d.byKind.length
+        ? `<div class="teacher-keys teacher-facts" title="Acerto em cada ação">${d.byKind.map((k) => `<span${k.pct < 60 ? ' class="is-low"' : ''} title="${escapeHtml(k.name)}">${k.icon} ${k.pct}%</span>`).join('')}</div>`
+        : '';
+      return `<div class="teacher-game"><strong>${escapeHtml(d.current)}</strong>
+        <span>⭐ ${d.stars}/${d.maxStars} · ${d.levelsDone}/${d.totalLevels} fases · acerta ${d.hitPct}%${d.toughest ? ` · treinar: ${escapeHtml(d.toughest)}` : ''}</span>${kinds}</div>`;
+    },
     matematica(d) {
       if (!d || !d.problems) return '<span class="muted">—</span>';
       const facts = d.toughest.length

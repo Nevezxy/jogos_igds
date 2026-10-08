@@ -1,7 +1,11 @@
-# 🖱️ 🔤 🔢 Plano — Clik, Letras Cadentes e Números Cadentes
+# 🖱️ 🔤 🔢 Plano — Click, Letras Cadentes e Números Cadentes
 
 > **Situação:** etapas **A** (motor de queda, Letras Cadentes e o painel por
-> assunto) e **B** (Números Cadentes) concluídas. Próxima: C (Clik).
+> assunto), **B** (Números Cadentes) e **C** (Click) concluídas. Falta a D
+> (ajuste de ritmo jogando de verdade, no tablet e no celular).
+> No Click, em vez de 7 mundos × 12 fases, ficaram 6 mundos e 30 fases, todas
+> diferentes, que aceleram durante a rodada (o mesmo princípio dos Cadentes,
+> sem fase repetida). O "Montar figuras" virou a fase "Até a sombra".
 > Ajustes pedidos depois: sem teclado de ajuda na tela; o céu ocupa a tela
 > toda; opção "apenas maiúsculas"; os mundos de letras (meio, cima, baixo) e
 > de números viraram um só ("Letras e números", sem separar por fileira nem
@@ -9,13 +13,13 @@
 > **Decisões tomadas:** nas "Cadentes" não há game over (a rodada vai até o
 > fim e as estrelas dependem de quantas peças a criança pegou); o painel de
 > jogos passa a ser separado por assunto; a ordem é Letras Cadentes →
-> Números Cadentes → Clik.
+> Números Cadentes → Click.
 
 Três jogos novos, inspirados em atividades do GCompris:
 
 | Jogo | Inspiração no GCompris | O que treina |
 |------|------------------------|--------------|
-| 🖱️ **Clik** | *Erase* (passar o mouse), *Click or tap*, *Double click*, *Click on me* (peixes que nadam), atividades de arrastar | Mover o mouse, clicar, clicar duas vezes, segurar e arrastar |
+| 🖱️ **Click** | *Erase* (passar o mouse), *Click or tap*, *Double click*, *Click on me* (peixes que nadam), atividades de arrastar | Mover o mouse, clicar, clicar duas vezes, segurar e arrastar |
 | 🔤 **Letras Cadentes** | *Simple letters* (gletters) e *Falling words* (wordsgame) | Achar as teclas e digitar letras, sílabas e palavras |
 | 🔢 **Números Cadentes** | *Addition/Subtraction/Multiplication/Division of numbers* (algebra_*), *Numbers with dice* e *with dominoes* | Contas de cabeça, com rapidez |
 
@@ -50,7 +54,7 @@ biblioteca nova.
 
 ---
 
-## 2. 🖱️ Clik (mouse)
+## 2. 🖱️ Click (mouse)
 
 ### 2.1 As cinco ações
 | Ação | O que a criança faz | Como o jogo reconhece |
@@ -171,7 +175,7 @@ resultado é possível, como faz no Teclado Mágico:
   - as peças que caíram existem naquela rodada;
   - a rodada não pode ter durado menos que o ritmo da fase permite.
 - Depois o servidor calcula as estrelas.
-- No **Clik**, a conferência é a mesma: total de alvos da fase, tempo mínimo e estrelas calculadas no servidor.
+- No **Click**, a conferência é a mesma: total de alvos da fase, tempo mínimo e estrelas calculadas no servidor.
 
 Para isso, o conteúdo das "Cadentes" precisa ser gerado com semente. O
 Letras Cadentes ganha um gerador próprio (com semente) sobre o mesmo banco de
@@ -183,20 +187,20 @@ palavras. O Números Cadentes já usa o gerador com semente do Conta Comigo.
 
 ```
 public/js/shared/falling.js          # motor de queda (Letras e Números Cadentes)
-public/games/clik/                   # levels.js, game.js, actions.js (reconhece clique, duplo, segurar, arrastar), view.html, game.css
+public/games/click/                   # levels.js, game.js, actions.js (reconhece clique, duplo, segurar, arrastar), view.html, game.css
 public/games/letras/                 # levels.js, content.js (gerador com semente), game.js, view.html, game.css
 public/games/numeros/                # levels.js, game.js, view.html, game.css (usa ../matematica/problems.js)
-src/games/clik/server.js             # validateResult, mergeProgress, summary, teacherSummary, mergeAccounts
+src/games/click/server.js             # validateResult, mergeProgress, summary, teacherSummary, mergeAccounts
 src/games/letras/server.js
 src/games/numeros/server.js
-test/clik.test.js, test/cadentes.test.js
+test/click.test.js, test/cadentes.test.js
 ```
 
 Mais três entradas no `registry.js`, todas com `mode: 'solo'`:
 
 | Jogo | `requiresKeyboard` |
 |------|--------------------|
-| Clik | false (funciona com o dedo) |
+| Click | false (funciona com o dedo) |
 | Letras Cadentes | true |
 | Números Cadentes | false |
 
@@ -205,7 +209,7 @@ Mais três entradas no `registry.js`, todas com `mode: 'solo'`:
 |-------|-------------|
 | A | Motor de queda + **Letras Cadentes** completo (fases, servidor, professor, testes) |
 | B | **Números Cadentes** (reaproveita o motor e o gerador de contas) |
-| C | **Clik** (ações, 7 mundos, figura revelada) |
+| C | **Click** (ações, 7 mundos, figura revelada) |
 | D | Ajustes de ritmo (velocidades e tempos) jogando de verdade, README e conferência no tablet e no celular |
 
 Cada etapa termina com os testes passando, conferência no navegador e um
@@ -214,7 +218,7 @@ commit.
 ### Testes novos
 - **Geradores:** cada fase das "Cadentes" só tem o conteúdo permitido, por exemplo as letras da fileira certa, palavras sem acento nas fases sem acento e contas dentro do limite. A mesma semente gera as mesmas peças, e toda fase tem conteúdo variado.
 - **Servidor:** recusa totais que não fecham, tempo impossível e peça que não existe na rodada; calcula as estrelas certas.
-- **Clik:** o reconhecimento das ações (clique, duplo clique dentro e fora do tempo, segurar curto demais, arrastar soltando fora) com eventos simulados.
+- **Click:** o reconhecimento das ações (clique, duplo clique dentro e fora do tempo, segurar curto demais, arrastar soltando fora) com eventos simulados.
 
 ---
 
@@ -222,7 +226,7 @@ commit.
 
 1. **Peça que chega ao chão:** sem game over. A rodada vai até o fim e as estrelas dependem de quantas peças a criança pegou.
 2. **Painel de jogos:** separado por assunto (⌨️ Digitação, 🔢 Matemática, 🖱️ Mouse, 👥 Com a turma). Isso entra com o primeiro jogo novo: cada jogo do `registry.js` ganha um campo `subject`.
-3. **Ordem:** Letras Cadentes (A) → Números Cadentes (B) → Clik (C).
+3. **Ordem:** Letras Cadentes (A) → Números Cadentes (B) → Click (C).
 
 ## 8. Riscos e cuidados
 - **Velocidade:** "rápido" para um 5º ano é impossível para um 1º ano. Por isso, cada mundo começa no 🐢. Os tempos serão ajustados jogando (etapa D).

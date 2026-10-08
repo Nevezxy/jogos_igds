@@ -14,6 +14,7 @@ Jogos de hoje:
 | 🔤 **Letras Cadentes** | sozinho(a) | Letras, números, sílabas e palavras caem do céu e a criança digita cada uma antes que chegue ao chão. 31 fases que aceleram durante a rodada, combo, peças especiais (⭐ 🧊 💥), recorde, opção "apenas maiúsculas" e o céu ocupando a tela toda. |
 | 🔢 **Conta Comigo** | sozinho(a) | Matemática: mundo das figurinhas, adição e subtração da unidade ao milhar, multiplicação e divisão até a dezena, depois números negativos, potências, raízes e expressões. 143 fases, sequência 🔥 e teclado numérico na tela (funciona no tablet). |
 | ☄️ **Números Cadentes** | sozinho(a) | Contas, dados e dominós caem do céu e a criança digita o resultado antes que cheguem ao chão (sem Enter). 42 fases que aceleram, combo, peças especiais, recorde e teclado numérico na tela. |
+| 🖱️ **Click** | sozinho(a) | Treino do mouse (e do dedo no tablet): passar por cima, clicar, clicar duas vezes, segurar e arrastar. 30 fases que aceleram, figura escondida revelada a cada acerto, combo, peças especiais e recorde. |
 | 🏁 **Desafio de Digitação** | com a turma | Corrida de digitação ao vivo: o professor escolhe o texto (uma fase do Teclado Mágico ou um texto dele) e o modo, a turma digita junta e o telão mostra a pista com os bichinhos e o pódio. |
 | 🎯 **Bingo** | com a turma | Bingo em tempo real conduzido pelo professor, com ~20 crianças em celulares, tablets ou computadores, e um telão opcional para o projetor. |
 
@@ -163,8 +164,10 @@ CMD ["node", "server.js"]
   seguintes completam aquela peça; letra errada faz a peça tremer e conta
   um erro, mas não perde a peça. Esc ou Backspace soltam o alvo. Cada
   acerto solta um estourinho de confetes no lugar da peça.
-- **6 mundos, 31 fases, todas diferentes:** letras e números, maiúsculas,
-  sílabas, palavras, palavras com acento e o grande final. **A rodada
+- **6 mundos, 31 fases, todas diferentes, em ordem de dificuldade (uma
+  novidade por vez):** letras e números → sílabas → palavras (das curtas às
+  compridas) → maiúsculas (com Shift, ainda sem acento) → palavras com
+  acento (a cedilha primeiro) → grande final. **A rodada
   acelera:** começa devagar e vai ficando mais rápida (tempo de queda,
   intervalo e quantas peças na tela) até a última peça. Cada mundo termina
   com um 🏆 Desafio, que mistura tudo do mundo e já começa mais rápido.
@@ -172,6 +175,10 @@ CMD ["node", "server.js"]
   até ×5); errar ou deixar cair zera o combo. O "+20" sobe do lugar do
   acerto. **Peças especiais** de vez em quando: ⭐ dourada (bônus), 🧊 gelo
   (o céu congela 3 s) e 💥 bomba (estoura todas as peças da tela).
+  **Placar grande dentro do céu** (atrás das peças): pontos que contam até
+  o valor novo, 🔥 ×N com a barra até o próximo multiplicador, acertos
+  seguidos e o recorde; combo novo, recorde batido e 10/20/30 seguidos viram
+  um letreiro grande no meio do céu, e a borda do céu esquenta com o combo.
   **Recorde de pontos** por fase (antes de começar e no resultado). Isso é
   o mesmo nos dois jogos Cadentes (`js/shared/cadentes.js`).
 - **Sem game over:** a rodada vai até a última peça. Estrelas: pegar 60% =
@@ -250,6 +257,32 @@ CMD ["node", "server.js"]
   botão ou ao trocar de aba.
 - O servidor refaz as contas pela semente; na área do professor aparecem a
   fase, quanto a criança resolve e as contas que mais caíram.
+
+### 🖱️ Click (mouse)
+- Alvos aparecem na área de jogo, cada um com um anel que mostra quanto
+  tempo falta (verde → laranja → vermelho). Acertou, ele estoura e revela um
+  pedaço da **figura escondida** no fundo; no fim, a figura inteira aparece
+  ("Você revelou o leão!").
+- **Cinco ações:** 🫧 passar por cima, 👆 clique, ✌️ duplo clique (o tempo
+  entre os cliques aperta de 0,9 s até 0,45 s), ✊ segurar até o anel encher
+  (0,6 a 1,3 s, sem sair de cima) e 🤏 arrastar e soltar no lugar certo
+  (cesta, caixa da mesma cor, sombra igual, cesta que anda). Medidas pelo
+  próprio jogo (`actions.js`), sem depender da configuração do Windows.
+- **6 mundos, 30 fases:** mover → clique → duplo clique → segurar →
+  arrastar → tudo misturado (cada alvo mostra o seu ícone). Dentro do
+  mundo: alvos grandes → pequenos → que andam → que pulam e mudam de
+  direção. A rodada acelera (alvos menores, mais rápidos e mais numerosos)
+  e cada mundo termina com um 🏆 Desafio.
+- O mesmo placar, combo, peças especiais (⭐ 🧊 💥) e recorde dos Cadentes.
+  Ação errada (clique no vazio, um clique só no alvo de duplo, soltar
+  cedo, soltar fora) conta erro e zera o combo, com um aviso do que fazer.
+- Pointer events: funciona igual com mouse, dedo e caneta (`touch-action:
+  none` evita o zoom do toque duplo). Pausa com Esc, pelo botão ou ao
+  trocar de aba.
+- Estrelas: 60%, 80% e 95% dos alvos (com até 25% de ações erradas para a
+  3ª). O servidor refaz a rodada pela semente e confere o tempo mínimo de
+  cada ação; na área do professor aparece a **% de acerto de cada ação**
+  (por exemplo ✌️ 45%) e qual ação treinar.
 
 ### 🏁 Desafio de Digitação
 - O professor cria a sala na área do professor (**Desafio de Digitação**), a
@@ -365,6 +398,11 @@ jogos_igds/
 │       ├── letras/           # 🔤 Letras Cadentes (usa o banco de palavras do Teclado Mágico)
 │       │   ├── levels.js     # Mundos, conteúdos × velocidades e estrelas (também no servidor)
 │       │   ├── items.js      # O que cai em cada fase, com semente (também no servidor)
+│       │   └── game.js, view.html, game.css
+│       ├── click/            # 🖱️ Click
+│       │   ├── levels.js     # Mundos, ações, ritmo e estrelas (também no servidor)
+│       │   ├── targets.js    # Os alvos de cada rodada, com semente (também no servidor)
+│       │   ├── actions.js    # Reconhece clique, duplo clique, segurar e soltar no lugar certo
 │       │   └── game.js, view.html, game.css
 │       ├── numeros/          # ☄️ Números Cadentes (usa o gerador de contas do Conta Comigo)
 │       │   ├── levels.js     # Mundos, conteúdos × velocidades e estrelas (também no servidor)
@@ -527,6 +565,7 @@ npm test
 |---------|-------------|
 | `test/digitacao.test.js` | Teclado Mágico sem navegador: motor (precisão, PPM, acento composto e decomposto), ABNT2 (Shift do lado oposto, acentos, `?` e `;`), fases e estrelas, todo exercício digitável e só com as teclas da fase, validação do servidor. |
 | `test/cadentes.test.js` | Números Cadentes (contas dentro das regras de cada mundo, dados e dominós certos, servidor) e Letras Cadentes: peças certas em todas as fases (só as teclas da fase, sem acento onde não pode, tudo digitável no ABNT2), mesma semente = mesmas peças, servidor recusando resultado impossível, estrelas, progresso, painel por assunto e área do professor. |
+| `test/click.test.js` | Click: reconhecimento das ações com eventos de mentira (duplo clique dentro e fora do tempo, segurar curto demais, sair do alvo, soltar fora ou no lugar errado), alvos de todas as fases (mesma semente = mesma rodada, todas as ações aparecem, nenhuma fase igual a outra, mundos em ordem), servidor e área do professor. |
 | `test/matematica.test.js` | Conta Comigo: regras do gerador em todas as fases (vai-um/empréstimo onde deve, divisão exata, negativos só nos mundos certos, "qual é o sinal?" com uma resposta só), mesma semente = mesmas contas, servidor conferindo respostas, estrelas, revisão e área do professor. |
 | `test/platform.test.js` | Contas (nome e sobrenome, maiúsculas/acentos/espaços, conta repetida, sessão, bichinho, sair) e progresso pela API (estrelas do servidor, fase bloqueada, velocidade impossível, resumos). |
 | `test/teacher.test.js` | Área do professor com PIN: cadastro em lote, autocadastro, renomear, juntar contas, liberar fases, desativar, sala de bingo só pelo professor. |

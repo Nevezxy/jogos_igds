@@ -1,0 +1,89 @@
+<div class="ck">
+
+  <!-- ============ MAPA ============ -->
+  <section class="ck-screen" data-ck="map">
+    <div class="ck-map-head">
+      <div data-mascot class="ck-mascot"></div>
+      <p class="speech" id="ck-map-speech" aria-live="polite">Vamos treinar o mouse!</p>
+      <div class="ck-stars-total" title="Estrelas conquistadas">⭐ <strong id="ck-total-stars">0</strong><span class="ck-stars-max">/<span id="ck-max-stars">0</span></span></div>
+    </div>
+    <div class="ck-toolbar">
+      <button type="button" class="btn btn-primary btn-lg" id="ck-continue">▶ Continuar</button>
+    </div>
+    <div id="ck-worlds"></div>
+  </section>
+
+  <!-- ============ ANTES DA FASE ============ -->
+  <section class="ck-screen" data-ck="intro" hidden>
+    <div class="ck-card">
+      <p class="ck-intro-world" id="ck-intro-world"></p>
+      <h3 class="ck-intro-title" id="ck-intro-title"></h3>
+      <p class="ck-intro-text" id="ck-intro-world-text"></p>
+      <p class="ck-intro-tip" id="ck-intro-tip"></p>
+      <p class="cad-record" id="ck-intro-record" hidden></p>
+      <ul class="ck-intro-kinds" id="ck-intro-kinds" aria-label="O que fazer em cada alvo"></ul>
+      <ul class="ck-intro-rules">
+        <li>⏳ O anel em volta do alvo mostra quanto tempo falta.</li>
+        <li>🖼️ Cada acerto revela um pedaço da figura escondida no fundo!</li>
+        <li>🔥 Acertos seguidos multiplicam os pontos. Especiais: ⭐ vale mais, 🧊 congela tudo, 💥 estoura tudo!</li>
+        <li>⏸ Precisa parar? Aperte Esc ou o botão de pausa.</li>
+      </ul>
+      <div class="ck-intro-actions">
+        <button type="button" class="btn btn-ghost" data-ck-go="map">← Mapa</button>
+        <button type="button" class="btn btn-success btn-lg" id="ck-start">Começar!</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ JOGANDO ============ -->
+  <section class="ck-screen" data-ck="play" hidden>
+    <div class="ck-play-head">
+      <button type="button" class="btn-mini" id="ck-quit" title="Sair da fase">✕ Sair</button>
+      <strong class="ck-play-title" id="ck-play-title"></strong>
+      <div class="ck-stats">
+        <span class="ck-stat" title="Alvos acertados">✅ <b id="ck-stat-hits">0</b></span>
+        <span class="ck-stat" title="Alvos que sumiram">💨 <b id="ck-stat-lost">0</b></span>
+        <span class="ck-stat" title="Alvos que ainda vão aparecer">🎯 <b id="ck-stat-left">0</b></span>
+      </div>
+      <button type="button" class="btn-mini" id="ck-pause-btn" title="Pausar (Esc)">⏸ Pausar</button>
+    </div>
+    <div class="ck-progress" aria-hidden="true"><span id="ck-progress-bar"></span></div>
+
+    <div class="ck-arena" id="ck-arena">
+      <div class="ck-picture" id="ck-picture" aria-hidden="true"></div>
+      <div class="ck-tiles" id="ck-tiles" aria-hidden="true"></div>
+      <div class="ck-layer" id="ck-layer"></div>
+      <div class="ck-overlay" id="ck-countdown" hidden><span id="ck-countdown-n">3</span></div>
+      <button type="button" class="ck-overlay ck-pause" id="ck-pause" hidden>
+        <span class="ck-pause-icon">⏸</span>
+        <span>Pausado</span>
+        <small>Clique aqui para continuar</small>
+      </button>
+    </div>
+  </section>
+
+  <!-- ============ RESULTADO ============ -->
+  <section class="ck-screen" data-ck="result" hidden>
+    <div class="ck-card ck-result-card">
+      <div class="ck-result-picture" id="ck-result-picture" aria-hidden="true"></div>
+      <div class="ck-result-stars" aria-hidden="true">
+        <span class="ck-star">★</span><span class="ck-star">★</span><span class="ck-star">★</span>
+      </div>
+      <h3 class="ck-result-title" id="ck-result-title"></h3>
+      <p class="ck-result-msg" id="ck-result-msg"></p>
+      <p class="cad-record" id="ck-record"></p>
+      <div class="ck-result-stats">
+        <div><b id="ck-res-score">0</b><small>⭐ pontos</small></div>
+        <div><b id="ck-res-hits">0</b><small>✅ acertos</small></div>
+        <div><b id="ck-res-acc">100%</b><small>🎯 ações certas</small></div>
+        <div><b id="ck-res-streak">0</b><small>🔥 seguidos</small></div>
+      </div>
+      <ul class="ck-by-kind" id="ck-by-kind" hidden></ul>
+      <div class="ck-result-actions">
+        <button type="button" class="btn btn-ghost" data-ck-go="map">🗺️ Mapa</button>
+        <button type="button" class="btn btn-violet" id="ck-retry">🔁 Jogar de novo</button>
+        <button type="button" class="btn btn-success" id="ck-next">Próxima fase ▶</button>
+      </div>
+    </div>
+  </section>
+</div>
