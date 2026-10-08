@@ -259,10 +259,19 @@ CMD ["node", "server.js"]
   fase, quanto a criança resolve e as contas que mais caíram.
 
 ### 🖱️ Click (mouse)
-- Alvos aparecem na área de jogo, cada um com um anel que mostra quanto
-  tempo falta (verde → laranja → vermelho). Acertou, ele estoura e revela um
-  pedaço da **figura escondida** no fundo; no fim, a figura inteira aparece
-  ("Você revelou o leão!").
+- Alvos aparecem na área de jogo. Acertou, ele estoura e revela um pedaço
+  da **foto escondida** no fundo (19 fotos de bichos e paisagens, CC0, em
+  `public/games/click/img/`, com os créditos em `CREDITOS.md`); no fim, a
+  foto inteira aparece ("Você revelou a raposa!").
+- **⏱️ Cronômetro nas bolinhas** (botão no mapa e antes da fase; vem
+  desligado e fica guardado no navegador). Ligado, cada alvo tem um anel que
+  mostra quanto tempo falta (verde → laranja → vermelho) e some se a criança
+  demorar. Desligado, os alvos esperam e as estrelas vêm das ações certas
+  (90%, 75% e 50%).
+- **Arrastar sem confusão:** a fruta balança e tem a etiqueta "✋ arraste";
+  uma trilha tracejada vai dela até a cesta "solte aqui", que pulsa
+  enquanto a fruta é arrastada; nas primeiras frutas da rodada, uma
+  mãozinha mostra o movimento.
 - **Cinco ações:** 🫧 passar por cima, 👆 clique, ✌️ duplo clique (o tempo
   entre os cliques aperta de 0,9 s até 0,45 s), ✊ segurar até o anel encher
   (0,6 a 1,3 s, sem sair de cima) e 🤏 arrastar e soltar no lugar certo

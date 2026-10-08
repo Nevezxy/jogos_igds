@@ -32,7 +32,7 @@
     click: { icon: '👆', name: 'Clique', verb: 'Clique uma vez' },
     double: { icon: '✌️', name: 'Duplo clique', verb: 'Clique duas vezes, rapidinho' },
     hold: { icon: '✊', name: 'Segurar', verb: 'Aperte e segure até encher' },
-    drag: { icon: '🤏', name: 'Arrastar', verb: 'Arraste e solte no lugar certo' },
+    drag: { icon: '🤏', name: 'Arrastar', verb: 'Aperte na fruta, segure, leve até a cesta e solte' },
   };
 
   const BASE = {
@@ -110,7 +110,9 @@
     },
   ];
 
-  // Estrelas: quantos alvos acertou e, para a 3ª, poucas ações erradas.
+  // Estrelas com o cronômetro ligado: quantos alvos acertou e, para a 3ª,
+  // poucas ações erradas. Sem cronômetro nenhum alvo some, então contam só
+  // as ações certas (% de acerto).
   const STAR_RULES = [
     { stars: 3, hits: 0.95, accuracy: 75 },
     { stars: 2, hits: 0.8 },
@@ -162,8 +164,19 @@
     };
   }
 
-  function starsFor(levelId, { hits, count, accuracy }) {
+  const NO_TIMER_RULES = [
+    { stars: 3, accuracy: 90 },
+    { stars: 2, accuracy: 75 },
+    { stars: 1, accuracy: 50 },
+  ];
+
+  function starsFor(levelId, { hits, count, accuracy, timer = true }) {
     if (!getLevel(levelId) || !count) return 0;
+    if (!timer) {
+      if (hits < count) return 0;
+      const rule = NO_TIMER_RULES.find((r) => accuracy >= r.accuracy);
+      return rule ? rule.stars : 0;
+    }
     const ratio = hits / count;
     for (const rule of STAR_RULES) {
       if (ratio >= rule.hits - 1e-9 && (rule.accuracy == null || accuracy >= rule.accuracy)) return rule.stars;

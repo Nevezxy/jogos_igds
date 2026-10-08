@@ -31,7 +31,12 @@
   font-size: 1.3rem;
 }
 .ck-stars-max { opacity: .6; font-size: .9em; }
-.ck-toolbar { display: flex; justify-content: center; margin: 18px 0 8px; }
+.ck-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px 16px; margin: 18px 0 8px; }
+.ck-toggle { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--surface); border: 2px solid var(--ink); border-radius: 999px; font-weight: 800; cursor: pointer; }
+.ck-toggle input { width: 20px; height: 20px; accent-color: var(--green-dark); }
+.ck-intro-timer { margin: 0 0 16px; }
+/* sem cronômetro: sem o anel do tempo */
+.ck-arena.no-timer .ck-target::before { display: none; }
 
 /* ================= ANTES DA FASE ================= */
 .ck-intro-world { margin: 0; font-weight: 800; color: var(--ink-soft); }
@@ -84,8 +89,9 @@
   line-height: 1;
   pointer-events: none;
 }
+.ck-picture.has-img { background: center / cover no-repeat; }
 .ck-arena.is-revealed .ck-picture { animation: ckReveal 1.2s var(--ease-bounce); }
-@keyframes ckReveal { 30% { transform: scale(1.12) rotate(-4deg); } 60% { transform: scale(.96) rotate(3deg); } }
+@keyframes ckReveal { 30% { transform: scale(1.06); filter: brightness(1.15); } }
 .ck-tiles { position: absolute; inset: 0; display: grid; pointer-events: none; }
 .ck-tiles i {
   display: block;
@@ -130,10 +136,66 @@
 .ck-target.is-click { background: radial-gradient(circle, #fff 0 22%, var(--pink) 23% 45%, #fff 46% 62%, var(--pink) 63%); }
 .ck-target.is-double { background: radial-gradient(circle, #fff 0 22%, var(--violet) 23% 45%, #fff 46% 62%, var(--violet) 63%); }
 .ck-target.is-hold { background: radial-gradient(circle, #fff 0 30%, var(--orange) 31%); }
-.ck-target.is-drag { background: #fff; border-radius: 22px; cursor: grab; }
-.ck-target.is-drag::before { border-radius: 28px; }
-.ck-target.is-drag .ck-ico { font-size: 3rem; }
-.ck-target.is-dragging { cursor: grabbing; z-index: 4; transform-origin: center; box-shadow: 0 12px 0 rgba(30, 18, 64, .35); }
+/* arrastar: a fruta num pratinho, balançando para dizer "me pegue",
+   com a etiqueta "✋ arraste" embaixo */
+.ck-target.is-drag { background: radial-gradient(circle, #fff 60%, #FFF1D6 100%); cursor: grab; }
+.ck-target.is-drag .ck-ico { font-size: 3.2rem; animation: ckWiggle 1.4s ease-in-out infinite; }
+@keyframes ckWiggle { 0%, 100% { transform: rotate(-8deg); } 50% { transform: rotate(8deg) translateY(-3px); } }
+.ck-grab {
+  position: absolute;
+  left: 50%;
+  bottom: -30px;
+  transform: translateX(-50%);
+  padding: 1px 10px;
+  background: var(--ink);
+  color: #fff;
+  border-radius: 999px;
+  font-size: .85rem;
+  font-weight: 800;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.ck-target.is-dragging { cursor: grabbing; z-index: 5; box-shadow: 0 14px 0 rgba(30, 18, 64, .3); }
+.ck-target.is-dragging .ck-ico { animation: none; transform: scale(1.15); }
+.ck-target.is-dragging .ck-grab { display: none; }
+.ck-arena.is-dragging { cursor: grabbing; }
+/* trilha tracejada da fruta até a cesta, andando no sentido certo */
+.ck-guide {
+  position: absolute;
+  top: -4px;
+  left: 0;
+  z-index: 2;
+  height: 8px;
+  transform-origin: 0 50%;
+  background: repeating-linear-gradient(90deg, rgba(31, 175, 96, .75) 0 16px, transparent 16px 28px);
+  border-radius: 4px;
+  animation: ckGuide .7s linear infinite;
+  pointer-events: none;
+}
+@keyframes ckGuide { to { background-position: 28px 0; } }
+.ck-arena.is-dragging .ck-guide { opacity: .45; }
+/* mãozinha que mostra o movimento: aperta, leva e solta */
+.ck-hand {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 6;
+  margin: -6px 0 0 -10px;
+  font-size: 2.6rem;
+  pointer-events: none;
+  filter: drop-shadow(0 3px 0 rgba(30, 18, 64, .35));
+  animation: ckHand 2.2s ease-in-out infinite;
+}
+@keyframes ckHand {
+  0% { transform: translate(var(--x0), var(--y0)) scale(1); opacity: 0; }
+  10% { opacity: 1; }
+  20% { transform: translate(var(--x0), var(--y0)) scale(.8); }
+  75% { transform: translate(var(--x1), var(--y1)) scale(.8); opacity: 1; }
+  85% { transform: translate(var(--x1), var(--y1)) scale(1); opacity: 1; }
+  100% { transform: translate(var(--x1), var(--y1)) scale(1); opacity: 0; }
+}
+.ck-drag-sample { display: inline-flex; align-items: center; gap: 4px; font-size: 1.9rem; flex-shrink: 0; }
+.ck-drag-sample i { width: 34px; height: 6px; background: repeating-linear-gradient(90deg, var(--green-dark) 0 8px, transparent 8px 13px); border-radius: 3px; }
 .ck-target.is-back { transition: transform .25s ease; }
 .ck-target .ck-ico { text-shadow: 0 2px 0 #fff; }
 /* duplo clique: 1º clique dado, falta o 2º */
@@ -176,7 +238,14 @@
   pointer-events: none;
   transition: background .15s, filter .15s;
 }
+.ck-dest { flex-direction: column; gap: 2px; }
 .ck-dest span { font-size: 3.4rem; line-height: 1; }
+.ck-dest small { font-size: .85rem; font-weight: 800; color: var(--ink); background: rgba(255, 255, 255, .85); padding: 0 8px; border-radius: 999px; }
+.ck-dest.is-wanted { border-color: var(--green-dark); }
+/* arrastando: o destino certo chama atenção */
+.ck-arena.is-dragging .ck-dest.is-wanted { animation: ckDestPulse .7s ease-in-out infinite alternate; }
+.ck-arena.is-dragging .ck-dest.is-color, .ck-arena.is-dragging .ck-dest.is-shadow { border-style: solid; }
+@keyframes ckDestPulse { to { box-shadow: 0 0 0 8px rgba(31, 175, 96, .35); background: #E7FFE9; } }
 .ck-dest.is-shadow span { filter: brightness(0); opacity: .35; }
 .ck-dest.is-color { background: var(--c, #fff); }
 .ck-dest-label { font-family: var(--font-body); font-size: .95rem !important; font-weight: 800; color: var(--ink); background: rgba(255, 255, 255, .8); padding: 2px 8px; border-radius: 999px; }
@@ -235,6 +304,15 @@
 
 /* ================= RESULTADO ================= */
 .ck-result-picture { font-size: 5rem; line-height: 1; animation: bounceIn .6s var(--ease-bounce); }
+.ck-result-picture.has-img {
+  width: min(320px, 80%);
+  aspect-ratio: 3 / 2;
+  margin: 0 auto 6px;
+  background: center / cover no-repeat;
+  border: var(--stroke) solid var(--ink);
+  border-radius: var(--radius-md);
+  box-shadow: 0 6px 0 var(--ink);
+}
 .ck-result-stars { font-size: 3.4rem; letter-spacing: 6px; color: rgba(30, 18, 64, .18); }
 .ck-star.is-on { color: var(--yellow-dark); display: inline-block; animation: bounceIn .4s var(--ease-bounce); }
 .ck-result-title { font-size: 2rem; margin: 4px 0; }
@@ -257,5 +335,5 @@
   .ck-dest span { font-size: 2.4rem; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .ck-arena.is-revealed .ck-picture, .ck-target.is-armed { animation: none; }
+  .ck-arena.is-revealed .ck-picture, .ck-target.is-armed, .ck-target.is-drag .ck-ico, .ck-guide { animation: none; }
 }

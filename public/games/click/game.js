@@ -29,6 +29,7 @@
   };
   const MIN_HIT_RADIUS = 24; // dedo e mouse tremido: alvo pequeno ganha uma folguinha
   const SPAWN_EMPTY_MS = 250; // tela vazia: o próximo alvo não demora
+  const TIMER_KEY = 'ck_timer'; // cronômetro nas bolinhas (vem desligado)
 
   function randomSeed() {
     try { return crypto.getRandomValues(new Uint32Array(1))[0]; } catch (e) { return Math.floor(Math.random() * 0xFFFFFFFF); }
@@ -59,6 +60,24 @@
     let current = null;
     let round = null;
     let size = { w: 800, h: 500, scale: 1 };
+
+    // ⏱️ cronômetro: ligado, cada alvo some se a criança demorar (e conta
+    // como perdido); desligado (o padrão), os alvos esperam e não têm anel.
+    let timer = false;
+    try { timer = localStorage.getItem(TIMER_KEY) === '1'; } catch (e) { /* ignore */ }
+    const timerBoxes = [...container.querySelectorAll('[data-ck-timer]')];
+    function syncTimer() {
+      timerBoxes.forEach((box) => { box.checked = timer; });
+      $('#ck-rule-timer').hidden = !timer;
+      $('#ck-rule-notimer').hidden = timer;
+    }
+    timerBoxes.forEach((box) => box.addEventListener('change', () => {
+      timer = box.checked;
+      try { localStorage.setItem(TIMER_KEY, timer ? '1' : '0'); } catch (e) { /* ignore */ }
+      sound.play('click');
+      syncTimer();
+    }));
+    syncTimer();
 
     function show(name) {
       screen = name;
@@ -105,7 +124,10 @@
       level.kinds.forEach((kind) => {
         const info = Levels.KIND_INFO[kind];
         const li = document.createElement('li');
-        li.innerHTML = `<span class="ck-target is-${kind} is-sample"><span class="ck-ico">${kind === 'drag' ? '🍎' : ICONS[kind]}</span></span><span><b>${info.name}</b><br>${info.verb}${kind === 'hover' ? ' (ou o dedo)' : ''}</span>`;
+        const sample = kind === 'drag'
+          ? '<span class="ck-drag-sample" aria-hidden="true"><span>🍎</span><i></i><span>🧺</span></span>'
+          : `<span class="ck-target is-${kind} is-sample"><span class="ck-ico">${ICONS[kind]}</span></span>`;
+        li.innerHTML = `${sample}<span><b>${info.name}</b><br>${info.verb}${kind === 'hover' ? ' (ou o dedo)' : ''}</span>`;
         list.appendChild(li);
       });
       show('intro');
@@ -128,8 +150,19 @@
     }
 
     // figura escondida: um quadriculado que vai sumindo a cada acerto
+    const IMG_BASE = '/games/click/img/';
+    // foto (ou o emoji, se ela não carregar) num elemento
+    function showPicture(el, picture) {
+      el.textContent = '';
+      el.classList.remove('has-img');
+      el.style.backgroundImage = '';
+      const probe = new Image();
+      probe.onload = () => { el.style.backgroundImage = `url("${IMG_BASE}${picture.img}")`; el.classList.add('has-img'); };
+      probe.onerror = () => { el.textContent = picture.emoji; };
+      probe.src = IMG_BASE + picture.img;
+    }
     function buildPicture(level, picture) {
-      $('#ck-picture').textContent = picture.emoji;
+      showPicture($('#ck-picture'), picture);
       const tiles = $('#ck-tiles');
       tiles.innerHTML = '';
       const cols = Math.ceil(Math.sqrt(level.count * 1.6));
@@ -186,7 +219,7 @@
         return { list, own: true, wanted: t.item.emoji };
       }
       const half = s / 2 + 8;
-      const d = makeDest('basket', 'basket', '<span>🧺</span>',
+      const d = makeDest('basket', 'basket', '<span>🧺</span><small>solte aqui</small>',
         Math.max(half, Math.min(size.w - half, t.item.bx * size.w)), Math.max(half, Math.min(size.h - half, t.item.by * size.h)), s, s);
       if (drag.moving) d.vx = 70 * size.scale * (t.item.angle > Math.PI ? 1 : -1);
       return { list: [d], own: true, wanted: 'basket' };
@@ -206,7 +239,9 @@
       el.className = `ck-target is-${item.kind}`;
       el.style.width = `${radius * 2}px`;
       el.style.height = `${radius * 2}px`;
-      el.innerHTML = `<span class="ck-fill"></span><span class="ck-ico">${item.kind === 'drag' ? item.emoji : ICONS[item.kind]}</span>`;
+      el.innerHTML = item.kind === 'drag'
+        ? `<span class="ck-ico">${item.emoji}</span><span class="ck-grab">✋ arraste</span>`
+        : `<span class="ck-fill"></span><span class="ck-ico">${ICONS[item.kind]}</span>`;
       Kit.decorate(el, r.specials[i]);
       layer.appendChild(el);
       const moving = r.level.motion !== 'none' && item.kind !== 'drag';
@@ -217,7 +252,14 @@
         life: pace.lifeMs, left: pace.lifeMs, turnIn: 600 + Math.random() * 900,
         gesture: Actions.createGesture(item.kind, { dblMs: r.level.dblMs, holdMs: r.level.holdMs }),
       };
-      if (item.kind === 'drag') t.dests = destsFor(t, r.level);
+      if (item.kind === 'drag') {
+        t.dests = destsFor(t, r.level);
+        // nas cestas, uma trilha mostra para onde levar; nas primeiras frutas
+        // da rodada, uma mãozinha faz o movimento
+        if (t.dests.own && t.dests.list.length === 1) t.guide = makeGuide();
+        if (r.dragHints > 0) { r.dragHints--; t.hand = makeHand(); }
+        t.dests.list.forEach((d) => d.el.classList.toggle('is-wanted', d.id === t.dests.wanted && t.dests.list.length === 1));
+      }
       r.alive.push(t);
       r.lastSpawn = r.elapsed;
       if (r.level.path && r.lastStep) {
@@ -225,6 +267,41 @@
         drawStep(r.lastStep, t);
       }
       render(t);
+    }
+
+    function makeGuide() {
+      const g = document.createElement('div');
+      g.className = 'ck-guide';
+      layer.insertBefore(g, layer.firstChild);
+      return g;
+    }
+    function makeHand() {
+      const h = document.createElement('div');
+      h.className = 'ck-hand';
+      h.textContent = '👆';
+      layer.appendChild(h);
+      return h;
+    }
+    const wantedDest = (t) => t.dests.list.find((d) => d.id === t.dests.wanted);
+    // trilha e mãozinha: da fruta até o destino certo (a cesta pode andar)
+    function updateHints(t) {
+      const d = wantedDest(t);
+      if (!d) return;
+      if (t.guide) {
+        const len = Math.max(0, dist({ x: t.homeX, y: t.homeY }, d) - d.w / 2);
+        t.guide.style.width = `${len}px`;
+        t.guide.style.transform = `translate(${t.homeX}px, ${t.homeY}px) rotate(${Math.atan2(d.y - t.homeY, d.x - t.homeX)}rad)`;
+      }
+      if (t.hand) {
+        t.hand.style.setProperty('--x0', `${t.homeX}px`);
+        t.hand.style.setProperty('--y0', `${t.homeY}px`);
+        t.hand.style.setProperty('--x1', `${d.x}px`);
+        t.hand.style.setProperty('--y1', `${d.y}px`);
+      }
+    }
+    function dropHints(t, all) {
+      if (t.hand) { t.hand.remove(); t.hand = null; }
+      if (all && t.guide) { t.guide.remove(); t.guide = null; }
     }
 
     function drawStep(from, to) {
@@ -253,6 +330,7 @@
       t.el.classList.add(cls);
       setTimeout(() => t.el.remove(), 450);
       if (t.dests && t.dests.own) t.dests.list.forEach((d) => { d.el.classList.add('is-gone'); setTimeout(() => d.el.remove(), 350); });
+      if (t.dests) dropHints(t, true);
     }
 
     function burst(t) {
@@ -355,6 +433,8 @@
       if (t.kind === 'drag') {
         round.drag = { t, dx: t.x - p.x, dy: t.y - p.y, sx: p.x, sy: p.y, moved: false };
         t.el.classList.add('is-dragging');
+        arena.classList.add('is-dragging');
+        dropHints(t, false);
         sound.play('click');
         return;
       }
@@ -398,6 +478,7 @@
         round.drag = null;
         const t = d.t;
         t.el.classList.remove('is-dragging');
+        arena.classList.remove('is-dragging');
         d.t.dests.list.forEach((dest) => dest.el.classList.remove('is-over'));
         const rects = t.dests.list.map((dest) => ({
           id: dest.id, left: dest.x - dest.w / 2, right: dest.x + dest.w / 2, top: dest.y - dest.h / 2, bottom: dest.y + dest.h / 2,
@@ -457,7 +538,7 @@
           handle(t, t.gesture.leave());
           if (!r.alive.includes(t)) continue;
         }
-        if (!frozen && !held) t.left -= dt;
+        if (!frozen && !held && r.timer) t.left -= dt;
         if (!frozen && t.speed && !(r.drag && r.drag.t === t)) move(t, dt);
         if (t.left <= 0) { expire(t); continue; }
         render(t);
@@ -470,7 +551,11 @@
           if (d.x < d.w / 2 + 6 || d.x > size.w - d.w / 2 - 6) { d.vx = -d.vx; d.x = Math.max(d.w / 2 + 6, Math.min(size.w - d.w / 2 - 6, d.x)); }
         }));
       }
-      r.alive.forEach((t) => t.dests && t.dests.list.forEach(placeDest));
+      r.alive.forEach((t) => {
+        if (!t.dests) return;
+        t.dests.list.forEach(placeDest);
+        updateHints(t);
+      });
       if (r.colorDests) r.colorDests.forEach(placeDest);
       if (r.next >= r.items.length && r.alive.length === 0) finish();
     }
@@ -508,17 +593,20 @@
       const items = Targets.makeTargets(level, seed);
       layer.innerHTML = '';
       arena.classList.remove('is-revealed', 'is-frozen-sky');
+      arena.classList.toggle('no-timer', !timer);
       show('play');
       fitArena();
       const picture = Targets.pictureFor(seed);
       round = {
-        level, seed, items, picture,
+        level, seed, items, picture, timer,
         tiles: buildPicture(level, picture), revealed: 0,
         specials: Kit.pickSpecials(items.length),
         board: Kit.createBoard(arena, { best: levelData(level.id).bestScore || 0, onMultiplier: () => sound.play('tada') }),
         alive: [], next: 0, lastSpawn: -1e9, elapsed: 0, frozenUntil: 0,
         hits: 0, hitsBy: {}, lost: [], wrong: 0, wrongBy: {},
         holdT: null, drag: null, pointer: null, lastStep: null,
+        // quantas frutas da rodada ganham a mãozinha que mostra o movimento
+        dragHints: !level.kinds.includes('drag') ? 0 : level.kinds.length > 1 || level.challenge ? 1 : level.indexInWorld === 0 ? 3 : 1,
         started: false, running: false, ended: false, raf: 0, lastT: 0,
       };
       round.colorDests = level.drag && level.drag.mode === 'color' && level.kinds.includes('drag') ? colorDests(level) : null;
@@ -586,7 +674,7 @@
         t.gesture.reset();
         t.el.classList.remove('is-armed', 'is-holding', 'is-dragging');
         t.el.style.setProperty('--hold', 0);
-        if (round.drag && round.drag.t === t) { t.x = t.homeX; t.y = t.homeY; render(t); }
+        if (round.drag && round.drag.t === t) { t.x = t.homeX; t.y = t.homeY; render(t); arena.classList.remove('is-dragging'); }
       });
       round.holdT = null;
       round.drag = null;
@@ -631,7 +719,7 @@
       r.running = false;
       const durationMs = Math.round(r.elapsed);
       const accuracy = r.hits + r.wrong ? Math.round((r.hits / (r.hits + r.wrong)) * 1000) / 10 : 0;
-      const stars = Levels.starsFor(r.level.id, { hits: r.hits, count: r.items.length, accuracy });
+      const stars = Levels.starsFor(r.level.id, { hits: r.hits, count: r.items.length, accuracy, timer: r.timer });
       const best = levelData(r.level.id).bestScore || 0;
       // a figura inteira aparece
       r.tiles.forEach((t) => t.classList.add('is-off'));
@@ -639,13 +727,13 @@
       sound.play('fanfare');
       const b = document.createElement('div');
       b.className = 'cad-banner is-streak';
-      b.textContent = `${r.picture.emoji} Você revelou ${r.picture.name}!`;
+      b.textContent = `Você revelou ${r.picture.name}!`;
       arena.appendChild(b);
       setTimeout(() => b.remove(), 1300);
       setTimeout(() => { if (round === r && !destroyed) showResult({ stars, accuracy, best }); }, 1500);
       try {
         const res = await ctx.api.post('/progress/click/results', {
-          levelId: r.level.id, seed: r.seed, lost: r.lost, wrong: r.wrong, wrongBy: r.wrongBy,
+          levelId: r.level.id, seed: r.seed, timer: r.timer, lost: r.lost, wrong: r.wrong, wrongBy: r.wrongBy,
           durationMs, score: r.board.score, bestStreak: r.board.bestStreak,
         });
         progress = res.progress;
@@ -657,7 +745,7 @@
     function showResult({ stars, accuracy, best }) {
       const r = round;
       show('result');
-      $('#ck-result-picture').textContent = r.picture.emoji;
+      showPicture($('#ck-result-picture'), r.picture);
       showRecord($('#ck-record'), r.board.score, best);
       $('#ck-res-score').textContent = r.board.score;
       $('#ck-res-hits').textContent = `${r.hits}/${r.items.length}`;
@@ -672,10 +760,11 @@
       $('#ck-result-title').textContent = titles[stars];
       const ratio = r.hits / r.items.length;
       let msg;
-      if (stars === 0) msg = 'Para ganhar estrela, acerte mais da metade dos alvos. Vá com calma 🙂';
+      if (!r.timer && stars < 3) msg = 'Sem cronômetro, as estrelas vêm das ações certas: mire bem antes de clicar 🎯';
+      else if (stars === 0) msg = 'Para ganhar estrela, acerte mais da metade dos alvos. Vá com calma 🙂';
       else if (stars < 3 && ratio >= 0.95) msg = 'Para a 3ª estrela, faça menos ações erradas (cliques fora e ações trocadas).';
       else if (stars < 3) msg = 'Repita para conquistar mais estrelas! ⭐';
-      else msg = `Você revelou ${r.picture.name} sem deixar quase nada escapar! 🎉`;
+      else msg = r.timer ? `Você revelou ${r.picture.name} sem deixar quase nada escapar! 🎉` : `Você revelou ${r.picture.name} quase sem errar! 🎉`;
       $('#ck-result-msg').textContent = msg;
       // misturado: como foi em cada ação
       const kinds = r.level.kinds;

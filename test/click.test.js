@@ -92,7 +92,7 @@ async function checkServer() {
     const seed = 1234;
     const items = Targets.makeTargets(level, seed);
     const send = (body) => api('POST', '/api/progress/click/results', {
-      levelId: level.id, seed, lost: [], wrong: 0, durationMs: 90000, ...body,
+      levelId: level.id, seed, timer: true, lost: [], wrong: 0, durationMs: 90000, ...body,
     }, kid);
 
     let r = await send({ durationMs: 500 });
@@ -112,6 +112,16 @@ async function checkServer() {
     r = await send({ lost: doubles, wrongBy: { double: 4 } });
     const dk = r.progress.byKind.double;
     assert(r.ok && dk.total === doubles.length * 3 && dk.ok === doubles.length * 2 && dk.wrong === 4, 'guarda o acerto de cada ação');
+
+    // sem cronômetro: nenhum alvo some, as estrelas vêm das ações certas
+    r = await send({ timer: false, lost: [0] });
+    assert(r.code === 'RESULTADO_INVALIDO', 'sem cronômetro, alvo perdido é recusado');
+    r = await send({ timer: false, wrong: 1 });
+    assert(r.ok && r.result.stars === 3, 'sem cronômetro: quase sem erro = 3 estrelas');
+    r = await send({ timer: false, wrong: items.length });
+    assert(r.ok && r.result.stars === 1, 'sem cronômetro: metade das ações erradas = 1 estrela');
+    r = await send({ timer: undefined, lost: [0] });
+    assert(r.code === 'RESULTADO_INVALIDO', 'o cronômetro vem desligado quando não é informado');
 
     const t = (await api('POST', '/api/teacher/login', {})).token;
     r = await api('GET', '/api/teacher/students', null, { teacher: t });

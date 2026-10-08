@@ -9,6 +9,9 @@
     </div>
     <div class="ck-toolbar">
       <button type="button" class="btn btn-primary btn-lg" id="ck-continue">▶ Continuar</button>
+      <label class="ck-toggle" title="Ligado: cada bolinha some se você demorar. Desligado: elas esperam você.">
+        <input type="checkbox" id="ck-timer" data-ck-timer> ⏱️ Cronômetro nas bolinhas
+      </label>
     </div>
     <div id="ck-worlds"></div>
   </section>
@@ -23,11 +26,15 @@
       <p class="cad-record" id="ck-intro-record" hidden></p>
       <ul class="ck-intro-kinds" id="ck-intro-kinds" aria-label="O que fazer em cada alvo"></ul>
       <ul class="ck-intro-rules">
-        <li>⏳ O anel em volta do alvo mostra quanto tempo falta.</li>
+        <li id="ck-rule-timer">⏳ O anel em volta do alvo mostra quanto tempo falta: se acabar, ele some!</li>
+        <li id="ck-rule-notimer">🐢 Sem cronômetro: os alvos esperam você, faça com calma.</li>
         <li>🖼️ Cada acerto revela um pedaço da figura escondida no fundo!</li>
         <li>🔥 Acertos seguidos multiplicam os pontos. Especiais: ⭐ vale mais, 🧊 congela tudo, 💥 estoura tudo!</li>
         <li>⏸ Precisa parar? Aperte Esc ou o botão de pausa.</li>
       </ul>
+      <label class="ck-toggle ck-intro-timer">
+        <input type="checkbox" data-ck-timer> ⏱️ Cronômetro nas bolinhas
+      </label>
       <div class="ck-intro-actions">
         <button type="button" class="btn btn-ghost" data-ck-go="map">← Mapa</button>
         <button type="button" class="btn btn-success btn-lg" id="ck-start">Começar!</button>

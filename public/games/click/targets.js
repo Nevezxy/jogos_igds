@@ -34,13 +34,29 @@
     { id: 'green', name: 'verde', css: '#6BCB77', items: ['🍏', '🥦', '🐸', '🍀', '🦖'] },
   ];
   const SHAPES = ['🐶', '🐱', '🐰', '🦊', '🐻', '🐼', '🐸', '🐵', '🦁', '🐷', '🐮', '🐔', '🐢', '🐟', '🦋', '🌵', '⛄', '🚀', '✈️', '🏠', '🎈', '⚽', '🎸', '☂️'];
-  // figura escondida no fundo, que aparece a cada acerto
+  // Figura escondida no fundo, que aparece a cada acerto: fotos livres (CC0,
+  // do StockSnap, via Openverse; créditos em img/CREDITOS.md). O emoji fica
+  // de reserva, se a foto não carregar.
   const PICTURES = [
-    { emoji: '🦁', name: 'o leão' }, { emoji: '🐘', name: 'o elefante' }, { emoji: '🦒', name: 'a girafa' },
-    { emoji: '🐬', name: 'o golfinho' }, { emoji: '🦄', name: 'o unicórnio' }, { emoji: '🐢', name: 'a tartaruga' },
-    { emoji: '🦋', name: 'a borboleta' }, { emoji: '🐙', name: 'o polvo' }, { emoji: '🚀', name: 'o foguete' },
-    { emoji: '🏰', name: 'o castelo' }, { emoji: '🌈', name: 'o arco-íris' }, { emoji: '🐼', name: 'o panda' },
-    { emoji: '🦖', name: 'o dinossauro' }, { emoji: '🐳', name: 'a baleia' }, { emoji: '🦜', name: 'o papagaio' },
+    { img: 'leao.jpg', emoji: '🦁', name: 'o leão' },
+    { img: 'elefante.jpg', emoji: '🐘', name: 'o elefante' },
+    { img: 'girafa.jpg', emoji: '🦒', name: 'a girafa' },
+    { img: 'golfinhos.jpg', emoji: '🐬', name: 'os golfinhos' },
+    { img: 'tartaruga.jpg', emoji: '🐢', name: 'a tartaruga marinha' },
+    { img: 'borboleta.jpg', emoji: '🦋', name: 'a borboleta' },
+    { img: 'panda.jpg', emoji: '🐼', name: 'o panda' },
+    { img: 'papagaio.jpg', emoji: '🦜', name: 'o papagaio' },
+    { img: 'zebras.jpg', emoji: '🦓', name: 'as zebras' },
+    { img: 'coruja.jpg', emoji: '🦉', name: 'a coruja' },
+    { img: 'cachorrinho.jpg', emoji: '🐶', name: 'o cachorrinho' },
+    { img: 'gatinho.jpg', emoji: '🐱', name: 'o gatinho' },
+    { img: 'poneis.jpg', emoji: '🐴', name: 'os pôneis' },
+    { img: 'girassol.jpg', emoji: '🌻', name: 'o girassol' },
+    { img: 'balao.jpg', emoji: '🎈', name: 'o balão' },
+    { img: 'pinguim.jpg', emoji: '🐧', name: 'o pinguim' },
+    { img: 'coala.jpg', emoji: '🐨', name: 'o coala' },
+    { img: 'tigre.jpg', emoji: '🐯', name: 'o tigre' },
+    { img: 'raposa.jpg', emoji: '🦊', name: 'a raposa' },
   ];
 
   // As ações em rodízio embaralhado: todas aparecem e nenhuma domina a rodada.

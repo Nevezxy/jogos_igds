@@ -40,6 +40,9 @@ function validateResult(body) {
   // alvos que sumiram: índices da rodada, sem repetir
   const lost = Array.isArray(body.lost) ? body.lost.map((i) => int(i, 0, items.length - 1)) : null;
   if (!lost || new Set(lost).size !== lost.length) throw invalid();
+  // sem cronômetro nenhum alvo some sozinho
+  const timer = body.timer === true;
+  if (!timer && lost.length) throw invalid();
   const lostSet = new Set(lost);
   const hitItems = items.filter((_, i) => !lostSet.has(i));
 
@@ -53,7 +56,7 @@ function validateResult(body) {
   const bestStreak = Math.min(hitItems.length, Math.max(0, Math.floor(Number(body.bestStreak) || 0)));
   const hits = hitItems.length;
   const accuracy = hits + wrong ? Math.round((hits / (hits + wrong)) * 1000) / 10 : 0;
-  const stars = Levels.starsFor(level.id, { hits, count: items.length, accuracy });
+  const stars = Levels.starsFor(level.id, { hits, count: items.length, accuracy, timer });
 
   const byKind = {};
   items.forEach((it, i) => {
@@ -77,7 +80,8 @@ function validateResult(body) {
     points: score,
     bestStreak,
     byKind,
-    details: { hits, count: items.length, wrong, byKind },
+    timer,
+    details: { hits, count: items.length, wrong, timer, byKind },
   };
 }
 
