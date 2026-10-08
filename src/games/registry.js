@@ -81,6 +81,25 @@ const games = [
     server: require('./matematica/server'),
   },
   {
+    id: 'numeros',
+    name: 'Números Cadentes',
+    icon: '☄️',
+    tagline: 'Contas caem do céu: digite o resultado antes que cheguem ao chão!',
+    mode: 'solo',
+    subject: 'matematica',
+    status: 'active',
+    color: 'orange',
+    isNew: true,
+    // teclado numérico na tela: funciona no tablet e no celular
+    requiresKeyboard: false,
+    client: {
+      styles: ['game.css'],
+      view: 'view.html',
+      scripts: ['../matematica/problems.js', 'levels.js', 'items.js', 'game.js'],
+    },
+    server: require('./numeros/server'),
+  },
+  {
     id: 'desafio',
     name: 'Desafio de Digitação',
     icon: '🏁',

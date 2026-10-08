@@ -100,7 +100,6 @@
 .lc-ground.is-hit { animation: groundHit .45s ease; }
 @keyframes groundHit { 0%, 100% { background-color: transparent; filter: none; } 30% { filter: hue-rotate(-90deg) saturate(2); } }
 
-.fall-piece { position: absolute; top: 0; left: 0; will-change: transform; }
 .lc-piece {
   display: inline-flex;
   padding: 4px 14px;

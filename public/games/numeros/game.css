@@ -1,0 +1,221 @@
+/* ============================================================
+   🔢 Números Cadentes — céu, contas caindo, chão, teclado numérico
+   e as telas. Durante o jogo o céu ocupa todo o espaço que sobra.
+   ============================================================ */
+
+.nc-screen[hidden] { display: none; }
+.nc-card {
+  background: var(--surface);
+  border: var(--stroke) solid var(--ink);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 0 var(--ink);
+  padding: 26px 24px;
+  max-width: 660px;
+  margin: 10px auto;
+  text-align: center;
+  animation: bounceIn .45s var(--ease-bounce);
+}
+.nc-kbd { display: inline-block; margin-left: 6px; padding: 0 8px; border: 2px solid currentColor; border-radius: 8px; font-size: .8em; opacity: .8; }
+
+/* ================= MAPA ================= */
+.nc-map-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; justify-content: center; }
+.nc-mascot { --size: 72px; flex-shrink: 0; }
+.nc-map-head .speech { text-align: left; max-width: 480px; }
+.nc-stars-total {
+  margin-left: auto;
+  padding: 8px 16px;
+  background: var(--yellow);
+  border: var(--stroke) solid var(--ink);
+  border-radius: 999px;
+  box-shadow: 0 4px 0 var(--ink);
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+}
+.nc-stars-max { opacity: .6; font-size: .9em; }
+.nc-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px 16px; margin: 18px 0 8px; }
+
+/* ================= ANTES DA FASE ================= */
+.nc-intro-world { margin: 0; font-weight: 800; color: var(--ink-soft); }
+.nc-intro-title { font-size: 1.9rem; margin: 4px 0 8px; }
+.nc-intro-text { margin: 0 0 8px; font-weight: 600; }
+.nc-intro-text:empty { display: none; }
+.nc-intro-tip { margin: 0 0 12px; padding: 10px 14px; background: var(--surface-2); border-radius: var(--radius-sm); font-weight: 700; }
+.nc-intro-example { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-bottom: 12px; }
+.nc-intro-rules { list-style: none; padding: 0; margin: 0 0 18px; display: grid; gap: 4px; font-weight: 600; }
+.nc-intro-actions, .nc-result-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+
+/* ================= JOGANDO ================= */
+.nc-play-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin: 0 0 8px;
+  padding: 8px 14px;
+  background: var(--surface);
+  border: var(--stroke) solid var(--ink);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 0 var(--ink);
+}
+.nc-play-title { font-family: var(--font-display); font-size: 1.15rem; }
+.nc-stats { display: flex; gap: 12px; margin-left: auto; font-weight: 800; font-variant-numeric: tabular-nums; }
+.nc-progress { height: 8px; margin: 0 0 8px; background: rgba(255, 255, 255, .4); border-radius: 999px; overflow: hidden; }
+.nc-progress span { display: block; height: 100%; width: 0; background: var(--green); transition: width .3s ease; }
+
+.nc-sky {
+  position: relative;
+  height: 60vh; /* ajustado pelo jogo para ir até o fim da tela */
+  overflow: hidden;
+  background: linear-gradient(180deg, #BDEBFF 0%, #E8F7FF 70%, #F7FCFF 100%);
+  border: var(--stroke) solid var(--ink);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 0 var(--ink);
+  user-select: none;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.nc-ground {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 22px;
+  background: repeating-linear-gradient(90deg, #6BCB77 0 18px, #4FB35C 18px 36px);
+  border-top: var(--stroke) solid var(--ink);
+}
+.nc-ground.is-hit { animation: groundHit .45s ease; }
+@keyframes groundHit { 0%, 100% { background-color: transparent; filter: none; } 30% { filter: hue-rotate(-90deg) saturate(2); } }
+
+.nc-piece {
+  display: inline-flex;
+  padding: 4px 14px;
+  margin-bottom: 22px; /* não entra no chão */
+  background: #fff;
+  border: var(--stroke) solid var(--ink);
+  border-radius: 16px;
+  box-shadow: 0 4px 0 var(--ink);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 2.2rem;
+  line-height: 1.15;
+  white-space: pre;
+  color: var(--ink);
+}
+.nc-piece.is-long { font-size: 1.7rem; }
+.nc-piece.is-caught { animation: piecePop .45s ease forwards; }
+@keyframes piecePop { 40% { opacity: 1; filter: brightness(1.2); } 100% { opacity: 0; filter: blur(2px); } }
+.nc-piece.is-landed { background: #FFD6DA; animation: pieceLand .6s ease forwards; }
+@keyframes pieceLand { 100% { opacity: 0; } }
+
+.nc-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: rgba(30, 18, 64, .35);
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 800;
+  z-index: 5;
+}
+.nc-overlay[hidden] { display: none; }
+#nc-countdown-n { font-size: 6rem; text-shadow: 0 6px 0 var(--ink); animation: bounceIn .5s var(--ease-bounce); }
+.nc-pause { border: 0; cursor: pointer; font-size: 1.6rem; }
+.nc-pause-icon { font-size: 3.4rem; }
+.nc-pause small { font-family: var(--font-body); font-size: 1rem; }
+
+
+
+/* ================= RESULTADO ================= */
+.nc-result-stars { font-size: 3.4rem; letter-spacing: 6px; color: rgba(30, 18, 64, .18); }
+.nc-star.is-on { color: var(--yellow-dark); display: inline-block; animation: bounceIn .4s var(--ease-bounce); }
+.nc-result-title { font-size: 2rem; margin: 4px 0; }
+.nc-result-msg { font-weight: 700; margin: 0 0 14px; }
+.nc-result-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+.nc-result-stats div { display: flex; flex-direction: column; padding: 10px; background: var(--surface-2); border: 2px solid var(--ink); border-radius: var(--radius-sm); }
+.nc-result-stats b { font-family: var(--font-display); font-size: 1.6rem; }
+.nc-result-stats small { font-weight: 700; color: var(--ink-soft); }
+.nc-lost { text-align: left; margin-bottom: 16px; padding: 10px 14px; background: #FFE1E4; border: 2px solid var(--ink); border-radius: var(--radius-sm); }
+.nc-lost[hidden] { display: none; }
+#nc-next[hidden] { display: none; }
+
+@media (max-width: 560px) {
+  .nc-stats { margin-left: 0; }
+  .nc-piece { font-size: 1.7rem; }
+  .nc-piece.is-long { font-size: 1.3rem; }
+  .nc-result-stats { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  }
+
+/* contas e dados */
+.nc-piece { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.nc-piece.is-dice, .nc-piece.is-domino { gap: 6px; padding: 6px; }
+.nc-piece.is-domino { gap: 0; padding: 0; overflow: hidden; }
+.nc-die, .nc-half {
+  display: grid;
+  grid-template-columns: repeat(3, 12px);
+  grid-template-rows: repeat(3, 12px);
+  gap: 4px;
+  padding: 6px;
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+}
+.nc-half { border: 0; border-radius: 0; }
+.nc-half + .nc-half { border-left: 3px solid var(--ink); }
+.nc-die i, .nc-half i { display: block; border-radius: 50%; }
+.nc-die i.is-pip, .nc-half i.is-pip { background: var(--ink); }
+.nc-piece.is-sample { position: static; margin: 0; font-size: 1.4rem; }
+.nc-intro-example { align-items: center; }
+
+/* céu + teclado lado a lado (no celular, teclado embaixo) */
+.nc-arena { display: flex; gap: 12px; align-items: stretch; }
+.nc-side { display: flex; flex-direction: column; gap: 10px; flex: 0 0 auto; width: 248px; }
+.nc-typed {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 64px;
+  background: #fff;
+  border: var(--stroke) solid var(--ink);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 0 var(--ink);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 2.2rem;
+  font-variant-numeric: tabular-nums;
+}
+.nc-typed.is-empty::after { content: "digite o resultado"; font-family: var(--font-body); font-size: .9rem; color: var(--ink-soft); }
+.nc-typed.is-wrong { background: #FFD6DA; animation: typedShake .3s ease; }
+@keyframes typedShake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+.nc-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.nc-key {
+  height: 62px;
+  background: var(--surface);
+  border: var(--stroke) solid var(--ink);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 0 var(--ink);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.8rem;
+  color: var(--ink);
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+}
+.nc-key:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
+.nc-key.is-blank { visibility: hidden; }
+.nc-lost ul { margin: 6px 0 0; padding-left: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+@media (max-width: 760px) {
+  .nc-arena { flex-direction: column; }
+  /* caixa do número em cima, teclado de 2 fileiras embaixo; o botão de som fica no canto */
+  .nc-side { width: auto; gap: 6px; padding-right: 58px; }
+  .nc-typed { min-height: 44px; font-size: 1.6rem; }
+  .nc-pad { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+  .nc-key { height: 46px; min-width: 0; padding: 0; font-size: 1.4rem; }
+}

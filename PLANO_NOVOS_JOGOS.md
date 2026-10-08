@@ -1,7 +1,7 @@
 # 🖱️ 🔤 🔢 Plano — Clik, Letras Cadentes e Números Cadentes
 
-> **Situação:** etapa **A** concluída (motor de queda, Letras Cadentes e o
-> painel por assunto). Próximas: B (Números Cadentes) e C (Clik).
+> **Situação:** etapas **A** (motor de queda, Letras Cadentes e o painel por
+> assunto) e **B** (Números Cadentes) concluídas. Próxima: C (Clik).
 > Ajustes pedidos depois: sem teclado de ajuda na tela; o céu ocupa a tela
 > toda; opção "apenas maiúsculas"; os mundos de letras (meio, cima, baixo) e
 > de números viraram um só ("Letras e números", sem separar por fileira nem

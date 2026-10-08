@@ -590,3 +590,6 @@
 
 /* jogo que pede a tela toda (ex.: Letras Cadentes) */
 #game-root.is-wide { max-width: none; }
+
+/* peça que cai (js/shared/falling.js): o motor mexe só no transform */
+.fall-piece { position: absolute; top: 0; left: 0; will-change: transform; }

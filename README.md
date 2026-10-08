@@ -13,6 +13,7 @@ Jogos de hoje:
 | ⌨️ **Teclado Mágico** | sozinho(a) | Digitação com os 10 dedos: teclado ABNT2 na tela com uma cor por dedo, mãos que mostram o dedo certo e 127 fases (letras, palavras, acentos, frases, pontuação, números e textos). |
 | 🔤 **Letras Cadentes** | sozinho(a) | Letras, números, sílabas e palavras caem do céu e a criança digita cada uma antes que chegue ao chão. 72 fases, opção "apenas maiúsculas" e o céu ocupando a tela toda. |
 | 🔢 **Conta Comigo** | sozinho(a) | Matemática: mundo das figurinhas, adição e subtração da unidade ao milhar, multiplicação e divisão até a dezena, depois números negativos, potências, raízes e expressões. 152 fases e teclado numérico na tela (funciona no tablet). |
+| ☄️ **Números Cadentes** | sozinho(a) | Contas, dados e dominós caem do céu e a criança digita o resultado antes que cheguem ao chão (sem Enter). 96 fases e teclado numérico na tela. |
 | 🏁 **Desafio de Digitação** | com a turma | Corrida de digitação ao vivo: o professor escolhe o texto (uma fase do Teclado Mágico ou um texto dele) e o modo, a turma digita junta e o telão mostra a pista com os bichinhos e o pódio. |
 | 🎯 **Bingo** | com a turma | Bingo em tempo real conduzido pelo professor, com ~20 crianças em celulares, tablets ou computadores, e um telão opcional para o projetor. |
 
@@ -214,6 +215,26 @@ CMD ["node", "server.js"]
 - Na área do professor: mundo e fase atual, estrelas, % de acerto de
   primeira e as contas que mais erra ("7 × 8").
 
+### ☄️ Números Cadentes (matemática)
+- Contas caem do céu e a criança digita o resultado antes que cheguem ao
+  chão. **Sem Enter:** quando o número digitado é a resposta de uma conta
+  que está caindo, ela estoura (a mais perto do chão, se duas tiverem a
+  mesma resposta). Se outra resposta na tela começa com o mesmo número (1 e
+  12), o jogo espera 0,8 s pelo próximo algarismo. Número que não leva a
+  nenhuma resposta pisca vermelho, apaga e conta um erro.
+- **8 mundos, 96 fases** (4 conteúdos × 🐢 🐇 🚀): dados e dominós (contar
+  os pontinhos), somar e tirar com unidades, somar e tirar com dezenas e
+  centenas, tabuadas, divisão, misturadas, números negativos (tecla −) e
+  potências e raízes. As contas vêm do gerador do Conta Comigo, com as
+  mesmas regras (nada acima de 100 fora de somar e tirar).
+- Teclado numérico na tela, ao lado do céu (no celular, embaixo), e o do
+  computador. O céu ocupa todo o espaço que sobra na tela.
+- Sem game over; estrelas como no Letras Cadentes (60%, 80% e 95% das
+  contas, com até 15% de números errados para a 3ª). Pausa com Esc, pelo
+  botão ou ao trocar de aba.
+- O servidor refaz as contas pela semente; na área do professor aparecem a
+  fase, quanto a criança resolve e as contas que mais caíram.
+
 ### 🏁 Desafio de Digitação
 - O professor cria a sala na área do professor (**Desafio de Digitação**), a
   turma entra pelo QR Code ou pelo código, com a conta (nome e bichinho
@@ -328,6 +349,10 @@ jogos_igds/
 │       ├── letras/           # 🔤 Letras Cadentes (usa o banco de palavras do Teclado Mágico)
 │       │   ├── levels.js     # Mundos, conteúdos × velocidades e estrelas (também no servidor)
 │       │   ├── items.js      # O que cai em cada fase, com semente (também no servidor)
+│       │   └── game.js, view.html, game.css
+│       ├── numeros/          # ☄️ Números Cadentes (usa o gerador de contas do Conta Comigo)
+│       │   ├── levels.js     # Mundos, conteúdos × velocidades e estrelas (também no servidor)
+│       │   ├── items.js      # Contas, dados e dominós de cada fase, com semente (também no servidor)
 │       │   └── game.js, view.html, game.css
 │       ├── matematica/       # 🔢 Conta Comigo (carregado sob demanda)
 │       │   ├── levels.js     # Mundos e fases (usado também pelo servidor)
@@ -485,7 +510,7 @@ npm test
 | Arquivo | O que testa |
 |---------|-------------|
 | `test/digitacao.test.js` | Teclado Mágico sem navegador: motor (precisão, PPM, acento composto e decomposto), ABNT2 (Shift do lado oposto, acentos, `?` e `;`), fases e estrelas, todo exercício digitável e só com as teclas da fase, validação do servidor. |
-| `test/cadentes.test.js` | Letras Cadentes: peças certas em todas as fases (só as teclas da fase, sem acento onde não pode, tudo digitável no ABNT2), mesma semente = mesmas peças, servidor recusando resultado impossível, estrelas, progresso, painel por assunto e área do professor. |
+| `test/cadentes.test.js` | Números Cadentes (contas dentro das regras de cada mundo, dados e dominós certos, servidor) e Letras Cadentes: peças certas em todas as fases (só as teclas da fase, sem acento onde não pode, tudo digitável no ABNT2), mesma semente = mesmas peças, servidor recusando resultado impossível, estrelas, progresso, painel por assunto e área do professor. |
 | `test/matematica.test.js` | Conta Comigo: regras do gerador em todas as fases (vai-um/empréstimo onde deve, divisão exata, negativos só nos mundos certos, "qual é o sinal?" com uma resposta só), mesma semente = mesmas contas, servidor conferindo respostas, estrelas, revisão e área do professor. |
 | `test/platform.test.js` | Contas (nome e sobrenome, maiúsculas/acentos/espaços, conta repetida, sessão, bichinho, sair) e progresso pela API (estrelas do servidor, fase bloqueada, velocidade impossível, resumos). |
 | `test/teacher.test.js` | Área do professor com PIN: cadastro em lote, autocadastro, renomear, juntar contas, liberar fases, desativar, sala de bingo só pelo professor. |

@@ -141,6 +141,14 @@
       return `<div class="teacher-game"><strong>${escapeHtml(d.current)}</strong>
         <span>⭐ ${d.stars}/${d.maxStars} · ${d.levelsDone}/${d.totalLevels} fases · pega ${d.caughtPct}%</span>${tough}</div>`;
     },
+    numeros(d) {
+      if (!d || !d.pieces) return '<span class="muted">—</span>';
+      const tough = d.toughest.length
+        ? `<div class="teacher-keys teacher-facts" title="Contas que mais caíram">${d.toughest.map((k) => `<span>${escapeHtml(k)}</span>`).join('')}</div>`
+        : '';
+      return `<div class="teacher-game"><strong>${escapeHtml(d.current)}</strong>
+        <span>⭐ ${d.stars}/${d.maxStars} · ${d.levelsDone}/${d.totalLevels} fases · resolve ${d.caughtPct}%</span>${tough}</div>`;
+    },
     matematica(d) {
       if (!d || !d.problems) return '<span class="muted">—</span>';
       const facts = d.toughest.length

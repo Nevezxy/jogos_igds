@@ -1,0 +1,92 @@
+<div class="nc">
+
+  <!-- ============ MAPA ============ -->
+  <section class="nc-screen" data-nc="map">
+    <div class="nc-map-head">
+      <div data-mascot class="nc-mascot"></div>
+      <p class="speech" id="nc-map-speech" aria-live="polite">Resolva as contas antes que caiam no chão!</p>
+      <div class="nc-stars-total" title="Estrelas conquistadas">⭐ <strong id="nc-total-stars">0</strong><span class="nc-stars-max">/<span id="nc-max-stars">0</span></span></div>
+    </div>
+    <div class="nc-toolbar">
+      <button type="button" class="btn btn-primary btn-lg" id="nc-continue">▶ Continuar</button>
+    </div>
+    <div id="nc-worlds"></div>
+  </section>
+
+  <!-- ============ ANTES DA FASE ============ -->
+  <section class="nc-screen" data-nc="intro" hidden>
+    <div class="nc-card">
+      <p class="nc-intro-world" id="nc-intro-world"></p>
+      <h3 class="nc-intro-title" id="nc-intro-title"></h3>
+      <p class="nc-intro-text" id="nc-intro-world-text"></p>
+      <p class="nc-intro-tip" id="nc-intro-tip"></p>
+      <div class="nc-intro-example" id="nc-intro-example" aria-label="Exemplos do que vai cair"></div>
+      <ul class="nc-intro-rules">
+        <li>☁️ As contas caem do céu. Digite o resultado antes que cheguem ao chão.</li>
+        <li>💥 Não precisa apertar Enter: acertou, a conta estoura sozinha.</li>
+        <li id="nc-intro-minus" hidden>➖ Resultado negativo: aperte − antes do número.</li>
+        <li>⏸ Precisa parar? Aperte Esc ou o botão de pausa.</li>
+      </ul>
+      <div class="nc-intro-actions">
+        <button type="button" class="btn btn-ghost" data-nc-go="map">← Mapa</button>
+        <button type="button" class="btn btn-success btn-lg" id="nc-start">Começar! <span class="nc-kbd">Enter</span></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ JOGANDO ============ -->
+  <section class="nc-screen" data-nc="play" hidden>
+    <div class="nc-play-head">
+      <button type="button" class="btn-mini" id="nc-quit" title="Sair da fase">✕ Sair</button>
+      <strong class="nc-play-title" id="nc-play-title"></strong>
+      <div class="nc-stats">
+        <span class="nc-stat" title="Contas resolvidas">✅ <b id="nc-stat-caught">0</b></span>
+        <span class="nc-stat" title="Contas que caíram no chão">💥 <b id="nc-stat-lost">0</b></span>
+        <span class="nc-stat" title="Contas que ainda vão cair">☁️ <b id="nc-stat-left">0</b></span>
+      </div>
+      <button type="button" class="btn-mini" id="nc-pause-btn" title="Pausar (Esc)">⏸ Pausar</button>
+    </div>
+    <div class="nc-progress" aria-hidden="true"><span id="nc-progress-bar"></span></div>
+
+    <div class="nc-arena" id="nc-arena">
+      <div class="nc-sky" id="nc-sky">
+        <div class="nc-ground" id="nc-ground" aria-hidden="true"></div>
+        <div class="nc-overlay" id="nc-countdown" hidden><span id="nc-countdown-n">3</span></div>
+        <button type="button" class="nc-overlay nc-pause" id="nc-pause" hidden>
+          <span class="nc-pause-icon">⏸</span>
+          <span>Pausado</span>
+          <small>Clique aqui ou aperte qualquer tecla para continuar</small>
+        </button>
+      </div>
+      <div class="nc-side">
+        <div class="nc-typed" id="nc-typed" aria-live="polite" title="O que você digitou"><span id="nc-typed-value"></span></div>
+        <div class="nc-pad" id="nc-pad"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ RESULTADO ============ -->
+  <section class="nc-screen" data-nc="result" hidden>
+    <div class="nc-card nc-result-card">
+      <div class="nc-result-stars" aria-hidden="true">
+        <span class="nc-star">★</span><span class="nc-star">★</span><span class="nc-star">★</span>
+      </div>
+      <h3 class="nc-result-title" id="nc-result-title"></h3>
+      <p class="nc-result-msg" id="nc-result-msg"></p>
+      <div class="nc-result-stats">
+        <div><b id="nc-res-caught">0</b><small>✅ resolvidas</small></div>
+        <div><b id="nc-res-acc">100%</b><small>🎯 números certos</small></div>
+        <div><b id="nc-res-time">0:00</b><small>⏱ tempo</small></div>
+      </div>
+      <div class="nc-lost" id="nc-lost" hidden>
+        <strong>💥 Caíram no chão:</strong>
+        <ul class="nc-lost-list" id="nc-lost-list"></ul>
+      </div>
+      <div class="nc-result-actions">
+        <button type="button" class="btn btn-ghost" data-nc-go="map">🗺️ Mapa</button>
+        <button type="button" class="btn btn-violet" id="nc-retry">🔁 Jogar de novo</button>
+        <button type="button" class="btn btn-success" id="nc-next">Próxima fase ▶</button>
+      </div>
+    </div>
+  </section>
+</div>
