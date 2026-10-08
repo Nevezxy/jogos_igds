@@ -100,6 +100,25 @@ const games = [
     server: require('./numeros/server'),
   },
   {
+    id: 'click',
+    name: 'Click',
+    icon: '🖱️',
+    tagline: 'Treine o mouse: estoure bolhas, clique, clique duas vezes, segure e arraste!',
+    mode: 'solo',
+    subject: 'mouse',
+    status: 'active',
+    color: 'yellow',
+    isNew: true,
+    // funciona com o mouse, com o dedo no tablet e com caneta
+    requiresKeyboard: false,
+    client: {
+      styles: ['game.css'],
+      view: 'view.html',
+      scripts: ['levels.js', 'targets.js', 'actions.js', 'game.js'],
+    },
+    server: require('./click/server'),
+  },
+  {
     id: 'desafio',
     name: 'Desafio de Digitação',
     icon: '🏁',

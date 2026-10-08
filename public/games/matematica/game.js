@@ -199,7 +199,7 @@
         bestStreak: 0,
       };
       $('#cc-play-title').textContent = level.title;
-      $('#cc-streak').hidden = true;
+      renderStreak(false);
       $('#cc-say').hidden = !voice;
       const dots = $('#cc-dots');
       dots.innerHTML = '';
@@ -400,21 +400,49 @@
     function bumpStreak() {
       round.streak++;
       round.bestStreak = Math.max(round.bestStreak, round.streak);
-      const el = $('#cc-streak');
-      el.hidden = round.streak < 2;
-      el.textContent = `🔥 ${round.streak}`;
-      el.classList.remove('is-hot');
-      void el.offsetWidth;
-      el.classList.add('is-hot');
-      if (round.streak === 5 || round.streak === 10) {
-        $('#cc-feedback').textContent = round.streak === 10 ? '🔥 10 seguidas! Que fera! 🏆' : '🔥 5 seguidas! Pegando fogo!';
+      renderStreak(true);
+      const n = round.streak;
+      if (n === 5 || n === 10) {
+        $('#cc-feedback').textContent = n === 10 ? '🔥 10 seguidas! Que fera! 🏆' : '🔥 5 seguidas! Pegando fogo!';
+        banner(n === 10 ? '10 SEGUIDAS! 🏆' : '5 SEGUIDAS! 🔥', n === 10 ? 'is-tier5' : 'is-tier3');
         fx.confetti({ amount: 30, origin: { x: innerWidth / 2, y: innerHeight / 3 }, power: 0.6 });
         sound.play('tada');
       }
+      // passou o recorde da fase durante a rodada
+      const prev = levelData(round.level.id).bestStreak || 0;
+      if (prev >= 2 && n === prev + 1) setTimeout(() => banner('🏆 NOVO RECORDE!', 'is-record'), 350);
     }
     function resetStreak() {
+      if (round.streak >= 3) banner('💔 sequência perdida', 'is-lost');
       round.streak = 0;
-      $('#cc-streak').hidden = true;
+      renderStreak(false);
+    }
+    function renderStreak(bump) {
+      const n = round.streak;
+      const el = $('#cc-streak');
+      el.hidden = n < 2;
+      el.querySelector('b').textContent = `🔥 ${n}`;
+      el.classList.toggle('is-warm', n >= 5 && n < 10);
+      el.classList.toggle('is-fire', n >= 10);
+      $('.cc-stage').classList.toggle('is-on-fire', n >= 5);
+      if (bump) {
+        el.classList.remove('is-hot');
+        void el.offsetWidth;
+        el.classList.add('is-hot');
+      }
+      const prev = levelData(round.level.id).bestStreak || 0;
+      const best = $('#cc-best-streak');
+      best.hidden = prev < 2;
+      best.classList.toggle('is-new', n > prev);
+      best.textContent = n > prev ? '🏆 NOVO RECORDE!' : `🏆 recorde: ${prev} seguidas`;
+    }
+    // letreiro grande no meio da área da conta (mesmo estilo dos Cadentes)
+    function banner(text, cls) {
+      const b = document.createElement('div');
+      b.className = `cad-banner ${cls || ''}`.trim();
+      b.textContent = text;
+      $('.cc-stage').appendChild(b);
+      setTimeout(() => b.remove(), 1300);
     }
 
     const PRAISE = ['Isso! 🎉', 'Muito bem! ⭐', 'Certinho! ✅', 'Mandou bem! 💪', 'Acertou! 🙌', 'Show! 🚀'];

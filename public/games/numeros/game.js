@@ -135,20 +135,9 @@
 
     // ---------------- pontos, combo e peças especiais ----------------
     const Kit = window.CadentesKit;
-    function updateHud() {
-      $('#nc-score').textContent = round.scorer.score;
-      const m = round.scorer.multiplier;
-      $('#nc-combo').hidden = m < 2;
-      $('#nc-combo').textContent = `🔥 ×${m}`;
-    }
-    function onMultiplier(m) {
-      sound.play('tada');
-      const c = $('#nc-combo');
-      c.classList.remove('fx-shake');
-      void c.offsetWidth;
-      c.classList.add('fx-shake');
-      Kit.floatText(sky, sky.querySelector('.nc-ground'), `Combo ×${m}! 🔥`, 'is-big');
-    }
+    // o placar grande fica dentro do céu (CadentesKit.createBoard)
+    function updateHud() {}
+    function onMultiplier() { sound.play('tada'); }
     // acerto: pontos (com combo), confete e o efeito da peça especial
     function scoreCatch(piece, base, { chain = false } = {}) {
       const special = round.specials[piece.index];
@@ -208,7 +197,7 @@
       round = {
         level, seed, items, typed: '', caught: 0, lost: [], wrong: 0, started: false,
         specials: Kit.pickSpecials(items.length),
-        scorer: Kit.createScorer({ onMultiplier }),
+        scorer: Kit.createBoard(sky, { best: levelData(level.id).bestScore || 0, onMultiplier }),
         // a rodada acelera: cada conta cai um pouco mais rápido que a anterior
         engine: window.FallingEngine.create(sky, {
           items,
