@@ -269,10 +269,23 @@
 }
 .tm-word { white-space: nowrap; }
 .tm-ch { position: relative; display: inline-block; min-width: .3em; padding: 0 1px; border-radius: 8px; transition: color .1s ease; }
-.tm-space { color: rgba(30, 18, 64, .25); padding: 0 .12em; }
+/* Espaço: um colchete deitado (␣) desenhado por CSS — o símbolo de espaço
+   dos teclados —, que não se confunde com ponto, vírgula ou sublinhado. */
+.tm-space { color: rgba(30, 18, 64, .3); min-width: .62em; padding: 0 .06em; }
+.tm-space::after {
+  content: "";
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  bottom: .32em;
+  height: .2em;
+  border: .09em solid currentColor;
+  border-top: 0;
+  border-radius: 0 0 .08em .08em;
+}
 .tm-ch.is-done { color: var(--green-dark); }
 .tm-ch.is-done.is-missed { color: var(--orange-dark); text-decoration: underline wavy var(--orange); text-underline-offset: 6px; }
-.tm-space.is-done { color: rgba(31, 175, 96, .35); }
+.tm-space.is-done { color: rgba(31, 175, 96, .45); }
 .tm-ch.is-current {
   color: var(--ink);
   background: var(--yellow);

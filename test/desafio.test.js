@@ -88,6 +88,13 @@ async function main() {
   assert(r.ok && r.typed === 0, 'tecla errada não avança o texto');
   r = await emit(bia.s, 'dz:keys', { roomCode, playerToken: bia.T, chars: 'oi sol' });
   assert(r.typed === 6, 'texto avança com as teclas certas (conferidas no servidor)');
+  const live = await emit(master, 'dz:master_reconnect', { roomCode, masterToken });
+  const biaLive = live.state.players.find((x) => x.name === 'Bia Lima');
+  const caioLive = live.state.players.find((x) => x.name === 'Caio Dias');
+  assert(live.state.text === 'oi sol mar' && biaLive.lastKeyAt > 0 && caioLive.wrong > 0,
+    'painel do professor recebe o texto, a última tecla e os erros de cada um');
+  const scr = await emit(screen, 'dz:watch', { roomCode });
+  assert(!('lastKeyAt' in scr.state.players[0]) && !scr.state.text, 'telão não recebe esses detalhes');
   r = await emit(ana.s, 'dz:keys', { roomCode, playerToken: ana.T, chars: 'oi sol mar' });
   assert(r.typed === 10 && r.finished && r.place === 1, 'Ana termina em 1º lugar');
   r = await emit(bia.s, 'dz:keys', { roomCode, playerToken: bia.T, chars: ' mxar' });

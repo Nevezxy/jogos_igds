@@ -2,6 +2,11 @@
 // Desafio de digitação, painel do professor (/professor/desafio): cria a
 // sala, escolhe o modo e o texto (uma fase do Teclado Mágico ou um texto
 // próprio), dá a largada, acompanha a turma ao vivo e vê o pódio.
+//
+// Painel de acompanhamento (durante a rodada): relógio, números da turma,
+// uma linha por criança (progresso, velocidade, precisão, erros e situação)
+// e quem pode precisar de ajuda — parado há um tempo, errando muito ou que
+// saiu da página.
 
 (function () {
   const { socket, emitAsync } = window.BingoSocket;
@@ -18,6 +23,11 @@
   let session = null; // { roomCode, masterToken }
   let state = null;
   let qrFor = null;
+  let sortBy = 'position';
+
+  // quando avisar o professor
+  const IDLE_MS = 12000; // sem digitar há 12 s
+  const LOW_ACCURACY = 80; // menos de 80% de acerto (depois de 10 letras)
 
   function load() {
     try { return JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch (e) { return null; }
@@ -179,6 +189,135 @@
     $('dz-m-url').textContent = url.replace(/^https?:\/\//, '');
   }
 
+  // ---------------- painel de acompanhamento ----------------
+
+  // Situação de uma criança na rodada (e se o professor deveria olhar).
+  function situation(p, s, t) {
+    if (p.finished) {
+      const time = p.timeMs ? ` em ${C.formatTime(p.timeMs)}` : '';
+      return { cls: 'is-done', text: `🏁 ${p.place}º lugar${time}`, attention: null };
+    }
+    if (!p.connected) return { cls: 'is-away', text: '📴 saiu da página', attention: 'saiu da página' };
+    if (t < s.startAt) return { cls: '', text: '⏳ na largada', attention: null };
+    const idle = t - (p.lastKeyAt || s.startAt);
+    if (idle > IDLE_MS) {
+      const secs = Math.floor(idle / 1000);
+      return { cls: 'is-idle', text: `💤 parado há ${secs} s`, attention: p.correct ? `parado há ${secs} s` : `ainda não começou (${secs} s)` };
+    }
+    if (p.correct >= 10 && p.accuracy < LOW_ACCURACY) {
+      return { cls: 'is-errors', text: '⚠️ errando bastante', attention: `errando bastante (${Math.round(p.accuracy)}% de acerto)` };
+    }
+    return { cls: '', text: '✍️ digitando', attention: null };
+  }
+
+  const SORTS = {
+    position: (list, s) => C.liveOrder(list, s.config.mode),
+    name: (list) => list.slice().sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')),
+    accuracy: (list) => list.slice().sort((a, b) => a.accuracy - b.accuracy),
+    attention: (list, s, t) => list.slice().sort((a, b) => Number(Boolean(situation(b, s, t).attention)) - Number(Boolean(situation(a, s, t).attention))),
+  };
+
+  document.querySelectorAll('#dz-live [data-sort]').forEach((btn) => btn.addEventListener('click', () => {
+    sortBy = btn.dataset.sort;
+    setPressed('#dz-live [data-sort]', 'sort', sortBy);
+    if (state) renderLive(state);
+  }));
+
+  function liveTimer(s, t) {
+    if (t < s.startAt) return `largada em ${Math.ceil((s.startAt - t) / 1000)}`;
+    return s.config.mode === 'relogio' ? C.formatTime(s.endsAt - t) : C.formatTime(t - s.startAt);
+  }
+
+  function renderLive(s) {
+    const t = C.now();
+    const racers = s.players.filter((p) => p.racing);
+    const late = s.players.filter((p) => !p.racing);
+    const finished = racers.filter((p) => p.finished);
+    const infos = new Map(racers.map((p) => [p.id, situation(p, s, t)]));
+    const idle = racers.filter((p) => !p.finished && infos.get(p.id).cls === 'is-idle');
+    const typing = racers.filter((p) => !p.finished && infos.get(p.id).text.startsWith('✍️'));
+    const started = racers.filter((p) => p.correct > 0);
+    const avg = (list, f) => (list.length ? list.reduce((n, p) => n + f(p), 0) / list.length : 0);
+    const clock = s.config.mode === 'relogio';
+
+    $('dz-live-round').textContent = `#${s.round}`;
+    $('dz-live-mode').textContent = C.modeLabel(s.config);
+    $('dz-live-timer').textContent = liveTimer(s, t);
+    $('dz-live-typing').textContent = typing.length;
+    $('dz-live-done').textContent = clock ? '–' : `${finished.length}/${racers.length}`;
+    $('dz-live-idle').textContent = idle.length;
+    $('dz-live-idle-box').classList.toggle('has-value', idle.length > 0);
+    $('dz-live-avg').textContent = Math.round(avg(started, (p) => p.wpm));
+    $('dz-live-acc').textContent = `${Math.round(avg(started, (p) => p.accuracy) || 100)}%`;
+    $('dz-live-progress').textContent = clock
+      ? `${racers.reduce((n, p) => n + p.correct, 0)}`
+      : `${Math.round(avg(racers, (p) => p.progress) * 100)}%`;
+    $('dz-live-progress').nextElementSibling.textContent = clock ? '📈 letras da turma' : '📈 turma no texto';
+
+    const m = s.mascot;
+    $('dz-live-mascot').hidden = !m;
+    if (m) {
+      const max = Math.max(m.target, m.team, 1);
+      $('dz-live-mteam').style.width = `${(m.team / max) * 100}%`;
+      $('dz-live-mmascot').style.width = `${(m.mascotNow / max) * 100}%`;
+      $('dz-live-mteam-n').textContent = m.team;
+      $('dz-live-mmascot-n').textContent = m.mascotNow;
+    }
+
+    // quem pode precisar de ajuda
+    const help = racers.filter((p) => infos.get(p.id).attention);
+    $('dz-live-help').hidden = help.length === 0;
+    $('dz-live-help-list').innerHTML = help
+      .map((p) => `<li>${escapeHtml(p.avatar)} ${escapeHtml(p.name)} — ${escapeHtml(infos.get(p.id).attention)}</li>`).join('');
+
+    // tabela: uma linha por criança, reaproveitada para as barras deslizarem
+    const tbody = $('dz-live-rows');
+    const ordered = SORTS[sortBy](racers, s, t);
+    const positions = new Map(C.liveOrder(racers, s.config.mode).map((p, i) => [p.id, i + 1]));
+    const best = Math.max(1, ...racers.map((r) => r.correct));
+    const seen = new Set();
+    ordered.forEach((p) => {
+      seen.add(p.id);
+      let tr = tbody.querySelector(`[data-row="${CSS.escape(p.id)}"]`);
+      if (!tr) {
+        tr = document.createElement('tr');
+        tr.dataset.row = p.id;
+        tr.innerHTML = `<td class="num dz-c-pos"></td>
+          <td><span class="dz-live-who"><span class="avatar-badge"></span><span class="dz-c-name"></span></span></td>
+          <td><div class="dz-live-bar"><i></i><span></span></div></td>
+          <td class="num dz-c-wpm"></td><td class="num dz-c-acc"></td><td class="num dz-c-wrong"></td>
+          <td><span class="dz-status"></span></td>`;
+      }
+      tbody.appendChild(tr); // na ordem escolhida
+      const info = infos.get(p.id);
+      tr.className = [p.finished ? 'is-done' : '', info.attention ? 'is-attention' : '', p.connected ? '' : 'is-away'].join(' ').trim();
+      tr.querySelector('.dz-c-pos').textContent = `${positions.get(p.id)}º`;
+      tr.querySelector('.avatar-badge').textContent = p.avatar;
+      tr.querySelector('.dz-c-name').textContent = p.name;
+      const pct = clock ? Math.min(100, (p.correct / best) * 100) : p.progress * 100;
+      tr.querySelector('.dz-live-bar i').style.width = `${pct}%`;
+      tr.querySelector('.dz-live-bar span').textContent = clock ? `${p.correct} letras` : `${Math.round(pct)}%`;
+      tr.querySelector('.dz-c-wpm').textContent = p.correct ? Math.round(p.wpm) : '–';
+      tr.querySelector('.dz-c-acc').textContent = p.correct ? `${Math.round(p.accuracy)}%` : '–';
+      tr.querySelector('.dz-c-wrong').textContent = p.wrong || 0;
+      const status = tr.querySelector('.dz-status');
+      status.className = `dz-status ${info.cls}`;
+      status.textContent = info.text;
+    });
+    tbody.querySelectorAll('[data-row]').forEach((tr) => { if (!seen.has(tr.dataset.row)) tr.remove(); });
+
+    $('dz-live-late').hidden = late.length === 0;
+    $('dz-live-late').textContent = late.length
+      ? `⏳ Entraram depois da largada e correm na próxima rodada: ${late.map((p) => p.name).join(', ')}.`
+      : '';
+    if ($('dz-live-text').textContent !== (s.text || '')) $('dz-live-text').textContent = s.text || '';
+  }
+
+  // relógio e "parado há N s" andam entre uma atualização e outra
+  setInterval(() => {
+    if (active && state && (state.status === 'countdown' || state.status === 'racing')) renderLive(state);
+  }, 1000);
+
   function render(s) {
     state = s;
     C.syncClock(s.now);
@@ -195,6 +334,11 @@
     $('dz-m-stop').hidden = !live;
     $('dz-m-lock').textContent = s.locked ? '🔓 Abrir entrada' : '🔒 Fechar entrada';
     renderPlayers(s);
+    // durante a rodada, as regras e a lista simples dão lugar ao painel ao vivo
+    $('dz-live').hidden = !live;
+    $('dz-m-config').hidden = live;
+    $('dz-m-players-card').hidden = live;
+    if (live) renderLive(s);
     $('dz-m-results').hidden = !s.results || live;
     if (s.results && !live) {
       $('dz-m-round').textContent = `#${s.results.round}`;

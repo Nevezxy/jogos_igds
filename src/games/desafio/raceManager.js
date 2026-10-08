@@ -179,6 +179,7 @@ function joinRoom(code, { student = null, playerToken = null } = {}) {
     connected: false,
     kicked: false,
     run: null, // rodada atual (TypingRun), null = esperando a próxima
+    lastKeyAt: null, // última tecla (painel do professor: quem parou)
     finishedAt: null,
     place: null,
   };
@@ -235,6 +236,7 @@ function startRound(code, token, now = Date.now()) {
     p.finishedAt = null;
     p.place = null;
     p.run = null;
+    p.lastKeyAt = null;
     if (p.kicked || !p.connected) continue;
     // stopOnError: o texto só anda com a tecla certa (como no Teclado Mágico)
     const run = new TypingRun(room.text, { stopOnError: true });
@@ -256,6 +258,7 @@ function typeKeys(code, playerToken, chars, now = Date.now()) {
   const typedSoFar = run.pos + run.wrongPresses;
   const budget = Math.max(0, allowed - typedSoFar);
   const list = [...String(chars || '').normalize('NFC')].slice(0, Math.min(40, budget));
+  if (list.length) player.lastKeyAt = now;
   run.now = () => now;
   for (const ch of list) {
     if (ch === '\n' || ch === '\r' || ch === '\t') continue;
@@ -363,7 +366,8 @@ function endRoom(code, token) {
 
 // ---------------- o que cada um vê ----------------
 
-function publicPlayers(room, { hideNames = false } = {}) {
+// `detail`: só para o painel do professor (última tecla e teclas erradas).
+function publicPlayers(room, { hideNames = false, detail = false } = {}) {
   const now = Date.now();
   return [...room.players.values()].filter((p) => !p.kicked).map((p) => {
     const stats = playerStats(room, p, now);
@@ -379,6 +383,11 @@ function publicPlayers(room, { hideNames = false } = {}) {
       accuracy: stats ? stats.accuracy : 100,
       finished: stats ? stats.finished : false,
       place: p.place,
+      ...(detail ? {
+        lastKeyAt: p.lastKeyAt,
+        wrong: p.run ? p.run.wrongPresses : 0,
+        timeMs: stats ? stats.timeMs : null,
+      } : {}),
     };
   });
 }
@@ -420,7 +429,15 @@ function summary(room, opts = {}) {
 }
 
 function masterState(room) {
-  return { ...summary(room), config: room.config, isMaster: true, levelTitle: levelTitle(room.config.levelId) };
+  const live = room.status === 'countdown' || room.status === 'racing';
+  return {
+    ...summary(room, { detail: true }),
+    config: room.config,
+    isMaster: true,
+    levelTitle: levelTitle(room.config.levelId),
+    // o professor vê o texto da rodada no painel de acompanhamento
+    text: live || room.status === 'finished' ? room.text : null,
+  };
 }
 
 // O que vai para o canal das crianças (sem o texto: ele vai uma vez, no

@@ -135,6 +135,8 @@ CMD ["node", "server.js"]
 - **Estrelas:** 85% de precisão = ⭐, 93% = ⭐⭐,
   97% + velocidade mínima do mundo = ⭐⭐⭐. Resultado com PPM (palavras por
   minuto), precisão, tempo e as teclas que mais deram trabalho.
+- No texto, o espaço aparece como **␣** (o símbolo de espaço dos teclados),
+  para não se confundir com o ponto final.
 - Treino livre (não conta estrelas) e as opções "Esperar a tecla certa" e
   **"Apenas maiúsculas"** (todas as letras e palavras em MAIÚSCULA, nas
   fases e no treino; a dica ensina o Shift do lado contrário e, com o Caps
@@ -159,6 +161,12 @@ CMD ["node", "server.js"]
   o **pódio com três prêmios** — ⚡ mais rápido, 🎯 mais preciso e 📈 quem
   mais melhorou em relação à própria média (para não premiar só quem já
   digita bem). Opção de esconder os nomes no telão.
+- **Painel de acompanhamento** (professor, durante a rodada): relógio,
+  quantos estão digitando, terminaram ou parados, PPM e precisão médios,
+  uma linha por criança (progresso no texto, PPM, precisão, erros e
+  situação) com ordenação por posição, nome, precisão ou "quem precisa de
+  ajuda", e um aviso de quem pode precisar de ajuda: parado há mais de 12 s,
+  errando bastante (menos de 80% de acerto) ou que saiu da página.
 - **Contra trapaça:** cada tecla é conferida no servidor pelo mesmo motor do
   Teclado Mágico, com teto de 20 teclas por segundo.
 - Cada rodada conta no progresso da criança (painel e área do professor).

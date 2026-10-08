@@ -148,6 +148,59 @@
         <p class="form-error" id="dz-m-error" role="alert"></p>
       </section>
 
+      <!-- painel de acompanhamento (aparece durante a rodada) -->
+      <section class="card-block dz-live" id="dz-live" hidden>
+        <div class="dz-live-head">
+          <div>
+            <h2>📡 Acompanhando a rodada <span id="dz-live-round"></span></h2>
+            <p class="muted dz-live-mode" id="dz-live-mode"></p>
+          </div>
+          <span class="dz-live-timer" id="dz-live-timer" title="Tempo da rodada">0:00</span>
+        </div>
+
+        <div class="dz-live-kpis">
+          <div class="dz-kpi"><b id="dz-live-typing">0</b><small>✍️ digitando</small></div>
+          <div class="dz-kpi"><b id="dz-live-done">0</b><small>🏁 terminaram</small></div>
+          <div class="dz-kpi is-alert" id="dz-live-idle-box"><b id="dz-live-idle">0</b><small>💤 parados</small></div>
+          <div class="dz-kpi"><b id="dz-live-avg">0</b><small>⚡ PPM médio</small></div>
+          <div class="dz-kpi"><b id="dz-live-acc">100%</b><small>🎯 precisão média</small></div>
+          <div class="dz-kpi"><b id="dz-live-progress">0%</b><small>📈 turma no texto</small></div>
+        </div>
+
+        <div class="dz-live-mascot" id="dz-live-mascot" hidden>
+          <div class="dz-live-mbar"><span>👥 Turma</span><div class="dz-live-mtrack"><i id="dz-live-mteam"></i></div><b id="dz-live-mteam-n">0</b></div>
+          <div class="dz-live-mbar is-mascot"><span>🙂 Bingolino</span><div class="dz-live-mtrack"><i id="dz-live-mmascot"></i></div><b id="dz-live-mmascot-n">0</b></div>
+        </div>
+
+        <div class="dz-live-help" id="dz-live-help" hidden>
+          <strong>🙋 Podem precisar de ajuda:</strong>
+          <ul id="dz-live-help-list"></ul>
+        </div>
+
+        <div class="dz-live-tools">
+          <span class="dz-m-label">Ordenar</span>
+          <div class="dz-seg" role="radiogroup" aria-label="Ordenar a tabela">
+            <button type="button" class="dz-seg-btn dz-seg-mini" data-sort="position" role="radio" aria-checked="true">Posição</button>
+            <button type="button" class="dz-seg-btn dz-seg-mini" data-sort="name" role="radio">Nome</button>
+            <button type="button" class="dz-seg-btn dz-seg-mini" data-sort="accuracy" role="radio">Precisão</button>
+            <button type="button" class="dz-seg-btn dz-seg-mini" data-sort="attention" role="radio">Quem precisa de ajuda</button>
+          </div>
+        </div>
+
+        <div class="dz-live-table-wrap">
+          <table class="dz-live-table">
+            <thead><tr><th>#</th><th>Educando</th><th>Progresso no texto</th><th>PPM</th><th>Precisão</th><th>Erros</th><th>Situação</th></tr></thead>
+            <tbody id="dz-live-rows"></tbody>
+          </table>
+        </div>
+        <p class="muted dz-live-late" id="dz-live-late" hidden></p>
+
+        <details class="dz-live-text">
+          <summary>📄 Ver o texto da rodada</summary>
+          <p id="dz-live-text"></p>
+        </details>
+      </section>
+
       <section class="card-block dz-m-controls">
         <button type="button" class="btn btn-success btn-lg" id="dz-m-start">▶ Dar a largada</button>
         <button type="button" class="btn btn-danger" id="dz-m-stop" hidden>⏹ Encerrar rodada</button>
@@ -170,7 +223,7 @@
         <a id="dz-m-url" class="dz-url" target="_blank" rel="noopener"></a>
         <p class="muted">Ou no painel: <strong>Desafio de Digitação</strong> → código <strong id="dz-m-code2">-----</strong></p>
       </section>
-      <section class="card-block">
+      <section class="card-block" id="dz-m-players-card">
         <h3>👥 Na sala <span class="count-badge" id="dz-m-count2">0</span></h3>
         <ul class="dz-m-players" id="dz-m-players"></ul>
       </section>

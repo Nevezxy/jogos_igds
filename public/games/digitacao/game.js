@@ -182,7 +182,8 @@
         if (ch === ' ') {
           word = null;
           span.classList.add('tm-space');
-          span.textContent = '·';
+          // espaço desenhado pelo CSS (␣), para não parecer um ponto final
+          span.textContent = '\u00a0';
           textBox.appendChild(span);
           textBox.appendChild(document.createElement('wbr'));
         } else {
