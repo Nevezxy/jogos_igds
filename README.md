@@ -131,7 +131,11 @@ CMD ["node", "server.js"]
 - **Estrelas:** 85% de precisão = ⭐ (libera a próxima fase), 93% = ⭐⭐,
   97% + velocidade mínima do mundo = ⭐⭐⭐. Resultado com PPM (palavras por
   minuto), precisão, tempo e as teclas que mais deram trabalho.
-- Treino livre (não conta estrelas) e a opção "Esperar a tecla certa".
+- Treino livre (não conta estrelas) e as opções "Esperar a tecla certa" e
+  **"Apenas maiúsculas"** (todas as letras e palavras em MAIÚSCULA, nas
+  fases e no treino; a dica ensina o Shift do lado contrário e, com o Caps
+  Lock ligado, avisa que não precisa segurar o Shift). As duas opções ficam
+  guardadas no aparelho.
 - Precisa de teclado físico; em tablet/celular aparece um aviso.
 
 ### 🎯 Bingo

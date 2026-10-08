@@ -98,6 +98,21 @@ for (const level of Levels.LEVELS) {
   }
 }
 Content.PRACTICE.forEach((p) => typable('treino ' + p.id, p.make()));
+
+// modo "apenas maiúsculas": o mesmo conteúdo em MAIÚSCULA continua digitável
+const upperProblems = [];
+const upper = (t) => t.toLocaleUpperCase('pt-BR');
+for (const level of Levels.LEVELS) {
+  for (let i = 0; i < 10; i++) {
+    const text = upper(Content.generate(level));
+    for (const ch of text) if (!layout.canType(ch)) upperProblems.push(`${level.id}: "${ch}"`);
+    if (/[a-zà-ÿ]/.test(text)) upperProblems.push(`${level.id}: sobrou minúscula`);
+  }
+}
+Content.PRACTICE.forEach((p) => { for (const ch of upper(p.make())) if (!layout.canType(ch)) upperProblems.push(`treino ${p.id}: "${ch}"`); });
+assert(upperProblems.length === 0, `em maiúsculas, todo exercício é digitável e não sobra minúscula${upperProblems.length ? ': ' + [...new Set(upperProblems)].slice(0, 5).join(', ') : ''}`);
+assert(upper('maçã ação pé avô à') === 'MAÇÃ AÇÃO PÉ AVÔ À', 'maiúsculas mantêm cedilha e acentos');
+assert(s('Ç')[0].code === 'Semicolon' && s('Ç')[0].shift && s('Ã').length === 2 && s('Ã')[1].shift, 'Ç e Ã maiúsculos têm o caminho certo no teclado');
 assert(problems.length === 0, `todo exercício é digitável no ABNT2 e respeita as teclas da fase${problems.length ? ': ' + [...new Set(problems)].slice(0, 5).join(', ') : ''}`);
 
 // ---------------- validação no servidor ----------------

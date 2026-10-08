@@ -17,6 +17,10 @@
         <input type="checkbox" id="tm-stop-on-error" checked />
         <span>Esperar a tecla certa</span>
       </label>
+      <label class="tm-toggle" title="Todas as letras e palavras vêm em MAIÚSCULA (com Shift ou com o Caps Lock ligado)">
+        <input type="checkbox" id="tm-uppercase" />
+        <span>🔠 Apenas maiúsculas</span>
+      </label>
     </div>
 
     <div class="tm-worlds" id="tm-worlds"></div>
@@ -39,6 +43,7 @@
       <h3 class="tm-intro-title" id="tm-intro-title">F e J</h3>
       <p class="tm-intro-text" id="tm-intro-world-text"></p>
       <p class="tm-intro-tip" id="tm-intro-tip"></p>
+      <p class="tm-intro-mode" id="tm-intro-mode" hidden>🔠 Modo <strong>apenas maiúsculas</strong>: tudo vem em MAIÚSCULA. Segure o Shift do lado contrário da letra — ou ligue o Caps Lock e digite sem segurar nada.</p>
       <ul class="tm-intro-rules">
         <li>👀 Olhe para a tela, não para as mãos.</li>
         <li>🏠 Depois de cada tecla, o dedo volta para a casa (F e J).</li>
@@ -56,6 +61,7 @@
     <div class="tm-play-head">
       <button type="button" class="btn-mini" id="tm-quit" title="Sair da fase (Esc)">✕ Sair</button>
       <strong class="tm-play-title" id="tm-play-title">F e J</strong>
+      <span class="tm-mode-chip" id="tm-upper-chip" hidden title="Modo apenas maiúsculas">🔠 MAIÚSCULAS</span>
       <div class="tm-stats" aria-label="Como você está indo">
         <span class="tm-stat" title="Tempo">⏱ <b id="tm-stat-time">0:00</b></span>
         <span class="tm-stat" title="Precisão (acertos de primeira)">🎯 <b id="tm-stat-acc">100%</b></span>

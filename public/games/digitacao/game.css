@@ -195,6 +195,13 @@
 .tm-intro-title { font-size: 2.2rem !important; color: var(--violet-dark); }
 .tm-intro-text { font-size: 1.1rem; font-weight: 700; background: var(--surface-2); border-radius: var(--radius-md); padding: 12px 14px; }
 .tm-intro-tip { font-size: 1.15rem; font-weight: 800; }
+.tm-intro-mode {
+  font-weight: 700;
+  background: color-mix(in srgb, var(--orange) 22%, #fff);
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+}
 .tm-intro-rules { list-style: none; padding: 0; margin: 14px 0; text-align: left; display: grid; gap: 6px; font-weight: 700; }
 .tm-intro-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 10px; }
 
@@ -212,6 +219,17 @@
   padding: 8px 12px;
 }
 .tm-play-title { font-family: var(--font-display); font-size: 1.25rem; }
+.tm-mode-chip {
+  padding: 3px 10px;
+  background: var(--orange);
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: .85rem;
+  letter-spacing: .5px;
+}
+.tm-mode-chip[hidden] { display: none; }
 .tm-stats { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
 .tm-stat {
   padding: 4px 10px;

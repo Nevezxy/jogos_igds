@@ -18,6 +18,7 @@
   const { createHands, fingerName } = window.DigitacaoHands;
 
   const STOP_KEY = 'tm_stop_on_error';
+  const UPPER_KEY = 'tm_uppercase';
   const SHIFT_FINGER = { ShiftLeft: 'e5', ShiftRight: 'd5' };
 
   function formatTime(ms) {
@@ -55,6 +56,11 @@
     let stopOnError = true;
     try { stopOnError = localStorage.getItem(STOP_KEY) !== '0'; } catch (e) { /* ignore */ }
     $('#tm-stop-on-error').checked = stopOnError;
+    // "Apenas maiúsculas": todo exercício (fases e treino livre) vem em MAIÚSCULA
+    let uppercase = false;
+    try { uppercase = localStorage.getItem(UPPER_KEY) === '1'; } catch (e) { /* ignore */ }
+    $('#tm-uppercase').checked = uppercase;
+    let capsOn = false; // estado do Caps Lock, lido a cada tecla
 
     function show(name) {
       screen = name;
@@ -169,6 +175,7 @@
       worldText.textContent = level.indexInWorld === 0 ? world.intro : '';
       worldText.hidden = level.indexInWorld !== 0;
       $('#tm-intro-tip').textContent = `💡 ${level.tip}`;
+      $('#tm-intro-mode').hidden = !uppercase;
       show('intro');
       setTimeout(() => $('#tm-start').focus(), 60);
     }
@@ -219,8 +226,12 @@
       const strokes = layout.strokesFor(ch);
       if (!strokes) { keyboard.highlight(null); hands.highlight([]); hint.textContent = ''; return; }
       const step = deadArmed && strokes[0].dead && strokes.length > 1 ? 1 : 0;
-      const stroke = strokes[step];
+      let stroke = strokes[step];
       const key = layout.keys[stroke.code];
+      // Com o Caps Lock ligado, a letra maiúscula sai sem Shift.
+      const isLetterKey = /^Key/.test(stroke.code) || stroke.code === 'Semicolon';
+      const byCaps = capsOn && stroke.shift && isLetterKey;
+      if (byCaps) stroke = { ...stroke, shift: false, shiftCode: null };
       keyboard.highlight(stroke);
       const fingers = [key.fingerId];
       if (stroke.shiftCode) fingers.push(SHIFT_FINGER[stroke.shiftCode]);
@@ -241,6 +252,7 @@
       } else {
         text = `${shiftPart}${shiftPart ? 'a' : 'A'}perte ${keyName(stroke.code)} com o ${finger}.`;
       }
+      if (byCaps) text = `⇪ Caps Lock ligado: ${text[0].toLowerCase()}${text.slice(1)}`;
       if (layout.tips[stroke.code]) text += ` (${layout.tips[stroke.code]})`;
       hint.textContent = text;
     }
@@ -253,8 +265,10 @@
       $('#tm-progress-bar').style.width = `${(run.pos / run.chars.length) * 100}%`;
     }
 
-    function start({ level = null, practice = null, title, text }) {
+    function start({ level = null, practice = null, title, text: rawText }) {
+      const text = uppercase ? rawText.toLocaleUpperCase('pt-BR') : rawText;
       current = { level, practice, title, text };
+      $('#tm-upper-chip').hidden = !uppercase;
       run = new TypingRun(text, { stopOnError });
       deadArmed = false;
       $('#tm-play-title').textContent = title;
@@ -322,7 +336,7 @@
       if (screen !== 'play') return;
       if (ev.key === 'Tab') { ev.preventDefault(); return; }
       if (ev.key === 'Escape') { ev.preventDefault(); quit(); return; }
-      $('#tm-caps').hidden = !(ev.getModifierState && ev.getModifierState('CapsLock'));
+      updateCaps(ev);
       keyboard.press(ev.code, true);
       if (!['ShiftLeft', 'ShiftRight', 'CapsLock'].includes(ev.code)) lastCode = ev.code;
       if (ev.key === 'Dead') {
@@ -333,8 +347,19 @@
     });
     input.addEventListener('keyup', (ev) => {
       keyboard.press(ev.code, false);
-      $('#tm-caps').hidden = !(ev.getModifierState && ev.getModifierState('CapsLock'));
+      updateCaps(ev);
     });
+    // Caps Lock: no modo normal avisa para desligar; no modo "apenas
+    // maiúsculas" ele é uma ajuda (a dica passa a dispensar o Shift).
+    function updateCaps(ev) {
+      const on = Boolean(ev.getModifierState && ev.getModifierState('CapsLock'));
+      $('#tm-caps').hidden = !on || uppercase;
+      if (on !== capsOn) {
+        capsOn = on;
+        if (run && !run.done) updateHint();
+      }
+    }
+
     input.addEventListener('blur', () => {
       keyboard.releaseAll();
       // sem foco, as teclas não chegam: pede um clique para continuar
@@ -454,6 +479,11 @@
     $('#tm-stop-on-error').addEventListener('change', (ev) => {
       stopOnError = ev.target.checked;
       try { localStorage.setItem(STOP_KEY, stopOnError ? '1' : '0'); } catch (e) { /* ignore */ }
+    });
+    $('#tm-uppercase').addEventListener('change', (ev) => {
+      uppercase = ev.target.checked;
+      try { localStorage.setItem(UPPER_KEY, uppercase ? '1' : '0'); } catch (e) { /* ignore */ }
+      sound.play('pop');
     });
     container.querySelectorAll('[data-tm-go="map"]').forEach((btn) => btn.addEventListener('click', () => {
       show('map');
