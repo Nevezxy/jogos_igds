@@ -223,7 +223,7 @@ CMD ["node", "server.js"]
   12), o jogo espera 0,8 s pelo próximo algarismo. Número que não leva a
   nenhuma resposta pisca vermelho, apaga e conta um erro.
 - **8 mundos, 96 fases** (4 conteúdos × 🐢 🐇 🚀): dados e dominós (contar
-  os pontinhos), somar e tirar com unidades, somar e tirar com dezenas e
+  os pontinhos: um dado, dois dados e dominós, três dados), somar e tirar com unidades, somar e tirar com dezenas e
   centenas, tabuadas, divisão, misturadas, números negativos (tecla −) e
   potências e raízes. As contas vêm do gerador do Conta Comigo, com as
   mesmas regras (nada acima de 100 fora de somar e tirar).

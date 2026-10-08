@@ -5,9 +5,9 @@
 // uma por velocidade (🐢 devagar, 🐇 médio, 🚀 rápido): 12 fases por mundo.
 //
 // Conteúdo (`gen`, gerado em items.js):
-//   { t: 'dice', n }        n dados (1 ou 2): a criança conta os pontinhos
+//   { t: 'dice', n }        n dados (1 a 3): a criança conta os pontinhos
 //   { t: 'domino' }         um dominó (0 a 6 de cada lado)
-//   { t: 'diceMix' }        dados e dominós misturados
+//   { t: 'diceMix', of }    sorteia entre 'd1', 'd2', 'd3' (dados) e 'domino'
 //   { t: 'calc', gen }      contas do gerador do Conta Comigo (problems.js);
 //                           só contas de uma resposta, com a resposta no fim
 // `maxAbs` do mundo: nenhum número da conta passa disso (centena e milhar só
@@ -48,9 +48,9 @@
       intro: 'Dados e dominós caem do céu. Conte os pontinhos e digite o número antes que cheguem ao chão!',
       contents: [
         { title: 'Um dado', gen: { t: 'dice', n: 1 }, tip: 'Conte os pontinhos do dado: de 1 a 6.' },
-        { title: 'Dois dados', gen: { t: 'dice', n: 2 }, tip: 'Some os pontinhos dos dois dados.' },
-        { title: 'Dominós', gen: { t: 'domino' }, tip: 'Some os pontinhos dos dois lados do dominó.' },
-        { title: 'Dados e dominós', gen: { t: 'diceMix' }, tip: 'Dados e dominós misturados.' },
+        { title: 'Dois dados e dominós', gen: { t: 'diceMix', of: ['d2', 'domino'] }, tip: 'Some os pontinhos das duas partes. No dominó, um lado pode estar vazio: vale 0.' },
+        { title: 'Três dados', gen: { t: 'dice', n: 3 }, tip: 'Some dois dados primeiro e depois o terceiro.' },
+        { title: 'Tudo misturado', gen: { t: 'diceMix', of: ['d1', 'd2', 'd3', 'domino'] }, tip: 'Um, dois ou três dados, e dominós.' },
       ],
     },
     {

@@ -15,7 +15,10 @@
   const intIn = (r, lo, hi) => lo + Math.floor(r() * (hi - lo + 1));
 
   function dice(r, gen) {
-    if (gen.t === 'diceMix') return r() < 0.5 ? dice(r, { t: 'dice', n: intIn(r, 1, 2) }) : dice(r, { t: 'domino' });
+    if (gen.t === 'diceMix') {
+      const pick = gen.of[Math.floor(r() * gen.of.length)];
+      return dice(r, pick === 'domino' ? { t: 'domino' } : { t: 'dice', n: Number(pick.slice(1)) });
+    }
     if (gen.t === 'domino') {
       const faces = [intIn(r, 0, 6), intIn(r, 0, 6)];
       return { kind: 'domino', faces, answer: faces[0] + faces[1], text: `${faces[0]}|${faces[1]}` };
