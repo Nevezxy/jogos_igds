@@ -71,8 +71,8 @@ async function main() {
     const round = { levelId: 'm1f1', chars: 50, durationMs: 60000, accuracy: 96, wpm: 10, wrongPresses: 2, errorsByChar: { f: 2 } };
     r = await api('POST', '/api/progress/digitacao/results', round, kid);
     assert(r.ok && r.result.stars === 2 && r.progress.levels.m1f1.stars === 2, 'resultado gravado com as estrelas do servidor');
-    r = await api('POST', '/api/progress/digitacao/results', { ...round, levelId: 'm1f3' }, kid);
-    assert(r.status === 403 && r.code === 'FASE_BLOQUEADA', 'não grava fase ainda bloqueada');
+    r = await api('POST', '/api/progress/digitacao/results', { ...round, levelId: 'm99' }, kid);
+    assert(r.status === 400 && r.code === 'FASE_INVALIDA', 'não grava fase que não existe');
     r = await api('POST', '/api/progress/digitacao/results', { ...round, levelId: 'm1f2', wpm: 120 }, kid);
     assert(r.code === 'RESULTADO_INVALIDO', 'recusa velocidade impossível');
     r = await api('POST', '/api/progress/digitacao/results', { ...round, levelId: 'm1f2', accuracy: 80 }, kid);

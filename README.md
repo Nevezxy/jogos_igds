@@ -128,7 +128,10 @@ CMD ["node", "server.js"]
 - **10 mundos, 58 fases:** fileira do meio → de cima → de baixo →
   maiúsculas → palavras → acentuação → frases → pontuação → números e
   símbolos → textos. As fases de letras só usam as teclas já aprendidas.
-- **Estrelas:** 85% de precisão = ⭐ (libera a próxima fase), 93% = ⭐⭐,
+- **Todas as fases liberadas:** a criança escolhe qualquer fase no mapa
+  (chave `ALL_UNLOCKED` em `levels.js`; com `false`, cada fase abre quando a
+  anterior tem 1 ⭐ e o professor pode liberar todas para um educando).
+- **Estrelas:** 85% de precisão = ⭐, 93% = ⭐⭐,
   97% + velocidade mínima do mundo = ⭐⭐⭐. Resultado com PPM (palavras por
   minuto), precisão, tempo e as teclas que mais deram trabalho.
 - Treino livre (não conta estrelas) e as opções "Esperar a tecla certa" e

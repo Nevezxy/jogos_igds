@@ -182,12 +182,19 @@
     return 0;
   }
 
-  // Fase liberada: a primeira sempre; as outras, quando a anterior tem pelo
-  // menos 1 estrela (ou quando o professor liberou todas).
+  // Todas as fases abertas: a criança joga qualquer fase, em qualquer ordem
+  // (a estrela continua valendo e o "Continuar" leva à primeira sem estrela).
+  // Com `false`, volta a trilha: cada fase abre quando a anterior tem 1 ⭐,
+  // e o professor pode liberar todas para um educando.
+  const ALL_UNLOCKED = true;
+
+  // Fase liberada: todas (ALL_UNLOCKED); senão, a primeira sempre e as
+  // outras quando a anterior tem pelo menos 1 estrela (ou quando o
+  // professor liberou todas).
   function isUnlocked(progress, levelId) {
     const level = getLevel(levelId);
     if (!level) return false;
-    if (level.index === 0 || (progress && progress.unlockedAll)) return true;
+    if (ALL_UNLOCKED || level.index === 0 || (progress && progress.unlockedAll)) return true;
     const prev = LEVELS[level.index - 1];
     const prevStars = progress && progress.levels && progress.levels[prev.id] ? progress.levels[prev.id].stars : 0;
     return prevStars >= 1;
@@ -204,7 +211,7 @@
   }
 
   const api = {
-    WORLDS, LEVELS, MAX_STARS: LEVELS.length * 3,
+    WORLDS, LEVELS, MAX_STARS: LEVELS.length * 3, ALL_UNLOCKED,
     getLevel, getWorld, starsFor, isUnlocked, nextLevel, totalStars,
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

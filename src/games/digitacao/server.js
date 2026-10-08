@@ -104,6 +104,8 @@ function teacherSummary(progress) {
     avgWpm,
     toughest,
     unlockedAll: Boolean(p.unlockedAll),
+    // com todas as fases abertas não há o que liberar
+    lockable: !Levels.ALL_UNLOCKED,
   };
 }
 

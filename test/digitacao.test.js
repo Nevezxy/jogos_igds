@@ -75,9 +75,8 @@ assert(Levels.starsFor('m1f1', 84, 0) === 0, 'menos de 85% de precisão: sem est
 assert(Levels.starsFor('m1f1', 90, 0) === 1 && Levels.starsFor('m1f1', 95, 0) === 2, '85% = 1 estrela, 93% = 2 estrelas');
 assert(Levels.starsFor('m1f1', 99, 0) === 3, 'nos mundos 1 a 4 a 3ª estrela não exige velocidade');
 assert(Levels.starsFor('m10f1', 99, 5) === 2 && Levels.starsFor('m10f1', 99, 15) === 3, 'nos textos a 3ª estrela exige velocidade');
-assert(Levels.isUnlocked(null, 'm1f1') && !Levels.isUnlocked(null, 'm1f2'), 'só a primeira fase começa liberada');
-assert(Levels.isUnlocked({ levels: { m1f1: { stars: 1 } } }, 'm1f2'), '1 estrela libera a próxima');
-assert(Levels.isUnlocked({ levels: {}, unlockedAll: true }, 'm10f5'), 'professor pode liberar todas');
+assert(Levels.ALL_UNLOCKED && Levels.LEVELS.every((l) => Levels.isUnlocked(null, l.id)), 'todas as fases começam liberadas');
+assert(!Levels.isUnlocked(null, 'nada'), 'fase inexistente não é liberada');
 assert(Levels.nextLevel({ levels: { m1f1: { stars: 2 } } }).id === 'm1f2', 'próxima fase é a primeira sem estrela');
 
 // ---------------- conteúdo ----------------
@@ -120,7 +119,7 @@ const good = { levelId: 'm1f1', chars: 50, durationMs: 60000, accuracy: 98, wpm:
 const v = server.validateResult(good, null);
 assert(v.stars === 3 && v.levelId === 'm1f1', 'resultado válido ganha as estrelas calculadas pelo servidor');
 assert(!('xx' in v.errorsByChar) && v.errorsByChar.j === 1, 'erros por tecla são limpos');
-assert(throwsCode(() => server.validateResult({ ...good, levelId: 'm1f2' }, null), 'FASE_BLOQUEADA'), 'fase bloqueada é recusada');
+assert(server.validateResult({ ...good, levelId: 'm10f5', durationMs: 60000 }, null).levelId === 'm10f5', 'qualquer fase vale, mesmo sem jogar as anteriores');
 assert(throwsCode(() => server.validateResult({ ...good, levelId: 'nada' }, null), 'FASE_INVALIDA'), 'fase inexistente é recusada');
 assert(throwsCode(() => server.validateResult({ ...good, wpm: 80 }, null), 'RESULTADO_INVALIDO'), 'velocidade que não bate com o tempo é recusada');
 assert(throwsCode(() => server.validateResult({ ...good, accuracy: 150 }, null), 'RESULTADO_INVALIDO'), 'precisão fora de 0–100 é recusada');

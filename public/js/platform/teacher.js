@@ -119,7 +119,7 @@
         : '';
       return `<div class="teacher-game"><strong>${escapeHtml(d.current)}</strong>
         <span>⭐ ${d.stars}/${d.maxStars} · ${d.levelsDone}/${d.totalLevels} fases · ${d.avgWpm} PPM</span>
-        ${d.unlockedAll ? '<span class="teacher-badge">🔓 fases liberadas</span>' : ''}${keys}</div>`;
+        ${d.unlockedAll && d.lockable ? '<span class="teacher-badge">🔓 fases liberadas</span>' : ''}${keys}</div>`;
     },
     bingo(d) {
       return d && d.wins ? `🏆 ${d.wins}` : '<span class="muted">—</span>';
@@ -168,7 +168,7 @@
         <td class="teacher-actions">
           <button type="button" class="btn-mini" data-act="rename" title="Corrigir o nome">✏️ Renomear</button>
           <button type="button" class="btn-mini" data-act="merge" title="Juntar com outra conta da mesma criança">🔀 Juntar</button>
-          <button type="button" class="btn-mini" data-act="unlock" title="Liberar ou bloquear todas as fases do Teclado Mágico">${typing && typing.unlockedAll ? '🔒 Bloquear fases' : '🔓 Liberar fases'}</button>
+          ${typing && typing.lockable ? `<button type="button" class="btn-mini" data-act="unlock" title="Liberar ou bloquear todas as fases do Teclado Mágico">${typing.unlockedAll ? '🔒 Bloquear fases' : '🔓 Liberar fases'}</button>` : ''}
           <button type="button" class="btn-mini" data-act="active">${s.active ? '⏸ Desativar' : '▶ Reativar'}</button>
         </td>`;
       tr.querySelectorAll('[data-act]').forEach((btn) => btn.addEventListener('click', () => ACTIONS[btn.dataset.act](s)));

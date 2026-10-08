@@ -96,11 +96,9 @@ async function main() {
 
   // ---- liberar todas as fases ----
   r = await api('POST', '/api/progress/digitacao/results', round('m5f1', 95), ana);
-  assert(r.code === 'FASE_BLOQUEADA', 'fase lá na frente começa bloqueada');
-  r = await api('POST', `/api/teacher/students/${anaRow.id}/games/digitacao/unlock-all`, { unlocked: true }, T);
-  assert(r.ok, 'professor libera todas as fases');
-  r = await api('POST', '/api/progress/digitacao/results', round('m5f1', 95), ana);
-  assert(r.ok, 'depois de liberar, a fase vale');
+  assert(r.ok, 'com todas as fases abertas, uma fase lá na frente já vale');
+  r = await api('GET', '/api/teacher/students', null, T);
+  assert(r.students[0].games.digitacao.lockable === false, 'sem trilha bloqueada, a área do professor não oferece "liberar fases"');
   r = await api('POST', `/api/teacher/students/${anaRow.id}/games/bingo/unlock-all`, { unlocked: true }, T);
   assert(r.code === 'SEM_FASES', 'jogo sem fases não tem o que liberar');
 
