@@ -11,7 +11,7 @@ Jogos de hoje:
 | Jogo | Modo | O que é |
 |------|------|---------|
 | ⌨️ **Teclado Mágico** | sozinho(a) | Digitação com os 10 dedos: teclado ABNT2 na tela com uma cor por dedo, mãos que mostram o dedo certo e 127 fases (letras, palavras, acentos, frases, pontuação, números e textos). |
-| 🔢 **Conta Comigo** | sozinho(a) | Matemática: mundo das figurinhas, adição e subtração da unidade ao milhar, multiplicação e divisão até a dezena, depois números negativos, potências, raízes e expressões. 160 fases e teclado numérico na tela (funciona no tablet). |
+| 🔢 **Conta Comigo** | sozinho(a) | Matemática: mundo das figurinhas, adição e subtração da unidade ao milhar, multiplicação e divisão até a dezena, depois números negativos, potências, raízes e expressões. 152 fases e teclado numérico na tela (funciona no tablet). |
 | 🏁 **Desafio de Digitação** | com a turma | Corrida de digitação ao vivo: o professor escolhe o texto (uma fase do Teclado Mágico ou um texto dele) e o modo, a turma digita junta e o telão mostra a pista com os bichinhos e o pódio. |
 | 🎯 **Bingo** | com a turma | Bingo em tempo real conduzido pelo professor, com ~20 crianças em celulares, tablets ou computadores, e um telão opcional para o projetor. |
 
@@ -152,7 +152,8 @@ CMD ["node", "server.js"]
 - Precisa de teclado físico; em tablet/celular aparece um aviso.
 
 ### 🔢 Conta Comigo (matemática)
-- **9 mundos, 160 fases** (12 a 37 por mundo, com etapas no mapa):
+- **9 mundos, 152 fases** (12 a 37 por mundo, com etapas no mapa; toda fase
+  tem pelo menos 10 contas diferentes, para não repetir conta na rodada):
   🍎 contando com figurinhas, ➕ adição e subtração juntas (unidade até 10,
   unidade até 20, dezena, centena e milhar, sem e com vai-um/empréstimo,
   número que falta), ✖️ multiplicação (tabuadas das mais fáceis às mais
@@ -175,7 +176,7 @@ CMD ["node", "server.js"]
   são pequenas o bastante para contar; o tema, entre 5, é escolhido antes
   da fase): grupos que se juntam (+), figurinhas riscadas (−), cestas com
   grupos iguais (×), repartir entre crianças (÷, com e sem sobra) e, no
-  fim, material dourado (barras e cubinhos) com dezenas até 60. Nas
+  fim, material dourado (barras e cubinhos) com dezenas até 60 (17 fases). Nas
   primeiras fases dá para responder escolhendo entre 3 opções, e o tempo
   não conta para a 3ª estrela.
 - **Teclado numérico na tela** (e o do computador), com a tecla − nos

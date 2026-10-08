@@ -17,11 +17,13 @@ function checkGenerator() {
   const bad = [];
   for (const level of Levels.LEVELS) {
     const world = Levels.getWorld(level.world);
+    const distinct = new Set();
     for (let s = 1; s <= 120; s++) {
       const round = P.makeRound(level, s * 2654435761 % 0xFFFFFFFF);
       if (round.length !== 10) bad.push(`${level.id}: rodada com ${round.length} contas`);
       for (const p of round) {
         problems++;
+        distinct.add(p.key);
         const again = P.fromKey(p.key);
         if (!again || !P.isCorrect(again, again.answer)) bad.push(`${level.id}: chave não refaz a conta ${p.key}`);
         const txt = `${P.text(p)} ${P.solution(p)} ${P.hint(p)} ${P.speech(p)}`;
@@ -46,6 +48,8 @@ function checkGenerator() {
         if (world.id !== 'as' && P.numbersOf(p).some((n) => Math.abs(n) > 100)) bad.push(`${level.id}: número acima de 100 ${p.key}`);
       }
     }
+    // fase pequena demais repete conta na rodada de 10
+    if (distinct.size < 10) bad.push(`${level.id}: só ${distinct.size} contas diferentes`);
   }
   assert(Levels.LEVELS.length >= 140, `${Levels.LEVELS.length} fases`);
   assert(Levels.WORLDS.every((w) => w.levels.length >= 12), 'todo mundo tem pelo menos 12 fases');
@@ -139,7 +143,7 @@ async function checkServer() {
 
     // negativos (texto com "−"), resto e sinal
     const answerAs = (p) => (p.fields === 2 ? p.answer : p.hide === 'op' ? p.op : String(p.answer).replace('-', '−'));
-    for (const id of ['ng3', 'dv17', 'mx5', 'pw10', 'rz8', 'ex12']) {
+    for (const id of ['ng3', 'dv17', 'mx5', 'pw9', 'pw11', 'rz8', 'ex12']) {
       const lv = Levels.getLevel(id);
       const rd = P.makeRound(lv, 77);
       r = await api('POST', '/api/progress/matematica/results', {

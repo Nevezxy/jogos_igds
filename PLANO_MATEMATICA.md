@@ -17,7 +17,8 @@
 > contas pequenas (fora dele, as contas são sempre com números);
 > multiplicação e divisão vão só até a dezena; e centena e milhar ficaram
 > só na adição e subtração (nos outros mundos nada passa de 100).
-> São 160 fases. A lista definitiva é `public/games/matematica/levels.js`;
+> As fases pequenas demais (menos de 10 contas diferentes) foram juntadas
+> com as vizinhas. São 152 fases. A lista definitiva é `public/games/matematica/levels.js`;
 > as tabelas da seção 3 são a proposta original.
 
 Pedido: um jogo de matemática com níveis de dificuldade nas quatro operações
