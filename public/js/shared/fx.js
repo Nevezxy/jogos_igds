@@ -34,19 +34,20 @@
   }
 
   // amount: quantidade de pedaços. origin: 'top' (chuva) ou {x, y} (explosão).
-  function confetti({ amount = 160, origin = 'top' } = {}) {
+  // power: força da explosão (1 = normal; 0,5 = um estourinho pequeno).
+  function confetti({ amount = 160, origin = 'top', power = 1 } = {}) {
     if (reducedMotion()) return;
     ensureCanvas();
     for (let i = 0; i < amount; i++) {
       const fromTop = origin === 'top';
       const angle = Math.random() * Math.PI * 2;
-      const speed = 4 + Math.random() * 7;
+      const speed = (4 + Math.random() * 7) * power;
       particles.push({
         x: fromTop ? Math.random() * innerWidth : origin.x,
         y: fromTop ? -20 - Math.random() * innerHeight * 0.3 : origin.y,
         vx: fromTop ? (Math.random() - 0.5) * 3 : Math.cos(angle) * speed,
-        vy: fromTop ? 2 + Math.random() * 3 : Math.sin(angle) * speed - 4,
-        size: 7 + Math.random() * 7,
+        vy: fromTop ? 2 + Math.random() * 3 : Math.sin(angle) * speed - 4 * power,
+        size: (7 + Math.random() * 7) * (power < 1 ? 0.75 : 1),
         color: COLORS[Math.floor(Math.random() * COLORS.length)],
         rot: Math.random() * Math.PI,
         vrot: (Math.random() - 0.5) * 0.3,

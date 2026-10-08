@@ -158,7 +158,8 @@ CMD ["node", "server.js"]
   uma antes que chegue ao chão. **Alvo travado:** a primeira letra escolhe
   a peça mais perto do chão que começa com ela (fica amarela) e as letras
   seguintes completam aquela peça; letra errada faz a peça tremer e conta
-  um erro, mas não perde a peça. Esc ou Backspace soltam o alvo.
+  um erro, mas não perde a peça. Esc ou Backspace soltam o alvo. Cada
+  acerto solta um estourinho de confetes no lugar da peça.
 - **6 mundos, 72 fases:** letras e números (todas as letras e todos os
   números juntos, sem separar por fileira), maiúsculas, sílabas, palavras
   simples, palavras com acento e desafio. Cada mundo tem 4 conteúdos, e cada conteúdo vem em 3 velocidades

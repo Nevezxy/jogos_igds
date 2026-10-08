@@ -241,14 +241,20 @@
       if (target.pos >= [...target.item].length) {
         round.target = null;
         round.caught++;
+        burst(target.el);
         round.engine.catchPiece(target);
         sound.play('ding');
-        fx.sparkleAt && fx.sparkleAt(target.el, 6);
         updateStats();
       } else {
         paintPiece(target);
       }
       round.engine.pieces().forEach(paintPiece);
+    }
+
+    // estourinho de confetes onde a peça estava
+    function burst(el) {
+      const r = el.getBoundingClientRect();
+      fx.confetti({ amount: 26, origin: { x: r.left + r.width / 2, y: r.top + r.height / 2 }, power: 0.55 });
     }
 
     function miss(expected) {
