@@ -240,18 +240,6 @@
   text-shadow: 0 3px 0 var(--ink);
 }
 
-.count-badge {
-  display: inline-block;
-  min-width: 30px;
-  padding: 0 8px;
-  border-radius: 999px;
-  border: 2px solid var(--ink);
-  background: var(--yellow);
-  font-size: 1rem;
-  text-align: center;
-  vertical-align: middle;
-}
-
 /* ================= CAMADAS DE TELA CHEIA ================= */
 
 .overlay {

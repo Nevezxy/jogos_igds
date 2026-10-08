@@ -1,6 +1,6 @@
 # 🌻 Plano — De "Bingo Virtual" para Plataforma de Jogos Educativos
 
-> **Situação:** plano aprovado. Etapas **A** a **H** concluídas. Fica para depois: carregar o bingo sob demanda (ver README, seção 8).
+> **Situação:** plano aprovado. Etapas **A** a **H** concluídas, e o bingo também passou a carregar sob demanda (modo persistente do carregador).
 > **Decisões já tomadas** (marcadas com **[DECIDIDO]** no texto): a criança
 > cria a própria conta com confirmação; o login ignora maiúsculas, espaços
 > extras e acentos; a área do professor é protegida por PIN no `.env`; a

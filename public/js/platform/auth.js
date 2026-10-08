@@ -219,7 +219,7 @@
 
   async function init() {
     // o telão do bingo não tem login: ele só assiste a sala
-    if (window.BingoScreen && window.BingoScreen.isScreenMode()) { resolveReady(); return; }
+    if (location.pathname.replace(/\/+$/, '') === '/telao') { resolveReady(); return; }
     const token = readStoredToken();
     if (token) {
       api.setToken(token);
@@ -235,7 +235,7 @@
     resolveReady();
   }
 
-  // roda depois de todos os scripts da página (o bingo registra BingoScreen)
+  // roda depois de todos os scripts da página
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else setTimeout(init, 0);
 

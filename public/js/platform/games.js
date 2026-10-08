@@ -6,8 +6,13 @@
 //     genérica de jogo. Os arquivos dele (game.css, view.html, game.js) só
 //     são baixados quando a criança entra — sem build step, com
 //     <link>/<script> dinâmicos. É o jeito recomendado para jogos novos.
-//   - enter(ctx) / leave(): o jogo já está na página e cuida das próprias
-//     telas (é o caso do bingo, que tem sala de espera, cartela, telão...).
+//   - enter(ctx) / leave(): o jogo cuida das próprias telas (é o caso do
+//     bingo, que tem sala de espera, cartela, telão...). Com
+//     `client.persistent` no registro, o view.html entra na página uma única
+//     vez, num contêiner próprio, ANTES dos scripts (que já encontram as
+//     telas prontas), e fica lá: o jogo continua vivo (socket, temporizadores)
+//     mesmo quando a criança volta ao painel.
+// Nos dois casos os arquivos só são baixados quando o jogo é aberto.
 
 (function () {
   const modules = new Map(); // id -> { mount, unmount }
@@ -94,14 +99,32 @@
         const view = client.view
           ? await fetch(base + client.view).then((r) => (r.ok ? r.text() : Promise.reject(new Error('Falha ao carregar a tela do jogo.'))))
           : '';
+        if (client.persistent && view) {
+          const host = document.createElement('div');
+          host.dataset.gameHost = game.id;
+          host.innerHTML = view;
+          document.body.appendChild(host);
+          window.BingoMascot.mount(host);
+        }
         // scripts em ordem: um jogo pode dividir o código em vários arquivos
         for (const file of client.scripts || []) await loadScript(base + file);
-        return view;
+        return client.persistent ? '' : view;
       })();
       promise.catch(() => loading.delete(game.id));
       loading.set(game.id, promise);
     }
     return loading.get(game.id);
+  }
+
+  // Baixa o jogo (uma vez só) e devolve { game, module }. Usado para os jogos
+  // com enter/leave e para o que eles oferecem fora do painel (ex.: a
+  // ferramenta do professor e o telão do bingo).
+  async function ensureLoaded(id) {
+    const game = await getGame(id);
+    await loadAssets(game);
+    const module = modules.get(id);
+    if (!module) throw new Error(`O jogo "${id}" não se registrou (Plataforma.registerGame).`);
+    return { game, module };
   }
 
   // Monta o jogo dentro do contêiner, desmontando o anterior. Devolve null
@@ -134,6 +157,7 @@
     getModule: (id) => modules.get(id),
     createContext,
     listGames,
+    ensureLoaded,
     mountGame,
     unmountGame,
     currentGameId: () => (current ? current.id : null),

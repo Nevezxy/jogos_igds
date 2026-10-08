@@ -6,7 +6,7 @@
 //   /jogos/<id>       um jogo (ex.: /jogos/bingo?sala=CODE)
 //   /professor        área do professor (turma e ferramentas dos jogos)
 //   /professor/<id>   ferramenta de um jogo (ex.: /professor/bingo, a sala do bingo)
-//   /telao?sala=CODE  telão do bingo (cuidado pelo próprio bingo, sem login)
+//   /telao?sala=CODE  telão do bingo (sem login; a rota só carrega o bingo)
 // Links antigos /?sala=CODE (QR Codes já impressos) viram /jogos/bingo?sala=CODE.
 
 (function () {
@@ -61,9 +61,18 @@
       return go('/jogos', { replace: true });
     }
     const ctx = window.Plataforma.createContext(game, params, () => go('/jogos'));
-    const module = window.Plataforma.getModule(id);
-    if (module && typeof module.enter === 'function') {
-      // jogo que já vive na página e cuida das próprias telas (o bingo)
+    if (game.client && game.client.persistent) {
+      // jogo que cuida das próprias telas (o bingo): baixa uma vez e entra
+      let module;
+      try {
+        ({ module } = await window.Plataforma.ensureLoaded(id));
+      } catch (e) {
+        if (nav !== navId) return;
+        console.error(e);
+        toast('Não consegui abrir esse jogo 😵', 'error');
+        return go('/jogos', { replace: true });
+      }
+      if (nav !== navId) return;
       leaveCurrent = () => module.leave && module.leave();
       return module.enter(ctx);
     }
@@ -86,7 +95,13 @@
     const path = location.pathname.replace(/\/+$/, '') || '/';
     const params = new URLSearchParams(location.search);
 
-    if (path === '/telao') return; // o telão se vira sozinho (screen.js)
+    if (path === '/telao') {
+      // o telão do bingo começa sozinho quando os scripts do bingo carregam
+      return window.Plataforma.ensureLoaded('bingo').catch((e) => {
+        console.error(e);
+        toast('Não consegui abrir o telão 😵 Recarregue a página.', 'error');
+      });
+    }
     const nav = ++navId;
     leave();
 

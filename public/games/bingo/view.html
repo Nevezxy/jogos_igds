@@ -1,0 +1,373 @@
+<!-- public/games/bingo/view.html
+     Telas do bingo. A plataforma injeta este HTML uma única vez, no fim da
+     página, antes de carregar os scripts do bingo (client.persistent no
+     registro): as telas ficam na página enquanto a aba estiver aberta. -->
+
+<!-- ======================= ENTRAR NA SALA DE BINGO (educando logado) ======================= -->
+<section id="screen-join" class="screen screen-center">
+  <button class="btn-back" id="join-back" type="button">← Jogos</button>
+  <div class="panel-card join-card">
+    <div class="panel-head">
+      <div data-mascot id="join-mascot"></div>
+      <p class="speech" id="join-speech" aria-live="polite">Qual é o código da sala? 🤔</p>
+    </div>
+    <form id="form-join" novalidate autocomplete="off">
+      <div class="code-boxes" id="code-boxes" role="group" aria-label="Código da sala (5 letras)"></div>
+      <button type="submit" class="btn btn-success btn-block btn-lg" id="join-submit">Entrar na sala 🚀</button>
+    </form>
+  </div>
+</section>
+
+<!-- ======================= CRIAR (mestre) ======================= -->
+<section id="screen-create" class="screen screen-center">
+  <button class="btn-back" id="create-back" type="button">← Professor</button>
+  <div class="panel-card">
+    <div class="panel-head">
+      <div data-mascot></div>
+      <p class="speech">Oi, professor(a)! Vamos criar uma sala? ✨</p>
+    </div>
+    <p class="muted">Você vai comandar os sorteios da partida.</p>
+    <form id="form-create">
+      <label class="field">
+        <span>Nome da sala (opcional)</span>
+        <input id="input-room-name" type="text" maxlength="40" placeholder="Ex: Turma 5A — Bingo de Tecnologia" autocomplete="off" />
+      </label>
+      <button type="submit" class="btn btn-primary btn-block btn-lg">Criar sala 🎪</button>
+      <p id="create-error" class="form-error" role="alert"></p>
+    </form>
+  </div>
+</section>
+
+<!-- ======================= ESPERA (educando) ======================= -->
+<section id="screen-waiting" class="screen screen-center">
+  <button class="btn-back" id="waiting-leave" type="button">← Jogos</button>
+  <div class="balloon-layer" id="balloon-layer" aria-hidden="true"></div>
+  <div class="waiting-card">
+    <div class="waiting-hero">
+      <div data-mascot id="waiting-mascot"></div>
+      <p class="speech" id="waiting-speech">Esperando a turma...</p>
+    </div>
+    <p class="waiting-hello"><span id="waiting-avatar" class="avatar-badge">🐶</span><span>Oi, <strong id="waiting-player-name">jogador(a)</strong>!</span></p>
+    <h2 id="waiting-room-name">Sala</h2>
+    <div class="waiting-friends" id="waiting-friends" aria-label="Quem já está na sala"></div>
+    <p class="waiting-msg">Já já começa! Quando o(a) professor(a) der o play, sua cartela aparece aqui ✨</p>
+    <p class="waiting-code">Sala <strong id="waiting-room-code">----</strong> · <span id="waiting-count">0</span> na sala</p>
+  </div>
+  <p class="balloon-hint">🎈 Estoure os balões enquanto espera!</p>
+</section>
+
+<!-- ======================= JOGO (educando) ======================= -->
+<section id="screen-player" class="screen screen-top">
+  <header class="game-header player-header">
+    <div class="me-chip">
+      <span id="player-avatar" class="avatar-badge">🐶</span>
+      <span id="player-name-badge">—</span>
+      <span id="player-trophy" class="trophy" hidden title="Você fez BINGO nesta rodada">🏆</span>
+    </div>
+    <div class="game-header-right">
+      <button type="button" class="btn-mini" id="player-leave" hidden>← Jogos</button>
+      <span class="pill progress-pill" title="Casas marcadas">⭐ <span id="player-progress">0/0</span></span>
+      <span class="pill pill-status" id="player-status-badge">esperando</span>
+    </div>
+  </header>
+
+  <div class="ball-stage">
+    <div class="ball-stage-main">
+      <span class="last-drawn-label">Saiu agora!</span>
+      <div id="player-last-drawn" class="last-drawn-value">?</div>
+    </div>
+    <div class="recent-balls" id="player-recent" aria-label="Últimos sorteados"></div>
+  </div>
+
+  <div id="near-win-strip" class="near-win-strip" hidden>🔥 FALTA 1 PARA O BINGO! 🔥</div>
+  <div id="player-banner" class="game-banner" hidden></div>
+
+  <div class="player-main">
+    <div class="card-wrap">
+      <div id="player-card" class="bingo-card" aria-label="Sua cartela de bingo"></div>
+      <div id="pause-cover" class="pause-cover" hidden>
+        <div data-mascot data-mood="sleep" data-base-mood="sleep"></div>
+        <p>Pausa! Já volta 😴</p>
+      </div>
+    </div>
+
+    <aside class="history-panel">
+      <h3>Já saíram <span id="player-history-count" class="count-badge">0</span></h3>
+      <div id="player-history" class="history-chips"></div>
+    </aside>
+  </div>
+</section>
+
+<!-- ======================= PAINEL DO PROFESSOR ======================= -->
+<section id="screen-master" class="screen screen-top">
+  <header class="game-header">
+    <div class="game-header-left">
+      <span class="pill pill-code">Sala <strong id="master-room-code">----</strong></span>
+      <button id="btn-copy-code" class="btn-mini" type="button">copiar código</button>
+      <span class="pill pill-status" id="master-status-badge">esperando</span>
+      <button id="btn-voice" class="btn-mini" type="button" title="A voz lê em voz alta cada item sorteado neste computador">🗣️ voz ligada</button>
+      <button id="btn-open-screen" class="btn-mini" type="button" title="Abre uma tela grande para o projetor ou TV">📺 Abrir telão</button>
+      <button id="btn-master-teacher" class="btn-mini" type="button" title="Volta à área do professor (a sala continua aberta)">🧑‍🏫 Área do professor</button>
+    </div>
+    <div class="game-header-right">
+      <span id="master-player-count">0 participantes</span>
+    </div>
+  </header>
+
+  <div class="master-layout">
+    <!-- ---- Área principal ---- -->
+    <main class="master-main">
+
+      <section id="master-ended" class="card-block ended-card" hidden>
+        <h2>🌙 Esta sala foi encerrada</h2>
+        <p class="muted">Ninguém mais pode jogar nela. Para jogar de novo, crie uma sala nova e passe o novo código para a turma.</p>
+        <button id="btn-new-room" class="btn btn-primary btn-lg" type="button">🎪 Criar uma sala nova</button>
+      </section>
+
+      <section id="master-config" class="card-block">
+        <h2>Configurar partida</h2>
+
+        <h3 class="config-subtitle">1. Tipo de bingo</h3>
+        <select id="cfg-bingo-type" class="sr-only" tabindex="-1" aria-hidden="true">
+          <option value="numbers">Números</option>
+          <option value="words">Palavras</option>
+          <option value="emojis">Emojis</option>
+          <option value="custom">Personalizado</option>
+        </select>
+        <div class="choice-tiles" data-select="cfg-bingo-type" role="radiogroup" aria-label="Tipo de bingo">
+          <button type="button" class="choice-tile" data-value="numbers"><span class="tile-icon">🔢</span><span>Números</span></button>
+          <button type="button" class="choice-tile" data-value="words"><span class="tile-icon">🔤</span><span>Palavras</span></button>
+          <button type="button" class="choice-tile" data-value="emojis"><span class="tile-icon">😀</span><span>Emojis</span></button>
+          <button type="button" class="choice-tile" data-value="custom"><span class="tile-icon">🧩</span><span>Personalizado</span></button>
+        </div>
+
+        <div id="cfg-numbers-fields" class="config-subfields">
+          <div class="config-grid">
+            <label class="field">
+              <span>Número mínimo</span>
+              <input type="number" id="cfg-min-number" value="1" min="1" />
+            </label>
+            <label class="field">
+              <span>Número máximo</span>
+              <input type="number" id="cfg-max-number" value="75" min="5" />
+            </label>
+          </div>
+        </div>
+
+        <div id="cfg-words-fields" class="config-subfields" hidden>
+          <p class="pack-title">📦 Pacotes prontos <small>(escolha um ou mais)</small></p>
+          <div class="pack-picker" data-pack-type="words" data-target="cfg-words"></div>
+          <label class="field">
+            <span>Lista de palavras (uma por linha, ou separadas por vírgula)</span>
+            <textarea id="cfg-words" rows="5" placeholder="Computador&#10;Internet&#10;Programação&#10;RPG"></textarea>
+          </label>
+          <p class="pack-count" data-count-for="cfg-words"></p>
+        </div>
+
+        <div id="cfg-emojis-fields" class="config-subfields" hidden>
+          <p class="pack-title">📦 Pacotes prontos <small>(escolha um ou mais)</small></p>
+          <div class="pack-picker" data-pack-type="emojis" data-target="cfg-emojis"></div>
+          <label class="field">
+            <span>Emojis separados por espaço (em branco = pacote padrão)</span>
+            <textarea id="cfg-emojis" rows="4" placeholder="🎉 🎈 🎓 📚 ✏️ 🧠"></textarea>
+          </label>
+          <p class="pack-count" data-count-for="cfg-emojis"></p>
+        </div>
+
+        <div id="cfg-custom-fields" class="config-subfields" hidden>
+          <p class="pack-title">📦 Pacotes prontos <small>(escolha um ou mais)</small></p>
+          <div class="pack-picker" data-pack-type="custom" data-target="cfg-items"></div>
+          <label class="field">
+            <span>Itens personalizados (um por linha, ou separados por vírgula)</span>
+            <textarea id="cfg-items" rows="5" placeholder="🐶 Cachorro&#10;BA&#10;São Paulo&#10;Qualquer texto"></textarea>
+          </label>
+          <p class="pack-count" data-count-for="cfg-items"></p>
+        </div>
+
+        <h3 class="config-subtitle">2. Tamanho da cartela</h3>
+        <select id="cfg-grid-size" class="sr-only" tabindex="-1" aria-hidden="true">
+          <option value="3">3 × 3</option>
+          <option value="4">4 × 4</option>
+          <option value="5" selected>5 × 5</option>
+          <option value="6">6 × 6</option>
+        </select>
+        <div class="choice-tiles size-tiles" data-select="cfg-grid-size" role="radiogroup" aria-label="Tamanho da cartela">
+          <button type="button" class="choice-tile" data-value="3"><span class="mini-grid" style="--n:3"></span><span>3 × 3 <small>bem fácil</small></span></button>
+          <button type="button" class="choice-tile" data-value="4"><span class="mini-grid" style="--n:4"></span><span>4 × 4 <small>fácil</small></span></button>
+          <button type="button" class="choice-tile" data-value="5"><span class="mini-grid" style="--n:5"></span><span>5 × 5 <small>clássico</small></span></button>
+          <button type="button" class="choice-tile" data-value="6"><span class="mini-grid" style="--n:6"></span><span>6 × 6 <small>desafio</small></span></button>
+        </div>
+        <label class="field-check">
+          <input type="checkbox" id="cfg-free-space" checked />
+          <span>⭐ Casa livre no centro <small class="muted">(só em 3×3 e 5×5)</small></span>
+        </label>
+
+        <h3 class="config-subtitle">3. Como se ganha</h3>
+        <div class="win-rules">
+          <label class="rule-card" data-rule="row"><input type="checkbox" id="cfg-win-row" checked /><span class="rule-pic"></span><span>Linha</span></label>
+          <label class="rule-card" data-rule="column"><input type="checkbox" id="cfg-win-col" checked /><span class="rule-pic"></span><span>Coluna</span></label>
+          <label class="rule-card" data-rule="diagonal"><input type="checkbox" id="cfg-win-diag" checked /><span class="rule-pic"></span><span>Diagonal</span></label>
+          <label class="rule-card" data-rule="fullCard"><input type="checkbox" id="cfg-win-full" /><span class="rule-pic"></span><span>Cartela cheia</span></label>
+        </div>
+        <label class="field-check">
+          <input type="checkbox" id="cfg-autopause" checked />
+          <span>Pausar automaticamente quando alguém fizer Bingo</span>
+        </label>
+
+        <h3 class="config-subtitle">4. Sorteio</h3>
+        <label class="field field-inline">
+          <span>⏱️ Sorteio automático</span>
+          <select id="cfg-auto-draw">
+            <option value="0">Desligado (eu aperto SORTEAR)</option>
+            <option value="8">A cada 8 segundos</option>
+            <option value="10">A cada 10 segundos</option>
+            <option value="15">A cada 15 segundos</option>
+            <option value="20">A cada 20 segundos</option>
+            <option value="30">A cada 30 segundos</option>
+          </select>
+        </label>
+
+        <p id="config-error" class="form-error" role="alert"></p>
+        <div class="config-actions">
+          <button id="btn-save-config" class="btn btn-secondary" type="button">Salvar configurações</button>
+          <button id="btn-start-game" class="btn btn-primary btn-lg" type="button">Iniciar partida ▶️</button>
+        </div>
+      </section>
+
+      <section id="master-draw" class="card-block" hidden>
+        <div class="draw-layout">
+          <div class="draw-area">
+            <div class="draw-result" id="draw-result-display">
+              <span id="draw-result-value">🎲</span>
+            </div>
+            <button id="btn-draw" class="btn-draw" type="button">🎰 SORTEAR</button>
+            <p class="muted draw-hint">Atalho: barra de <kbd>espaço</kbd></p>
+            <p id="auto-draw-timer" class="auto-timer" hidden></p>
+            <p id="draw-remaining" class="muted"></p>
+            <p id="draw-error" class="form-error" role="alert"></p>
+            <button id="btn-undo-draw" class="btn btn-ghost" type="button">↩️ Desfazer último</button>
+          </div>
+          <div class="board-wrap">
+            <h3>Quadro do sorteio</h3>
+            <div id="number-board" class="number-board" aria-label="Itens já sorteados acendem no quadro"></div>
+          </div>
+        </div>
+        <details class="history-details">
+          <summary>Ordem dos sorteios</summary>
+          <div id="master-history" class="history-chips"></div>
+        </details>
+      </section>
+
+      <section id="master-winners" class="card-block" hidden>
+        <h2>🏆 Vencedores</h2>
+        <div id="master-winners-list"></div>
+        <button id="btn-new-match-win" class="btn btn-success btn-block btn-lg winners-cta" type="button">🎉 Jogar de novo com a mesma turma</button>
+      </section>
+
+    </main>
+
+    <!-- ---- Painel lateral ---- -->
+    <aside class="master-sidebar">
+
+      <div class="card-block invite-card" id="invite-card">
+        <h3>📲 Turma, entre aqui!</h3>
+        <img id="join-qr" class="join-qr" alt="QR Code para entrar na sala" />
+        <p class="join-url"><a id="join-url" href="#" target="_blank" rel="noopener"></a></p>
+        <select id="join-url-select" class="join-url-select" hidden aria-label="Endereço da rede"></select>
+        <p class="muted invite-hint">Aponte a câmera do celular ou tablet. A turma precisa estar no mesmo Wi-Fi.</p>
+        <button id="btn-copy-link" class="btn-mini" type="button">copiar link</button>
+      </div>
+
+      <div class="card-block">
+        <h3>Controles da partida</h3>
+        <div class="master-controls">
+          <button id="btn-pause" class="btn btn-secondary" type="button" hidden>⏸ Pausar</button>
+          <button id="btn-resume" class="btn btn-secondary" type="button" hidden>▶️ Retomar</button>
+          <button id="btn-new-match" class="btn btn-success" type="button" hidden>🎉 Nova partida</button>
+          <button id="btn-restart" class="btn btn-warn" type="button" hidden>⚙️ Mudar regras</button>
+          <button id="btn-end" class="btn btn-danger" type="button" hidden>⏹ Encerrar sala</button>
+        </div>
+      </div>
+
+      <div class="card-block">
+        <div class="sidebar-header">
+          <h3>Participantes</h3>
+          <button id="btn-toggle-lock" class="btn-mini" type="button">🔓 sala aberta</button>
+        </div>
+        <p id="near-summary" class="near-summary" hidden></p>
+        <ul id="participants-list" class="participants-list"></ul>
+      </div>
+
+    </aside>
+  </div>
+</section>
+
+<!-- ======================= TELÃO (projetor) ======================= -->
+<section id="screen-telao" class="screen screen-top telao">
+  <button class="btn-back telao-back" id="telao-back" type="button" title="Fechar o telão e voltar ao painel do professor">← Voltar</button>
+  <div id="telao-missing" class="telao-missing" hidden>
+    <div data-mascot data-mood="wow" data-base-mood="wow"></div>
+    <h1 class="title-game">Sala não encontrada</h1>
+    <p>Abra o telão pelo botão 📺 no painel do professor.</p>
+  </div>
+
+  <div id="telao-lobby" class="telao-lobby" hidden>
+    <div class="telao-lobby-left">
+      <h1 class="logo title-game telao-logo" aria-label="Bingo!">
+        <span style="--i:0">B</span><span style="--i:1">I</span><span style="--i:2">N</span><span style="--i:3">G</span><span style="--i:4">O</span><span style="--i:5">!</span>
+      </h1>
+      <p class="telao-call">Entre no jogo! 👇</p>
+      <img id="telao-qr" class="telao-qr" alt="QR Code para entrar na sala" />
+      <p class="telao-url" id="telao-url"></p>
+      <p class="telao-code">Código: <strong id="telao-code">-----</strong></p>
+    </div>
+    <div class="telao-lobby-right">
+      <div class="telao-mascot-row"><div data-mascot></div><p class="speech" id="telao-count">Esperando a turma...</p></div>
+      <div id="telao-friends" class="telao-friends"></div>
+    </div>
+  </div>
+
+  <div id="telao-game" class="telao-game" hidden>
+    <div class="telao-main">
+      <div class="telao-ball-wrap">
+        <p class="telao-label">Saiu agora!</p>
+        <div id="telao-ball" class="telao-ball"><span id="telao-ball-value">?</span></div>
+        <div id="telao-recent" class="recent-balls telao-recent"></div>
+        <p id="telao-timer" class="auto-timer" hidden></p>
+      </div>
+      <div class="telao-board-wrap">
+        <div id="telao-board" class="number-board telao-board"></div>
+      </div>
+    </div>
+    <div class="telao-bottom">
+      <div id="telao-players" class="telao-players"></div>
+    </div>
+    <div id="telao-paused" class="telao-paused" hidden>
+      <div data-mascot data-mood="sleep" data-base-mood="sleep" id="telao-paused-mascot"></div>
+      <p class="title-game" id="telao-paused-text">Pausa!</p>
+    </div>
+    <div id="telao-ended" class="telao-paused" hidden>
+      <div data-mascot data-mood="party" data-base-mood="party"></div>
+      <p class="title-game">Fim de jogo! Valeu, turma! 💜</p>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= camadas de animação ======================= -->
+<div id="countdown-overlay" class="overlay countdown-overlay" hidden>
+  <span id="countdown-number" class="countdown-number title-game"></span>
+</div>
+<div id="draw-overlay" class="overlay draw-overlay" hidden aria-hidden="true">
+  <div class="draw-ball"><span id="draw-overlay-value"></span></div>
+</div>
+<div id="bingo-overlay" class="overlay bingo-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="bingo-overlay-text">
+  <div class="bingo-box">
+    <div class="bingo-letters title-game" aria-hidden="true">
+      <span style="--i:0">B</span><span style="--i:1">I</span><span style="--i:2">N</span><span style="--i:3">G</span><span style="--i:4">O</span><span style="--i:5">!</span>
+    </div>
+    <div data-mascot data-mood="party" data-base-mood="party" class="bingo-mascot"></div>
+    <p id="bingo-overlay-text" class="bingo-text">Você fez BINGO!</p>
+    <button id="bingo-overlay-close" class="btn btn-primary btn-lg" type="button">Uhuu! 🎉</button>
+  </div>
+</div>
+<div id="draw-announcer" class="sr-only" aria-live="assertive"></div>

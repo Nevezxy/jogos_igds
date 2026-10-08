@@ -146,7 +146,9 @@ CMD ["node", "server.js"]
   automático, voz pt-BR, desfazer, pausar, bloquear entrada, remover
   participante, nova partida com a mesma turma.
 - **Telão** (`/telao?sala=CODE`): QR gigante na espera, bola enorme,
-  quadro de números, turma com 🔥/🏆 e comemoração de BINGO.
+  quadro de números, turma com 🔥/🏆 e comemoração de BINGO. O botão
+  "← Voltar" (canto superior direito, discreto no projetor) fecha a aba do
+  telão ou, se ela foi aberta pelo link, leva ao painel da sala.
 
 ### 🧑‍🏫 Área do professor
 - Protegida pelo `PROFESSOR_PIN`. Com PIN, só o professor cria salas de bingo.
@@ -186,7 +188,7 @@ jogos_igds/
 │           ├── bingoTypes.js     # Tipos de bingo (números/palavras/emojis/custom)
 │           └── winChecker.js     # Vitória e "quase lá" (falta 1), sempre no servidor
 ├── public/
-│   ├── index.html            # Telas do núcleo (login, painel, tela de jogo, professor) e do bingo
+│   ├── index.html            # Telas do núcleo (login, painel, tela de jogo, professor); os jogos trazem as suas
 │   ├── css/                  # tokens, base, animações, componentes, telas e platform.css
 │   ├── js/
 │   │   ├── shared/           # Usados por todos os jogos: socket, mascote, bichinhos, som, efeitos, ui
@@ -209,7 +211,8 @@ jogos_igds/
 │       │   ├── engine.js     # Motor da rodada: acertos, precisão e PPM
 │       │   ├── keyboard.js   # Teclado na tela
 │       │   └── hands.js      # Mãos em SVG
-│       └── bingo/            # 🎯 Bingo (master, player, join, screen, overlays, packs, session, css)
+│       └── bingo/            # 🎯 Bingo (carregado sob demanda, modo persistente): view.html com as telas,
+│                             #    master, player, join, screen (telão), overlays, packs, session e css
 ├── test/                     # Ver seção 6
 └── data/bingo.sqlite         # Criado automaticamente (contas, progresso e histórico do bingo)
 ```
@@ -312,6 +315,10 @@ preciso.
      color: 'green',        // cor do cartão (token do tema)
      isNew: true,           // etiqueta "Novo!"
      client: { styles: ['game.css'], view: 'view.html', scripts: ['game.js'] },
+     // jogo com telas próprias e que precisa continuar vivo fora do painel
+     // (como o bingo): client.persistent = true e enter/leave no lugar de
+     // mount/unmount; teacherTool: { icon, name, description } cria o
+     // cartão dele na área do professor (/professor/meu-jogo)
      server: require('./meu-jogo/server'), // opcional
    },
    ```
@@ -374,8 +381,6 @@ npm run test:carga
 
 ## 8. Próximos passos possíveis
 
-- Carregar o bingo sob demanda, como o Teclado Mágico (hoje ele é
-  carregado pelo `index.html` e cuida das próprias telas).
 - Outros layouts de teclado (US-Internacional) no Teclado Mágico.
 - Minijogos de digitação (chuva de palavras) e um desafio de digitação da
   turma em tempo real, reaproveitando o Socket.IO e o telão.

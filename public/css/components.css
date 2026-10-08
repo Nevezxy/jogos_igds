@@ -409,3 +409,16 @@
   line-height: 1;
   box-shadow: 0 3px 0 var(--ink);
 }
+
+/* contador redondo ao lado de títulos (turma, sorteados) */
+.count-badge {
+  display: inline-block;
+  min-width: 30px;
+  padding: 0 8px;
+  border-radius: 999px;
+  border: 2px solid var(--ink);
+  background: var(--yellow);
+  font-size: 1rem;
+  text-align: center;
+  vertical-align: middle;
+}

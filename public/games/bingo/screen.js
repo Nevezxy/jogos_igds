@@ -177,5 +177,16 @@
   socket.on('game_started', startCountdown);
   socket.on('new_match_started', startCountdown);
 
+  // Voltar: o telão costuma ser a aba aberta pelo botão 📺 do painel; aí ela
+  // só fecha e o professor volta para o painel, que continua aberto. Se não
+  // der para fechar (aba aberta pelo link), vai para a sala no painel.
+  document.getElementById('telao-back').addEventListener('click', () => {
+    if (window.opener && !window.opener.closed) {
+      window.close();
+      return;
+    }
+    location.assign('/professor/bingo');
+  });
+
   window.BingoScreen = { isScreenMode, start };
 })();

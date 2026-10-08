@@ -43,6 +43,7 @@
     session.playerId = null;
     session.playerName = null;
     session.playerAvatar = null;
+    session.studentId = null;
     clearStoredSession();
   }
 
@@ -64,10 +65,13 @@
     session.playerToken = playerToken;
     session.playerName = playerName;
     session.playerAvatar = playerAvatar || null;
+    // de quem é a sala guardada (o aparelho pode ser de várias crianças)
+    const student = window.PlataformaAuth.student();
+    session.studentId = student ? student.id : null;
     saveSession();
   }
 
-  // (a entrada da criança, em 3 passos, fica em join.js)
+  // (a entrada da criança fica em join.js)
 
   // ---------------- criar uma sala ----------------
 
@@ -106,6 +110,12 @@
     if (!mode) return;
     let saved = loadSession();
     if (saved && saved.role !== mode) saved = null;
+    // sala guardada por outra criança deste aparelho: não é desta
+    const me = window.PlataformaAuth.student();
+    if (saved && mode === 'player' && saved.studentId && (!me || saved.studentId !== me.id)) {
+      clearStoredSession();
+      saved = null;
+    }
 
     if (mode === 'master') {
       if (saved && saved.masterToken) {
@@ -189,15 +199,17 @@
   // Trocar de criança no aparelho apaga a sala da criança anterior.
   window.PlataformaAuth.onLogout(() => { if (session.role === 'player') resetSession(); });
 
-  window.Plataforma.registerGame('bingo', { enter: () => enter('player'), leave });
-  window.PlataformaTeacher.registerTool({
-    id: 'bingo',
-    icon: '🎯',
-    name: 'Bingo',
-    description: 'Crie uma sala (ou volte para a sala aberta) e comande os sorteios. Tem QR Code e telão.',
-    enter: () => enter('master'),
+  // Na plataforma: /jogos/bingo (criança) e /professor/bingo (ferramenta do
+  // professor, descrita em teacherTool no registro).
+  window.Plataforma.registerGame('bingo', {
+    enter: () => enter('player'),
     leave,
+    teacher: { enter: () => enter('master'), leave },
   });
+
+  const go = (url) => window.PlataformaRouter.go(url);
+  document.getElementById('create-back').addEventListener('click', () => go('/professor'));
+  document.getElementById('btn-master-teacher').addEventListener('click', () => go('/professor'));
 
   socket.on('disconnect', () => {
     toast('Conexão perdida. Tentando reconectar...', 'error', 4000);

@@ -1,6 +1,7 @@
 // public/js/platform/teacher.js
 // Área do professor (/professor): PIN (quando o servidor tem PROFESSOR_PIN),
-// ferramentas dos jogos (ex.: criar sala de bingo, em /professor/<id>) e a
+// ferramentas dos jogos (`teacherTool` no registro; ex.: a sala de bingo, em
+// /professor/<id>) e a
 // turma: progresso de cada educando, cadastro em lote, renomear, juntar
 // contas repetidas, liberar fases, desativar e ligar/desligar o autocadastro.
 // O token do professor fica no localStorage e vai no cabeçalho X-Teacher-Token.
@@ -11,7 +12,6 @@
   const go = (url) => window.PlataformaRouter.go(url);
 
   const STORAGE_KEY = 'igds_teacher_v1';
-  const tools = []; // { id, icon, name, description, enter(), leave() }
   let token = null;
   let pinRequired = false;
   let students = [];
@@ -78,10 +78,15 @@
 
   // ---------------- tela principal ----------------
 
-  function renderTools() {
+  // Um cartão por jogo com `teacherTool` no registro (ex.: Bingo). O jogo só é
+  // baixado quando o professor abre a ferramenta.
+  async function renderTools() {
     const wrap = document.getElementById('teacher-tools');
+    let games = [];
+    try { games = await window.Plataforma.listGames(); } catch (e) { /* sem ferramentas */ }
     wrap.innerHTML = '';
-    tools.forEach((tool) => {
+    games.filter((g) => g.teacherTool && g.status === 'active').forEach((game) => {
+      const tool = { id: game.id, ...game.teacherTool };
       const card = document.createElement('button');
       card.type = 'button';
       card.className = 'teacher-tool';
@@ -309,30 +314,37 @@
     storeToken(null);
     window.PlataformaAuth.goHome();
   });
-  document.getElementById('create-back').addEventListener('click', () => go('/professor'));
-  document.getElementById('btn-master-teacher').addEventListener('click', () => go('/professor'));
 
   // ---------------- rotas ----------------
 
   async function show() {
     if (!(await ensureAuth('/professor'))) return;
-    renderTools();
     showScreen('screen-teacher');
+    renderTools();
     await loadClass();
   }
 
+  // Abre a ferramenta de um jogo (o módulo do jogo exporta `teacher`:
+  // { enter(), leave() }). Devolve o que o roteador chama ao sair.
   async function enterTool(id) {
-    const tool = tools.find((t) => t.id === id);
-    if (!tool) { go('/professor'); return null; }
     if (!(await ensureAuth(`/professor/${id}`))) return null;
-    tool.enter();
-    return tool;
+    let module;
+    try {
+      ({ module } = await window.Plataforma.ensureLoaded(id));
+    } catch (e) {
+      console.error(e);
+      toast('Não consegui abrir essa ferramenta 😵', 'error');
+      go('/professor');
+      return null;
+    }
+    if (!module.teacher) { go('/professor'); return null; }
+    module.teacher.enter();
+    return { leave: () => module.teacher.leave && module.teacher.leave() };
   }
 
   window.PlataformaTeacher = {
     show,
     enterTool,
-    registerTool: (tool) => tools.push(tool),
     token: () => token,
   };
 })();

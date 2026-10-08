@@ -378,3 +378,16 @@ body.is-telao .sound-toggle:hover { opacity: 1; }
   .telao-qr { width: min(70vw, 360px); }
   .telao-ball { width: min(60vw, 300px); }
 }
+
+/* Voltar do telão: discreto para não aparecer no projetor, mais forte ao passar o mouse. */
+.telao-back {
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  left: auto;
+  z-index: 50;
+  opacity: .45;
+  transition: opacity .2s ease, transform .08s ease;
+}
+.telao-back:hover,
+.telao-back:focus-visible { opacity: 1; }
