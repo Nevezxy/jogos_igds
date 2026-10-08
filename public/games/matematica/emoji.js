@@ -1,6 +1,6 @@
 // public/games/matematica/emoji.js
-// Modo figurinhas do 🔢 Conta Comigo: troca os números da conta por
-// desenhos que mostram o que a operação faz.
+// Figurinhas do 🔢 Conta Comigo (o mundo "Contando com figurinhas"): troca
+// os números da conta por desenhos que mostram o que a operação faz.
 //   soma          junta dois grupos              🍎🍎🍎 + 🍎 = ?
 //   subtração     risca as figurinhas que saem   🍎🍎🍎🍎🍎 (2 riscadas) = ?
 //   multiplicação grupos iguais em cestas        🧺(🍎🍎🍎🍎) × 3
@@ -8,8 +8,9 @@
 //   dezena/centena: material dourado (cubinho = 1, barra = 10, placa = 100)
 // Até 20 figurinhas, elas ficam em fileiras de 5 (como no quadro de dez da
 // escola). Contas grandes demais para figurinhas continuam com números.
+// `plan` também roda no servidor/testes (não usa a página).
 
-(function () {
+(function (root) {
   const THEMES = {
     frutas: { name: 'Frutas', icon: '🍎', items: ['🍎', '🍌', '🍓', '🍊', '🍇', '🍐', '🍉', '🍒'] },
     bichos: { name: 'Bichos', icon: '🐶', items: ['🐶', '🐱', '🐰', '🐸', '🐥', '🐢', '🐟', '🦋'] },
@@ -136,5 +137,7 @@
     return theme.items[Math.floor(Math.random() * theme.items.length)];
   };
 
-  window.ContaEmoji = { THEMES, plan, render, pickEmoji };
-})();
+  const api = { THEMES, plan, render, pickEmoji };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.ContaEmoji = api;
+})(typeof window !== 'undefined' ? window : globalThis);

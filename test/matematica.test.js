@@ -5,6 +5,7 @@
 
 const Levels = require('../public/games/matematica/levels.js');
 const P = require('../public/games/matematica/problems.js');
+const Emoji = require('../public/games/matematica/emoji.js');
 const { startTestServer } = require('./helpers');
 
 const errors = [];
@@ -36,11 +37,24 @@ function checkGenerator() {
         if (g.t === 'add' && g.max != null && p.c > g.max) bad.push(`${level.id}: soma passou do máximo ${p.key}`);
         if (g.t === 'mul' && typeof g.a === 'number' && p.a !== g.a && p.b !== g.a) bad.push(`${level.id}: fora da tabuada do ${g.a} ${p.key}`);
         if (world.id === 'ng' && ![p.a, p.b, p.c].some((n) => n < 0)) bad.push(`${level.id}: sem nenhum negativo ${p.key}`);
+        // mundo das figurinhas: toda conta tem desenho
+        if (world.emoji && !Emoji.plan(p)) bad.push(`${level.id}: conta sem figurinha ${p.key}`);
+        // multiplicação e divisão só até a dezena
+        if (world.id === 'mu' && Math.max(p.a, p.b) > 99) bad.push(`${level.id}: fator acima de 99 ${p.key}`);
+        if (world.id === 'dv' && p.a > 99) bad.push(`${level.id}: dividendo acima de 99 ${p.key}`);
+        // centena e milhar só na adição e subtração
+        if (world.id !== 'as' && P.numbersOf(p).some((n) => Math.abs(n) > 100)) bad.push(`${level.id}: número acima de 100 ${p.key}`);
       }
     }
   }
   assert(Levels.LEVELS.length >= 140, `${Levels.LEVELS.length} fases`);
   assert(Levels.WORLDS.every((w) => w.levels.length >= 12), 'todo mundo tem pelo menos 12 fases');
+  assert(Levels.WORLDS.filter((w) => w.emoji).map((w) => w.id).join() === 'fg', 'figurinhas só no mundo das figurinhas');
+  assert(Levels.LEVELS.every((l) => !l.choice || Levels.getWorld(l.world).emoji), '3 opções só no mundo das figurinhas');
+  const as = Levels.getWorld('as');
+  assert(as && as.levels.some((l) => l.id.startsWith('ad')) && as.levels.some((l) => l.id.startsWith('sb'))
+    && as.levels.filter((l) => l.section).map((l) => l.section.split(':')[0]).join() === 'Unidade,Unidade,Dezena,Centena,Milhar,Número que falta e revisão',
+  'adição e subtração juntas, por unidade, dezena, centena e milhar');
   assert(new Set(Levels.LEVELS.map((l) => l.id)).size === Levels.LEVELS.length, 'ids de fase sem repetir');
   assert(bad.length === 0, `regras do gerador valem em ${problems} contas${bad.length ? `: ${bad.slice(0, 5).join(' / ')}` : ''}`);
 
@@ -91,8 +105,14 @@ async function checkServer() {
     assert(r.ok && r.result.stars === 3, '10 de primeira e rápido = 3 estrelas (o servidor refaz as contas)');
     r = await send({ durationMs: 200000 });
     assert(r.ok && r.result.stars === 2, '10 de primeira, mas devagar = 2 estrelas');
+    const fg = Levels.getLevel('fg9');
+    const fgRound = P.makeRound(fg, 5);
+    r = await api('POST', '/api/progress/matematica/results', {
+      levelId: fg.id, seed: 5, review: [], answers: fgRound.map((p) => ({ tries: [p.answer] })), durationMs: 200000, emoji: false,
+    }, kid);
+    assert(r.ok && r.result.stars === 3, 'no mundo das figurinhas o tempo não conta');
     r = await send({ durationMs: 200000, emoji: true });
-    assert(r.ok && r.result.stars === 3, 'com figurinhas o tempo não conta');
+    assert(r.ok && r.result.stars === 2, 'fora do mundo das figurinhas, mandar "emoji" não muda nada');
 
     // 4 erradas de primeira, certas na 2ª: 6 + 4 × ½ = 8 → 2 estrelas
     const mixed = round.map((p, i) => ({ tries: i < 4 ? [p.answer + 1, p.answer] : [p.answer] }));

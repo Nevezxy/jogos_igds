@@ -72,8 +72,8 @@ function validateResult(body, progress) {
 
   const score = firstTry + secondTry * 0.5;
   const avgSec = durationMs / 1000 / problems.length;
-  const emoji = Boolean(body.emoji);
-  const stars = Levels.starsFor(level.id, { score, count: problems.length, avgSec, emoji });
+  const emoji = Boolean(Levels.getWorld(level.world).emoji);
+  const stars = Levels.starsFor(level.id, { score, count: problems.length, avgSec });
   const accuracy = Math.round((firstTry / problems.length) * 100);
   return {
     levelId: level.id,

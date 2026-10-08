@@ -415,6 +415,13 @@
     return fn(r, gen);
   }
 
+  // Todos os números que aparecem na conta (e o resultado).
+  function numbersOf(p) {
+    if (p.type === 'expr') return [...p.values, p.c];
+    if (p.type === 'rem') return [p.a, p.b, p.c, p.rest];
+    return [p.a, p.b, p.c].filter((n) => typeof n === 'number');
+  }
+
   // Rodada da fase: `count` contas, sem repetir; as de revisão entram
   // embaralhadas no meio.
   function makeRound(level, seed, review = []) {
@@ -427,8 +434,14 @@
       if (p && !seen.has(p.key)) { list.push(p); seen.add(p.key); }
     }
     let guard = 0;
+    let misses = 0;
     while (list.length < count) {
       const p = build(generate(level.gen, r));
+      // fase com limite (ex.: nada acima de 100 fora da adição e subtração)
+      if (level.maxAbs && numbersOf(p).some((n) => Math.abs(n) > level.maxAbs)) {
+        if (++misses > 20000) throw new Error(`fase ${level.id}: nenhuma conta dentro do limite`);
+        continue;
+      }
       // fases com poucas contas possíveis (ex.: ×0 e ×1) podem repetir
       if (!seen.has(p.key) || guard++ > 40) { list.push(p); seen.add(p.key); }
     }
@@ -595,7 +608,7 @@
   }
 
   const api = {
-    rng, makeRound, generate, build, fromKey, parseAnswer, isCorrect,
+    rng, makeRound, generate, build, fromKey, numbersOf, parseAnswer, isCorrect,
     text, describe, solution, answerText, speech, hint, fmt,
     hasCarry, hasBorrow, hasMulCarry, compute, SYMBOL,
   };

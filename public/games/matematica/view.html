@@ -10,11 +10,6 @@
 
     <div class="cc-toolbar">
       <button type="button" class="btn btn-primary btn-lg" id="cc-continue">▶ Continuar</button>
-      <label class="cc-toggle" title="Nas contas pequenas, os números viram figurinhas (e dá para escolher a resposta entre 3)">
-        <input type="checkbox" id="cc-emoji" />
-        <span>🍎 Figurinhas</span>
-      </label>
-      <div class="cc-themes" id="cc-themes" role="radiogroup" aria-label="Tema das figurinhas" hidden></div>
       <label class="cc-toggle" id="cc-speech-toggle" title="O jogo lê cada conta em voz alta" hidden>
         <input type="checkbox" id="cc-speech" />
         <span>🔊 Ler em voz alta</span>
@@ -35,7 +30,10 @@
         <span class="cc-intro-example-label">Exemplo:</span>
         <span id="cc-intro-example"></span>
       </div>
-      <p class="cc-intro-note" id="cc-intro-emoji" hidden></p>
+      <div class="cc-intro-pictures" id="cc-intro-pictures" hidden>
+        <p class="cc-intro-note" id="cc-intro-emoji"></p>
+        <div class="cc-themes" id="cc-themes" role="radiogroup" aria-label="Escolha as figurinhas"></div>
+      </div>
       <ul class="cc-intro-rules">
         <li>🔟 São 10 contas. Errou? Você ganha uma dica e tenta de novo.</li>
         <li>🐢 Sem pressa: acertar de primeira vale mais que ser rápido.</li>

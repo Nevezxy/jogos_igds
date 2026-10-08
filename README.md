@@ -11,7 +11,7 @@ Jogos de hoje:
 | Jogo | Modo | O que é |
 |------|------|---------|
 | ⌨️ **Teclado Mágico** | sozinho(a) | Digitação com os 10 dedos: teclado ABNT2 na tela com uma cor por dedo, mãos que mostram o dedo certo e 127 fases (letras, palavras, acentos, frases, pontuação, números e textos). |
-| 🔢 **Conta Comigo** | sozinho(a) | Matemática: +, −, × e ÷ da unidade ao milhar, depois números negativos, potências, raízes e expressões. 142 fases, figurinhas no lugar dos números nas contas pequenas e teclado numérico na tela (funciona no tablet). |
+| 🔢 **Conta Comigo** | sozinho(a) | Matemática: mundo das figurinhas, adição e subtração da unidade ao milhar, multiplicação e divisão até a dezena, depois números negativos, potências, raízes e expressões. 160 fases e teclado numérico na tela (funciona no tablet). |
 | 🏁 **Desafio de Digitação** | com a turma | Corrida de digitação ao vivo: o professor escolhe o texto (uma fase do Teclado Mágico ou um texto dele) e o modo, a turma digita junta e o telão mostra a pista com os bichinhos e o pódio. |
 | 🎯 **Bingo** | com a turma | Bingo em tempo real conduzido pelo professor, com ~20 crianças em celulares, tablets ou computadores, e um telão opcional para o projetor. |
 
@@ -152,14 +152,18 @@ CMD ["node", "server.js"]
 - Precisa de teclado físico; em tablet/celular aparece um aviso.
 
 ### 🔢 Conta Comigo (matemática)
-- **9 mundos, 142 fases** (12 a 21 por mundo): ➕ adição e ➖ subtração (até
-  5, até 10, até 20, dezena e centena sem e com vai-um/empréstimo, milhar,
+- **9 mundos, 160 fases** (12 a 37 por mundo, com etapas no mapa):
+  🍎 contando com figurinhas, ➕ adição e subtração juntas (unidade até 10,
+  unidade até 20, dezena, centena e milhar, sem e com vai-um/empréstimo,
   número que falta), ✖️ multiplicação (tabuadas das mais fáceis às mais
-  difíceis, ×10/×100/×1000, dezena e centena × unidade, dezena × dezena),
-  ➗ divisão (tabuada ao contrário, dezena e centena ÷ unidade, com resto),
-  🎲 misturadas ("qual é o sinal?", contas em sequência), 🌡️ números
-  negativos, 🚀 potências, 🌱 raízes (quadrada e cúbica) e 🧠 expressões
-  (ordem das operações, parênteses, colchetes, a diferença entre −3² e (−3)²).
+  difíceis, dezena × unidade), ➗ divisão (tabuada ao contrário, dezena ÷
+  unidade, com resto), 🎲 misturadas ("qual é o sinal?", contas em
+  sequência), 🌡️ números negativos, 🚀 potências, 🌱 raízes (quadrada e
+  cúbica) e 🧠 expressões (ordem das operações, parênteses, colchetes, a
+  diferença entre −3² e (−3)²).
+- **Centena e milhar só na adição e subtração:** nos outros mundos nenhum
+  número da conta, nem o resultado, passa de 100 (`maxAbs` do mundo em
+  `levels.js`; o gerador descarta o que passar).
 - **Rodada de 10 contas.** Errou: dica que ensina o caminho (vai-um,
   empréstimo, tabuada, regra dos sinais...) e uma 2ª tentativa. Errou de
   novo: o jogo mostra a resposta e a conta volta nas próximas rodadas
@@ -167,12 +171,13 @@ CMD ["node", "server.js"]
 - **Estrelas:** acerto de primeira vale 1 e na 2ª tentativa vale ½;
   6 = ⭐, 8 = ⭐⭐, 9 + tempo médio dentro do alvo da fase = ⭐⭐⭐. Não há
   cronômetro na tela.
-- **🍎 Figurinhas** (com 5 temas): nas contas pequenas os números viram
-  desenhos que mostram a operação: grupos que se juntam (+), figurinhas
-  riscadas (−), cestas com grupos iguais (×), repartir entre crianças (÷);
-  nas dezenas e centenas, material dourado (placa, barra e cubinho). Nas
-  primeiras fases dá para responder escolhendo entre 3 opções; com
-  figurinhas o tempo não conta para a 3ª estrela.
+- **🍎 Mundo das figurinhas** (o único com figurinhas, porque as contas
+  são pequenas o bastante para contar; o tema, entre 5, é escolhido antes
+  da fase): grupos que se juntam (+), figurinhas riscadas (−), cestas com
+  grupos iguais (×), repartir entre crianças (÷, com e sem sobra) e, no
+  fim, material dourado (barras e cubinhos) com dezenas até 60. Nas
+  primeiras fases dá para responder escolhendo entre 3 opções, e o tempo
+  não conta para a 3ª estrela.
 - **Teclado numérico na tela** (e o do computador), com a tecla − nos
   mundos de negativos em diante; divisão com resto tem dois campos
   (quociente e resto). **🔊 Ler em voz alta** (voz do navegador em pt-BR).

@@ -12,8 +12,13 @@
 > 🌱 Raízes e 🧠 Expressões); muitas fases por nível (142 fases, de 12 a 21
 > por mundo; o Teclado Mágico também passou de 58 para 127); e um mapa que
 > diferencia as fases feitas, tentadas e pendentes, usado pelos dois jogos.
-> A lista definitiva das fases é `public/games/matematica/levels.js`; as
-> tabelas da seção 3 são a proposta original.
+> Depois, a pedido: adição e subtração viraram um mundo só (por unidade,
+> dezena, centena e milhar); as figurinhas ganharam um mundo próprio, com
+> contas pequenas (fora dele, as contas são sempre com números);
+> multiplicação e divisão vão só até a dezena; e centena e milhar ficaram
+> só na adição e subtração (nos outros mundos nada passa de 100).
+> São 160 fases. A lista definitiva é `public/games/matematica/levels.js`;
+> as tabelas da seção 3 são a proposta original.
 
 Pedido: um jogo de matemática com níveis de dificuldade nas quatro operações
 (soma, subtração, multiplicação e divisão), começando pela unidade e subindo

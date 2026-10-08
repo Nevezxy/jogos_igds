@@ -6,14 +6,14 @@
 // as contas pela semente e decide as estrelas (/api/progress/matematica).
 //
 // Resposta: teclado numérico na tela (funciona no tablet) ou o teclado do
-// computador. Nas primeiras fases com figurinhas, 3 opções para escolher.
+// computador. No mundo das figurinhas (o único com figurinhas, porque lá os
+// números são pequenos), algumas fases dão 3 opções para escolher.
 
 (function () {
   const Levels = window.ContaLevels;
   const P = window.ContaProblems;
   const Emoji = window.ContaEmoji;
 
-  const EMOJI_KEY = 'cc_emoji';
   const THEME_KEY = 'cc_theme';
   const SPEECH_KEY = 'cc_speech';
   const OP_KEYS = { '+': '+', '-': '-', '*': '*', x: '*', X: '*', '/': '/', ':': '/' };
@@ -35,7 +35,6 @@
     let progress = { levels: {} };
     let screen = 'map';
     let destroyed = false;
-    let emojiOn = store.get(EMOJI_KEY, '0') === '1';
     let theme = store.get(THEME_KEY, 'frutas');
     let speechOn = store.get(SPEECH_KEY, '0') === '1';
 
@@ -102,7 +101,6 @@
 
     function renderThemes() {
       const wrap = $('#cc-themes');
-      wrap.hidden = !emojiOn;
       wrap.innerHTML = '';
       Object.entries(Emoji.THEMES).forEach(([id, t]) => {
         const b = document.createElement('button');
@@ -111,7 +109,7 @@
         b.setAttribute('role', 'radio');
         b.setAttribute('aria-checked', String(id === theme));
         b.title = t.name;
-        b.textContent = t.icon;
+        b.textContent = `${t.icon} ${t.name}`;
         b.addEventListener('click', () => { theme = id; store.set(THEME_KEY, id); sound.play('pop'); renderThemes(); });
         wrap.appendChild(b);
       });
@@ -136,12 +134,12 @@
       const ex = $('#cc-intro-example');
       ex.innerHTML = '';
       sample.forEach((p) => ex.appendChild(renderTokens(p.tokens, { compact: true })));
-      const pictures = sample.some((p) => Emoji.plan(p));
-      const note = $('#cc-intro-emoji');
-      note.hidden = !emojiOn;
-      note.textContent = pictures
-        ? `🍎 Com figurinhas${level.choice ? ': e dá para escolher a resposta entre 3 opções' : ''}.`
-        : '🔢 Nesta fase os números são grandes demais para figurinhas: as contas vêm com números.';
+      // mundo das figurinhas: escolhe o tema antes de começar
+      $('#cc-intro-pictures').hidden = !world.emoji;
+      if (world.emoji) {
+        $('#cc-intro-emoji').textContent = `🍎 As contas vêm com figurinhas${level.choice ? ', e você escolhe a resposta entre 3 opções' : ''}. Escolha as figurinhas:`;
+        renderThemes();
+      }
       $('#cc-intro-review').hidden = reviewKeys(level).length === 0;
       show('intro');
       setTimeout(() => $('#cc-start').focus(), 60);
@@ -192,7 +190,7 @@
         i: 0,
         answers: [],
         startedAt: Date.now(),
-        emoji: emojiOn,
+        emoji: Boolean(Levels.getWorld(level.world).emoji),
         picture: Emoji.pickEmoji(theme),
       };
       $('#cc-play-title').textContent = level.title;
@@ -441,7 +439,7 @@
       const firstTry = r.answers.filter((a, i) => P.isCorrect(r.problems[i], a.tries[0])).length;
       const secondTry = r.answers.filter((a, i) => !P.isCorrect(r.problems[i], a.tries[0]) && a.tries[1] !== undefined && P.isCorrect(r.problems[i], a.tries[1])).length;
       const avgSec = durationMs / 1000 / r.problems.length;
-      const stars = Levels.starsFor(r.level.id, { score: firstTry + secondTry * 0.5, count: r.problems.length, avgSec, emoji: r.emoji });
+      const stars = Levels.starsFor(r.level.id, { score: firstTry + secondTry * 0.5, count: r.problems.length, avgSec });
       showResult({ firstTry, secondTry, avgSec, stars });
       try {
         const res = await ctx.api.post('/progress/matematica/results', {
@@ -450,7 +448,6 @@
           review: r.review,
           answers: r.answers,
           durationMs,
-          emoji: r.emoji,
         });
         progress = res.progress;
       } catch (e) {
@@ -509,13 +506,6 @@
       renderMap();
     }));
 
-    $('#cc-emoji').checked = emojiOn;
-    $('#cc-emoji').addEventListener('change', (ev) => {
-      emojiOn = ev.target.checked;
-      store.set(EMOJI_KEY, emojiOn ? '1' : '0');
-      sound.play('pop');
-      renderThemes();
-    });
     $('#cc-speech').checked = speechOn;
     $('#cc-speech').addEventListener('change', (ev) => {
       speechOn = ev.target.checked;
@@ -556,7 +546,6 @@
     document.addEventListener('keydown', onKeydown);
 
     async function load() {
-      renderThemes();
       try {
         const res = await ctx.api.get('/progress/matematica');
         progress = res.progress || { levels: {} };

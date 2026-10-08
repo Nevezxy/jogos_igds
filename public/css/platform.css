@@ -471,6 +471,17 @@
   gap: 10px;
   padding: 14px;
 }
+.lm-section {
+  grid-column: 1 / -1;
+  margin-top: 4px;
+  padding-bottom: 2px;
+  border-bottom: 2px solid var(--line);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1rem;
+}
+.lm-section:first-child { margin-top: 0; }
+.lm-section small { font-family: var(--font-body); font-weight: 700; color: var(--ink-soft); }
 .lm-level {
   position: relative;
   display: flex;

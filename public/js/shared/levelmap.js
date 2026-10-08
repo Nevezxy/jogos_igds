@@ -9,7 +9,9 @@
 // navegador). Cada mundo mostra quantas fases já fez.
 //
 // LevelMap.render(container, {
-//   worlds,                     [{ id, icon, name, color, levels: [{ id, title }] }]
+//   worlds,                     [{ id, icon, name, color, levels: [{ id, title, section? }] }]
+//                               `section` abre uma etapa dentro do mundo ("Dezena",
+//                               "Centena"...), que vale até a próxima
 //   stateOf(level) -> { stars, plays, locked? }
 //   nextId,                     fase recomendada
 //   storageKey,                 onde guardar o filtro escolhido
@@ -137,8 +139,21 @@
       meter.appendChild(fill);
 
       const grid = el('div', 'lm-levels');
+      // etapa de cada fase (a última `section` antes dela)
+      const sectionOf = new Map();
+      let sec = null;
+      world.levels.forEach((l) => { if (l.section) sec = l.section; sectionOf.set(l, sec); });
+      let lastSection = null;
       visible.forEach(({ level, st }) => {
         const i = world.levels.indexOf(level);
+        const section = sectionOf.get(level);
+        if (section && section !== lastSection) {
+          const inSection = states.filter((x) => sectionOf.get(x.level) === section);
+          const head = el('div', 'lm-section', section);
+          head.appendChild(el('small', null, ` ✓ ${inSection.filter((x) => x.st.stars > 0).length}/${inSection.length}`));
+          grid.appendChild(head);
+        }
+        lastSection = section;
         const status = statusOf(st, nextId === level.id);
         const btn = el('button', `lm-level is-${status}`);
         btn.type = 'button';
