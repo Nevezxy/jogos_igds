@@ -3,9 +3,10 @@
 // infantil), frases por nível, textos curtos escritos para o jogo, e o
 // gerador que transforma uma fase de levels.js em um exercício (texto).
 // As fases de letras só usam as letras já aprendidas: o gerador filtra o
-// banco de palavras pelas letras permitidas.
+// banco de palavras pelas letras permitidas. Também é usado pelo servidor,
+// para gerar o texto do Desafio de digitação.
 
-(function () {
+(function (root) {
   // ---------------- banco de palavras ----------------
   const WORDS = `
     a as asa asas sala salas fala falas gala galas ala alas alga algas fada fadas dada dadas
@@ -256,5 +257,9 @@
     { id: 'numeros', icon: '🔢', name: 'Números', make: () => sample(SENTENCES.numeros, 4).join(' ') },
   ];
 
-  window.DigitacaoContent = { generate, PRACTICE, WORD_BANK, LISTS, SENTENCES, TEXTS };
-})();
+  const api = { generate, PRACTICE, WORD_BANK, LISTS, SENTENCES, TEXTS };
+  // no navegador vira window.DigitacaoContent; no servidor (Desafio de
+  // digitação) é usado com require()
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.DigitacaoContent = api;
+})(typeof window !== 'undefined' ? window : globalThis);

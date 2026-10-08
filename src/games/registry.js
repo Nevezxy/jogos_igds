@@ -36,9 +36,37 @@ const games = [
     client: {
       styles: ['game.css'],
       view: 'view.html',
-      scripts: ['layouts/abnt2.js', 'levels.js', 'content.js', 'engine.js', 'keyboard.js', 'hands.js', 'game.js'],
+      scripts: ['layouts/abnt2.js', 'levels.js', 'content.js', 'engine.js', 'keyboard.js', 'hands.js', 'hint.js', 'game.js'],
     },
     server: require('./digitacao/server'),
+  },
+  {
+    id: 'desafio',
+    name: 'Desafio de Digitação',
+    icon: '🏁',
+    tagline: 'Corrida de digitação com a turma toda, ao vivo, com telão e pódio!',
+    mode: 'turma',
+    status: 'active',
+    color: 'orange',
+    isNew: true,
+    requiresKeyboard: true,
+    // usa o teclado, as mãos, as fases e o motor do Teclado Mágico
+    client: {
+      persistent: true,
+      styles: ['../digitacao/game.css', 'desafio.css'],
+      view: 'view.html',
+      scripts: [
+        '../digitacao/layouts/abnt2.js', '../digitacao/levels.js', '../digitacao/engine.js',
+        '../digitacao/keyboard.js', '../digitacao/hands.js', '../digitacao/hint.js',
+        'common.js', 'player.js', 'master.js', 'screen.js', 'session.js',
+      ],
+    },
+    teacherTool: {
+      icon: '🏁',
+      name: 'Desafio de Digitação',
+      description: 'Corrida de digitação ao vivo: escolha o texto e o modo, a turma digita junta e o telão mostra a pista e o pódio.',
+    },
+    server: require('./desafio/server'),
   },
   {
     id: 'bingo',

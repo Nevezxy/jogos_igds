@@ -16,12 +16,11 @@ global.window = global;
 const ROOT = path.join(__dirname, '..', 'public', 'games', 'digitacao');
 require(path.join(ROOT, 'layouts', 'abnt2.js'));
 const Levels = require(path.join(ROOT, 'levels.js'));
-require(path.join(ROOT, 'content.js'));
+const Content = require(path.join(ROOT, 'content.js'));
 const { TypingRun } = require(path.join(ROOT, 'engine.js'));
 const server = require('../src/games/digitacao/server');
 
 const layout = window.DigitacaoLayouts.abnt2;
-const Content = window.DigitacaoContent;
 
 const errors = [];
 const assert = (cond, msg) => { if (!cond) errors.push(msg); else console.log('OK:', msg); };

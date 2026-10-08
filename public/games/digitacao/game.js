@@ -19,20 +19,10 @@
 
   const STOP_KEY = 'tm_stop_on_error';
   const UPPER_KEY = 'tm_uppercase';
-  const SHIFT_FINGER = { ShiftLeft: 'e5', ShiftRight: 'd5' };
 
   function formatTime(ms) {
     const s = Math.floor(ms / 1000);
     return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
-  }
-
-  // Nome da tecla para a dica: letras em maiúscula, espaço por extenso.
-  function keyName(code) {
-    const key = layout.keys[code];
-    if (code === 'Space') return 'ESPAÇO';
-    if (code === 'ShiftLeft' || code === 'ShiftRight') return 'Shift';
-    if (/^Key/.test(code) || code === 'Semicolon') return key.shift;
-    return key.base;
   }
 
   function createGame(container, ctx) {
@@ -218,43 +208,15 @@
       textBox.scrollTop = Math.max(0, span.offsetTop - lineHeight * 0.6);
     }
 
-    // Dica da próxima tecla: destaca tecla, Shift e dedo, e explica em texto.
+    // Dica da próxima tecla: destaca tecla, Shift e dedo, e explica em texto
+    // (a regra está em hint.js, usada também pelo Desafio de digitação).
     function updateHint() {
-      const ch = run.expected;
       const hint = $('#tm-hint');
-      if (!ch) { keyboard.highlight(null); hands.highlight([]); hint.textContent = ''; return; }
-      const strokes = layout.strokesFor(ch);
-      if (!strokes) { keyboard.highlight(null); hands.highlight([]); hint.textContent = ''; return; }
-      const step = deadArmed && strokes[0].dead && strokes.length > 1 ? 1 : 0;
-      let stroke = strokes[step];
-      const key = layout.keys[stroke.code];
-      // Com o Caps Lock ligado, a letra maiúscula sai sem Shift.
-      const isLetterKey = /^Key/.test(stroke.code) || stroke.code === 'Semicolon';
-      const byCaps = capsOn && stroke.shift && isLetterKey;
-      if (byCaps) stroke = { ...stroke, shift: false, shiftCode: null };
-      keyboard.highlight(stroke);
-      const fingers = [key.fingerId];
-      if (stroke.shiftCode) fingers.push(SHIFT_FINGER[stroke.shiftCode]);
-      hands.highlight(fingers);
-
-      const finger = fingerName(key.fingerId);
-      const side = stroke.shiftCode === 'ShiftLeft' ? 'esquerdo' : 'direito';
-      const shiftPart = stroke.shiftCode ? `Segure o Shift ${side} (mindinho ${side}) e ` : '';
-      let text;
-      if (strokes[0].dead && step === 0) {
-        const accent = layout.accentName(ch) || 'acento';
-        const letter = strokes.length > 1 ? keyName(strokes[1].code) : '';
-        const then = strokes[1] && strokes[1].code === 'Space' ? 'Depois aperte o ESPAÇO.' : `Depois aperte ${letter}.`;
-        const symbol = stroke.shift ? key.shift : key.base;
-        text = `✨ ${accent[0].toUpperCase() + accent.slice(1)}: ${shiftPart ? shiftPart.toLowerCase() : ''}aperte a tecla ${symbol} com o ${finger} e solte. ${then}`;
-      } else if (stroke.code === 'Space') {
-        text = 'Aperte o ESPAÇO com o polegar.';
-      } else {
-        text = `${shiftPart}${shiftPart ? 'a' : 'A'}perte ${keyName(stroke.code)} com o ${finger}.`;
-      }
-      if (byCaps) text = `⇪ Caps Lock ligado: ${text[0].toLowerCase()}${text.slice(1)}`;
-      if (layout.tips[stroke.code]) text += ` (${layout.tips[stroke.code]})`;
-      hint.textContent = text;
+      const info = window.DigitacaoHint.describe(layout, run.expected, { deadArmed, capsOn, fingerName });
+      if (!info) { keyboard.highlight(null); hands.highlight([]); hint.textContent = ''; return; }
+      keyboard.highlight(info.stroke);
+      hands.highlight(info.fingers);
+      hint.textContent = info.text;
     }
 
     function updateStats() {

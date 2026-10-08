@@ -11,6 +11,7 @@ Jogos de hoje:
 | Jogo | Modo | O que é |
 |------|------|---------|
 | ⌨️ **Teclado Mágico** | sozinho(a) | Digitação com os 10 dedos: teclado ABNT2 na tela com uma cor por dedo, mãos que mostram o dedo certo e 58 fases (letras, palavras, acentos, frases, pontuação, números e textos). |
+| 🏁 **Desafio de Digitação** | com a turma | Corrida de digitação ao vivo: o professor escolhe o texto (uma fase do Teclado Mágico ou um texto dele) e o modo, a turma digita junta e o telão mostra a pista com os bichinhos e o pódio. |
 | 🎯 **Bingo** | com a turma | Bingo em tempo real conduzido pelo professor, com ~20 crianças em celulares, tablets ou computadores, e um telão opcional para o projetor. |
 
 A plataforma foi feita para receber **novos jogos** sem mexer no núcleo
@@ -141,6 +142,27 @@ CMD ["node", "server.js"]
   guardadas no aparelho.
 - Precisa de teclado físico; em tablet/celular aparece um aviso.
 
+### 🏁 Desafio de Digitação
+- O professor cria a sala na área do professor (**Desafio de Digitação**), a
+  turma entra pelo QR Code ou pelo código, com a conta (nome e bichinho
+  vêm sozinhos).
+- **Modos:** *corrida* (todos digitam o mesmo texto; vence quem terminar
+  primeiro) e *contra o relógio* (30 s a 2 min; vence quem digitar mais
+  letras certas), com a opção **turma contra o mascote** (a turma soma as
+  letras para vencer o Bingolino — sem ranking individual no placar).
+- **Texto:** qualquer fase do Teclado Mágico ou um texto do professor; opção
+  **apenas maiúsculas**.
+- A criança digita com o mesmo teclado colorido, as mãos e as dicas do
+  Teclado Mágico, vê a posição ao vivo e, no fim, o resultado.
+- **Telão** (`/telao/desafio?sala=CODE`): QR na espera, contagem 3-2-1, uma
+  raia por criança com o bichinho andando, relógio, barras turma × mascote e
+  o **pódio com três prêmios** — ⚡ mais rápido, 🎯 mais preciso e 📈 quem
+  mais melhorou em relação à própria média (para não premiar só quem já
+  digita bem). Opção de esconder os nomes no telão.
+- **Contra trapaça:** cada tecla é conferida no servidor pelo mesmo motor do
+  Teclado Mágico, com teto de 20 teclas por segundo.
+- Cada rodada conta no progresso da criança (painel e área do professor).
+
 ### 🎯 Bingo
 - A criança logada só digita o código da sala (pelo QR Code, entra
   sozinha); nome e bichinho vêm da conta. "← Jogos" na sala de espera e na
@@ -188,6 +210,10 @@ jogos_igds/
 │       ├── registry.js       # ⭐ Lista de jogos (o painel, o carregador e as rotas leem daqui)
 │       ├── digitacao/
 │       │   └── server.js     # Teclado Mágico: valida resultados, estrelas, progresso e resumos
+│       ├── desafio/
+│       │   ├── raceManager.js    # Salas, rodadas, teclas conferidas no servidor, pódio
+│       │   ├── socketHandlers.js # Eventos "dz:" e o relógio que encerra as rodadas
+│       │   └── server.js         # Progresso (corridas, vitórias, PPM) e resumos
 │       └── bingo/
 │           ├── server.js         # Ponto de entrada do bingo para o registro
 │           ├── roomManager.js    # Fonte única da verdade do estado "ao vivo" de cada sala
@@ -208,6 +234,11 @@ jogos_igds/
 │   │       ├── router.js     # Rotas (History API)
 │   │       └── app.js        # Som, cliques e navegação comuns a todas as telas
 │   └── games/
+│       ├── desafio/          # 🏁 Desafio de digitação (persistente; usa teclado, mãos e motor do Teclado Mágico)
+│       │   ├── view.html     # Telas: entrar, espera, corrida, resultado, painel do professor e telão
+│       │   ├── common.js     # Relógio acertado com o servidor, pódio, ranking, contagem 3-2-1
+│       │   ├── player.js     # Criança · master.js: professor · screen.js: telão · session.js: liga na plataforma
+│       │   └── desafio.css
 │       ├── digitacao/        # ⌨️ Teclado Mágico (carregado sob demanda)
 │       │   ├── game.js       # Telas: mapa, antes da fase, jogando, resultado, treino livre
 │       │   ├── view.html     # HTML das telas
@@ -217,6 +248,7 @@ jogos_igds/
 │       │   ├── content.js    # Banco de palavras, frases, textos e gerador de exercícios
 │       │   ├── engine.js     # Motor da rodada: acertos, precisão e PPM
 │       │   ├── keyboard.js   # Teclado na tela
+│       │   ├── hint.js       # Dica da próxima tecla (usada também pelo desafio)
 │       │   └── hands.js      # Mãos em SVG
 │       └── bingo/            # 🎯 Bingo (carregado sob demanda, modo persistente): view.html com as telas,
 │                             #    master, player, join, screen (telão), overlays, packs, session e css
@@ -234,6 +266,7 @@ jogos_igds/
 | `/professor` | Área do professor: turma e ferramentas dos jogos |
 | `/professor/<id>` | Ferramenta de um jogo (ex.: `/professor/bingo`) |
 | `/telao?sala=CODE` | Telão do bingo, sem login |
+| `/telao/<id>?sala=CODE` | Telão de outro jogo (ex.: `/telao/desafio`), sem login |
 
 O QR Code do bingo usa o link curto `/?sala=CODE`, mais fácil de digitar;
 o roteador leva para `/jogos/bingo?sala=CODE`, pedindo login antes, se for
@@ -353,6 +386,7 @@ npm test
 | `test/digitacao.test.js` | Teclado Mágico sem navegador: motor (precisão, PPM, acento composto e decomposto), ABNT2 (Shift do lado oposto, acentos, `?` e `;`), fases e estrelas, todo exercício digitável e só com as teclas da fase, validação do servidor. |
 | `test/platform.test.js` | Contas (nome e sobrenome, maiúsculas/acentos/espaços, conta repetida, sessão, bichinho, sair) e progresso pela API (estrelas do servidor, fase bloqueada, velocidade impossível, resumos). |
 | `test/teacher.test.js` | Área do professor com PIN: cadastro em lote, autocadastro, renomear, juntar contas, liberar fases, desativar, sala de bingo só pelo professor. |
+| `test/desafio.test.js` | Desafio de digitação: sala com PIN, mesmo texto para todos, teclas conferidas no servidor, teto de velocidade, fim automático, pódio, relógio contra o mascote, progresso, telão sem tokens. |
 | `test/integration.test.js` | Partida completa de bingo: entrada só com conta, mesma conta em dois aparelhos, sorteio, marcação, vitória, expulsão, nova partida, reconexão, encerramento. |
 | `test/features.test.js` | Bingo: nome e bichinho da conta, sair da sala, casa travada, "quase lá", sorteio automático, telão sem tokens, QR Code, bingo contando no progresso. |
 
@@ -389,6 +423,5 @@ npm run test:carga
 ## 8. Próximos passos possíveis
 
 - Outros layouts de teclado (US-Internacional) no Teclado Mágico.
-- Minijogos de digitação (chuva de palavras) e um desafio de digitação da
-  turma em tempo real, reaproveitando o Socket.IO e o telão.
+- Minijogos de digitação (chuva de palavras).
 - Novos jogos: tabuada, ortografia, quiz.

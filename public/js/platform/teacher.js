@@ -124,6 +124,11 @@
     bingo(d) {
       return d && d.wins ? `🏆 ${d.wins}` : '<span class="muted">—</span>';
     },
+    desafio(d) {
+      if (!d || !d.races) return '<span class="muted">—</span>';
+      return `<div class="teacher-game"><strong>🏁 ${d.races} ${d.races === 1 ? 'corrida' : 'corridas'}${d.wins ? ` · 🏆 ${d.wins}` : ''}</strong>
+        <span>melhor ${d.bestWpm} PPM · média ${d.avgWpm} PPM</span></div>`;
+    },
   };
   function genericCell(d) {
     if (!d || typeof d !== 'object') return '<span class="muted">—</span>';

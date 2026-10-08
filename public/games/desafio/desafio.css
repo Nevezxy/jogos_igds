@@ -1,0 +1,288 @@
+/* ============================================================
+   🏁 Desafio de digitação: telas da criança, painel do professor e
+   telão (pista com os bichinhos, relógio, mascote e pódio).
+   O teclado, as mãos e o texto vêm do game.css do Teclado Mágico.
+   ============================================================ */
+
+.dz-code-input { text-transform: uppercase; letter-spacing: 10px; }
+
+/* ---------------- sala de espera ---------------- */
+
+.dz-lobby-card { max-width: 560px; }
+.dz-hello { font-size: 1.25rem; display: flex; align-items: center; justify-content: center; gap: 10px; margin: 6px 0; }
+.dz-mode {
+  display: inline-block;
+  padding: 4px 14px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--yellow);
+  font-family: var(--font-display);
+  font-weight: 800;
+}
+.dz-mode:empty { display: none; }
+.dz-friends { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 8px; padding: 14px 10px; }
+.dz-friend { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 66px; animation: popIn .4s var(--ease-bounce) both; }
+.dz-friend small { font-weight: 800; font-size: .78rem; max-width: 66px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dz-friend.is-me .avatar-badge { background: var(--yellow); }
+.dz-friend.is-away { opacity: .45; }
+
+/* ---------------- correndo ---------------- */
+
+#dz-race { padding: 16px 16px 96px; }
+.dz-race { max-width: 1100px; margin: 0 auto; }
+.dz-alert-done { background: var(--green); color: var(--ink); }
+.dz-countdown {
+  position: fixed;
+  inset: 0;
+  z-index: 980;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(30, 18, 64, .55);
+}
+.dz-countdown[hidden] { display: none; }
+.dz-countdown span {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(8rem, 30vw, 18rem);
+  color: var(--yellow);
+  -webkit-text-stroke: 6px var(--ink);
+  animation: popIn .5s var(--ease-bounce);
+}
+
+/* ---------------- resultado / pódio ---------------- */
+
+.dz-result-card { max-width: 620px; }
+.dz-result-title { margin: 0; }
+.dz-result-place { font-family: var(--font-display); font-weight: 800; font-size: 1.6rem; color: var(--violet-dark); margin: 4px 0 10px; }
+.dz-podium { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 14px 0; }
+.dz-podium > .dz-prize { flex: 1 1 0; min-width: 150px; max-width: 34%; }
+.dz-podium:empty { display: none; }
+.dz-prize {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 8px;
+  background: var(--surface-2);
+  border: var(--stroke) solid var(--ink);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 0 var(--ink);
+  text-align: center;
+  animation: bounceIn .5s var(--ease-bounce) both;
+  animation-delay: calc(var(--i, 0) * 180ms);
+}
+.dz-prize.is-me { background: var(--yellow); }
+.dz-prize-icon { font-size: 2rem; }
+.dz-prize-label { font-weight: 800; font-size: .85rem; color: var(--ink-soft); }
+.dz-prize .avatar-badge { width: 52px; height: 52px; font-size: 1.9rem; }
+.dz-prize-name { font-family: var(--font-display); font-weight: 800; line-height: 1.1; }
+.dz-prize-value { font-weight: 800; font-size: .9rem; }
+.dz-ranking { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 6px; text-align: left; }
+.dz-ranking li {
+  display: grid;
+  grid-template-columns: 34px 40px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--surface);
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+}
+.dz-ranking li.is-me { background: var(--yellow); }
+.dz-rank-pos { font-family: var(--font-display); font-weight: 800; font-size: 1.2rem; text-align: center; }
+.dz-ranking .avatar-badge { width: 36px; height: 36px; font-size: 1.3rem; }
+.dz-rank-stats { color: var(--ink-soft); font-size: .9rem; white-space: nowrap; }
+.dz-mascot-score {
+  padding: 10px 14px;
+  border: var(--stroke) solid var(--ink);
+  border-radius: var(--radius-md);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.2rem;
+  text-align: center;
+  background: var(--green);
+}
+.dz-mascot-score.is-lost { background: var(--orange); }
+
+/* ---------------- professor ---------------- */
+
+#dz-master .pill-code strong { letter-spacing: 2px; font-size: 1.1em; }
+.dz-m-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 18px;
+  max-width: 1200px;
+  margin: 16px auto 0;
+  padding: 0 16px 96px;
+}
+.dz-m-main, .dz-m-side { display: flex; flex-direction: column; gap: 16px; }
+.dz-m-config h2, .dz-m-results h2 { margin: 0 0 12px; font-size: 1.4rem; }
+.dz-m-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-bottom: 14px; }
+.dz-m-row[hidden] { display: none; }
+.dz-m-label { width: 70px; font-family: var(--font-display); font-weight: 800; }
+.dz-seg { display: flex; flex-wrap: wrap; gap: 8px; }
+.dz-seg-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 8px 14px;
+  background: var(--surface-2);
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 3px 0 var(--ink);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1rem;
+  color: var(--ink);
+  cursor: pointer;
+}
+.dz-seg-btn small { font-family: var(--font-body, inherit); font-weight: 600; font-size: .78rem; color: var(--ink-soft); }
+.dz-seg-btn[aria-checked="true"] { background: var(--yellow); }
+.dz-seg-btn:disabled { cursor: not-allowed; opacity: .6; }
+.dz-select, .dz-textarea {
+  padding: 8px 12px;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  font: inherit;
+  font-weight: 700;
+}
+.dz-select-wide { flex: 1 1 260px; min-width: 0; }
+.dz-textarea { flex: 1 1 320px; min-width: 0; resize: vertical; }
+.dz-check { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; cursor: pointer; }
+.dz-check small { font-weight: 600; color: var(--ink-soft); }
+.dz-check input { width: 20px; height: 20px; accent-color: var(--green-dark); }
+.dz-m-controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.dz-m-join { text-align: center; }
+.dz-m-join h3 { margin: 0 0 10px; }
+.dz-qr {
+  width: 100%;
+  max-width: 240px;
+  aspect-ratio: 1;
+  padding: 10px;
+  background: #fff;
+  border: var(--stroke) solid var(--ink);
+  border-radius: var(--radius-md);
+}
+.dz-url { display: block; margin: 8px 0; font-weight: 800; word-break: break-all; color: var(--violet-dark); }
+.dz-m-players { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 6px; }
+.dz-m-players li {
+  display: grid;
+  grid-template-columns: 34px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+}
+.dz-m-players li.is-away { opacity: .5; }
+.dz-m-players .avatar-badge { width: 32px; height: 32px; font-size: 1.1rem; }
+.dz-m-pname { display: flex; flex-direction: column; min-width: 0; }
+.dz-m-pname span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dz-m-bar { height: 8px; border: 2px solid var(--ink); border-radius: 999px; background: var(--surface-2); overflow: hidden; margin-top: 3px; }
+.dz-m-bar i { display: block; height: 100%; background: var(--green); width: 0; transition: width .3s ease; }
+.dz-m-pstat { font-size: .82rem; color: var(--ink-soft); white-space: nowrap; }
+.dz-kick { background: none; border: 0; cursor: pointer; font-size: 1rem; opacity: .6; }
+.dz-kick:hover { opacity: 1; }
+
+@media (max-width: 900px) {
+  .dz-m-layout { grid-template-columns: 1fr; }
+  .dz-podium > .dz-prize { max-width: none; flex-basis: 100%; }
+}
+
+/* ---------------- telão ---------------- */
+
+.dz-telao { min-height: 100vh; padding: 2.5vh 2.5vw; color: #fff; }
+body.is-telao .sound-toggle { opacity: .5; }
+.dz-telao .telao-back { position: fixed; top: auto; bottom: 16px; left: 16px; right: auto; z-index: 50; opacity: .45; }
+.dz-telao .telao-back:hover, .dz-telao .telao-back:focus-visible { opacity: 1; }
+.dz-t-center { min-height: 90vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 12px; }
+.dz-t-center .mascot { --size: 160px; }
+.dz-t-center p { font-size: 1.4rem; font-weight: 800; }
+
+.dz-t-lobby { display: grid; grid-template-columns: 1fr 1fr; gap: 3vw; align-items: center; min-height: 92vh; }
+.dz-t-lobby-left { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.dz-t-title { font-size: clamp(2.6rem, 5vw, 5rem); margin: 0; }
+.dz-t-call { font-family: var(--font-display); font-weight: 800; font-size: clamp(1.4rem, 2.6vw, 2.4rem); margin: 8px 0 12px; text-shadow: 0 3px 0 var(--ink); }
+.dz-t-qr { width: min(32vw, 44vh); max-width: none; border-width: 5px; border-radius: 28px; box-shadow: 0 12px 0 var(--ink); }
+.dz-t-code { font-family: var(--font-display); font-weight: 800; font-size: clamp(1.4rem, 2.4vw, 2.2rem); margin: 18px 0 4px; }
+.dz-t-code strong { padding: 0 14px; background: var(--yellow); color: var(--ink); border: 3px solid var(--ink); border-radius: 12px; letter-spacing: 6px; }
+.dz-t-mode { font-weight: 800; font-size: 1.3rem; }
+.dz-t-lobby-right { display: flex; flex-direction: column; align-items: center; gap: 18px; }
+.dz-t-lobby-right .speech { color: var(--ink); font-size: 1.6rem; }
+.dz-t-friends .dz-friend { width: 92px; }
+.dz-t-friends .avatar-badge { width: 72px; height: 72px; font-size: 2.6rem; box-shadow: 0 4px 0 var(--ink); }
+.dz-t-friends .dz-friend small { font-size: 1rem; max-width: 92px; color: #fff; text-shadow: 0 2px 0 var(--ink); }
+
+.dz-t-race, .dz-t-results { display: flex; flex-direction: column; gap: 2vh; min-height: 95vh; }
+.dz-t-race-head { display: flex; align-items: center; gap: 20px; }
+.dz-t-race-title { margin: 0; font-size: clamp(2.2rem, 4vw, 4rem); }
+.dz-t-timer {
+  margin-left: auto;
+  padding: 4px 22px;
+  background: var(--surface);
+  color: var(--ink);
+  border: 4px solid var(--ink);
+  border-radius: 999px;
+  box-shadow: 0 6px 0 var(--ink);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(2rem, 4vw, 3.6rem);
+}
+.dz-t-mascot { display: grid; gap: 10px; }
+.dz-t-mascot[hidden] { display: none; }
+.dz-t-mbar { display: grid; grid-template-columns: 200px 1fr 90px; align-items: center; gap: 14px; font-family: var(--font-display); font-weight: 800; font-size: 1.5rem; }
+.dz-t-mtrack { height: 34px; border: 4px solid var(--ink); border-radius: 999px; background: rgba(255, 255, 255, .25); overflow: hidden; }
+.dz-t-mtrack span { display: block; height: 100%; width: 0; background: var(--green); transition: width .3s linear; }
+.dz-t-mbar.is-mascot .dz-t-mtrack span { background: var(--yellow); }
+
+.dz-t-lanes { display: grid; gap: 8px; }
+.dz-t-lanes.is-two-cols { grid-template-columns: 1fr 1fr; column-gap: 3vw; }
+.dz-lane { display: grid; grid-template-columns: minmax(80px, 180px) 1fr; align-items: center; gap: 12px; }
+.dz-lane-name { font-family: var(--font-display); font-weight: 800; font-size: clamp(.9rem, 1.6vw, 1.4rem); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0 2px 0 var(--ink); }
+.dz-lane-track {
+  position: relative;
+  height: clamp(34px, 5vh, 54px);
+  background: rgba(255, 255, 255, .18);
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+  /* linha de chegada quadriculada no fim */
+  background-image: linear-gradient(90deg, transparent calc(100% - 26px), rgba(255, 255, 255, .5) calc(100% - 26px));
+}
+.dz-lane-runner {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translate(4px, -50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: left .3s linear;
+}
+.dz-lane-runner .avatar-badge { width: clamp(30px, 4.6vh, 50px); height: clamp(30px, 4.6vh, 50px); font-size: clamp(1.2rem, 3vh, 2rem); }
+.dz-lane-wpm { font-weight: 800; font-size: clamp(.8rem, 1.3vw, 1.1rem); text-shadow: 0 2px 0 var(--ink); white-space: nowrap; }
+.dz-lane.is-done .avatar-badge { background: var(--yellow); }
+/* poucas crianças: raias e bichinhos grandes */
+.dz-t-lanes.is-few { gap: 2vh; }
+.dz-t-lanes.is-few .dz-lane-track { height: clamp(46px, 9vh, 96px); }
+.dz-t-lanes.is-few .dz-lane-runner .avatar-badge { width: clamp(40px, 8vh, 84px); height: clamp(40px, 8vh, 84px); font-size: clamp(1.6rem, 5vh, 3.2rem); }
+.dz-t-lanes.is-few .dz-lane-name { font-size: clamp(1.1rem, 2.2vw, 2rem); }
+.dz-t-lanes.is-few .dz-lane-wpm { font-size: clamp(1rem, 1.8vw, 1.5rem); }
+.dz-lane-flag { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-family: var(--font-display); font-weight: 800; font-size: clamp(1rem, 2vw, 1.6rem); }
+
+.dz-t-results { align-items: center; }
+.dz-t-podium { width: min(1100px, 100%); color: var(--ink); }
+.dz-t-podium .dz-prize { padding: 20px 12px; }
+.dz-t-podium .dz-prize-icon { font-size: 3rem; }
+.dz-t-podium .avatar-badge { width: 90px; height: 90px; font-size: 3.2rem; }
+.dz-t-podium .dz-prize-name { font-size: 1.6rem; }
+.dz-t-podium .dz-prize-label, .dz-t-podium .dz-prize-value { font-size: 1.1rem; }
+.dz-t-mascot-score { width: min(1100px, 100%); color: var(--ink); font-size: 1.8rem; }
+.dz-t-ranking { width: min(1100px, 100%); color: var(--ink); grid-template-columns: 1fr 1fr; }
+
+@media (max-width: 800px) {
+  .dz-t-lobby { grid-template-columns: 1fr; }
+  .dz-t-qr { width: min(70vw, 360px); }
+  .dz-t-lanes.is-two-cols { grid-template-columns: 1fr; }
+  .dz-t-ranking { grid-template-columns: 1fr; }
+}

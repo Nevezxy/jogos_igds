@@ -219,7 +219,7 @@
 
   async function init() {
     // o telão do bingo não tem login: ele só assiste a sala
-    if (location.pathname.replace(/\/+$/, '') === '/telao') { resolveReady(); return; }
+    if (/^\/telao(\/|$)/.test(location.pathname)) { resolveReady(); return; }
     const token = readStoredToken();
     if (token) {
       api.setToken(token);

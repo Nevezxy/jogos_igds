@@ -1,0 +1,225 @@
+<!-- public/games/desafio/view.html
+     Telas do Desafio de digitação (criança, professor e telão). A plataforma
+     injeta este HTML uma vez, antes dos scripts (client.persistent). -->
+
+<!-- ======================= CRIANÇA: entrar na sala ======================= -->
+<section id="dz-join" class="screen screen-center">
+  <button class="btn-back" id="dz-join-back" type="button">← Jogos</button>
+  <div class="panel-card">
+    <div class="panel-head">
+      <div data-mascot id="dz-join-mascot"></div>
+      <p class="speech" id="dz-join-speech" aria-live="polite">Qual é o código do desafio? 🏁</p>
+    </div>
+    <form id="dz-join-form" novalidate autocomplete="off">
+      <label class="field">
+        <span class="sr-only">Código da sala (5 letras)</span>
+        <input id="dz-join-code" class="input-big dz-code-input" type="text" maxlength="5" placeholder="CÓDIGO" autocapitalize="characters" spellcheck="false" autocomplete="off" />
+      </label>
+      <button type="submit" class="btn btn-success btn-block btn-lg" id="dz-join-submit">Entrar no desafio 🚀</button>
+    </form>
+  </div>
+</section>
+
+<!-- ======================= CRIANÇA: sala de espera ======================= -->
+<section id="dz-lobby" class="screen screen-center">
+  <button class="btn-back" id="dz-lobby-leave" type="button">← Jogos</button>
+  <div class="panel-card dz-lobby-card">
+    <div class="panel-head">
+      <div data-mascot id="dz-lobby-mascot"></div>
+      <p class="speech" id="dz-lobby-speech">Já já começa! Quando o(a) professor(a) der a largada, o texto aparece aqui ✨</p>
+    </div>
+    <p class="dz-hello"><span class="avatar-badge" id="dz-lobby-avatar">🐶</span> <span>Oi, <strong id="dz-lobby-name">amigo(a)</strong>!</span></p>
+    <p class="dz-mode" id="dz-lobby-mode"></p>
+    <div class="dz-friends" id="dz-lobby-friends" aria-label="Quem já está na sala"></div>
+    <p class="muted">Sala <strong id="dz-lobby-code">-----</strong> · <span id="dz-lobby-count">0</span> na sala</p>
+  </div>
+</section>
+
+<!-- ======================= CRIANÇA: correndo ======================= -->
+<section id="dz-race" class="screen screen-top">
+  <div class="tm dz-race">
+    <div class="tm-play-head">
+      <span class="avatar-badge" id="dz-race-avatar">🐶</span>
+      <strong class="tm-play-title" id="dz-race-title">Desafio</strong>
+      <div class="tm-stats">
+        <span class="tm-stat" id="dz-race-place-wrap" title="Sua posição agora">🏁 <b id="dz-race-place">–</b></span>
+        <span class="tm-stat" title="Tempo">⏱ <b id="dz-race-time">0:00</b></span>
+        <span class="tm-stat" title="Palavras por minuto">⚡ <b id="dz-race-wpm">0</b> PPM</span>
+      </div>
+    </div>
+    <div class="tm-progress" aria-hidden="true"><span id="dz-race-bar"></span></div>
+
+    <div class="tm-stage" id="dz-race-stage">
+      <div class="tm-text" id="dz-race-text" aria-hidden="true"></div>
+      <p class="tm-hint" id="dz-race-hint" aria-live="polite"></p>
+      <div class="tm-alerts">
+        <span class="tm-alert tm-alert-dead" id="dz-race-dead" hidden>✨ Acento pronto! Agora aperte a letra.</span>
+        <span class="tm-alert dz-alert-done" id="dz-race-done" hidden></span>
+      </div>
+      <div class="tm-kb" id="dz-race-kb" aria-hidden="true"></div>
+      <div class="tm-hands" id="dz-race-hands" aria-hidden="true"></div>
+      <textarea id="dz-race-input" class="tm-input" rows="1" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Digite o texto aqui"></textarea>
+      <button type="button" class="tm-focus-cover" id="dz-race-focus" hidden>👆 Clique aqui para continuar digitando</button>
+    </div>
+  </div>
+  <div class="dz-countdown" id="dz-countdown" hidden aria-live="assertive"><span id="dz-countdown-num">3</span></div>
+</section>
+
+<!-- ======================= CRIANÇA: resultado ======================= -->
+<section id="dz-result" class="screen screen-center">
+  <button class="btn-back" id="dz-result-leave" type="button">← Jogos</button>
+  <div class="panel-card dz-result-card">
+    <h2 class="dz-result-title" id="dz-result-title">Fim da rodada!</h2>
+    <p class="dz-result-place" id="dz-result-place"></p>
+    <div class="tm-result-stats">
+      <div><span>🎯</span><b id="dz-result-acc">100%</b><small>precisão</small></div>
+      <div><span>⚡</span><b id="dz-result-wpm">0</b><small>palavras por minuto</small></div>
+      <div><span>✅</span><b id="dz-result-chars">0</b><small>letras certas</small></div>
+    </div>
+    <div class="dz-podium" id="dz-result-podium"></div>
+    <p class="muted" id="dz-result-wait">Esperando o(a) professor(a) começar outra rodada…</p>
+  </div>
+</section>
+
+<!-- ======================= PROFESSOR ======================= -->
+<section id="dz-create" class="screen screen-center">
+  <button class="btn-back" id="dz-create-back" type="button">← Professor</button>
+  <div class="panel-card">
+    <div class="panel-head">
+      <div data-mascot></div>
+      <p class="speech">Vamos fazer uma corrida de digitação com a turma? 🏁</p>
+    </div>
+    <p class="muted">Você cria a sala, escolhe o texto e dá a largada. A turma entra pelo QR Code.</p>
+    <button type="button" class="btn btn-primary btn-block btn-lg" id="dz-create-btn">Criar sala do desafio 🏁</button>
+    <p class="form-error" id="dz-create-error" role="alert"></p>
+  </div>
+</section>
+
+<section id="dz-master" class="screen screen-top">
+  <header class="game-header">
+    <div class="game-header-left">
+      <span class="pill pill-code">Sala <strong id="dz-m-code">-----</strong></span>
+      <span class="pill pill-status" id="dz-m-status">esperando</span>
+      <button class="btn-mini" id="dz-m-screen" type="button" title="Abre a pista para o projetor ou a TV">📺 Abrir telão</button>
+      <button class="btn-mini" id="dz-m-teacher" type="button" title="Volta à área do professor (a sala continua aberta)">🧑‍🏫 Área do professor</button>
+    </div>
+    <div class="game-header-right"><span id="dz-m-count">0 na sala</span></div>
+  </header>
+
+  <div class="dz-m-layout">
+    <main class="dz-m-main">
+      <section class="card-block dz-m-config" id="dz-m-config">
+        <h2>Regras da rodada</h2>
+        <div class="dz-m-row">
+          <span class="dz-m-label">Modo</span>
+          <div class="dz-seg" role="radiogroup" aria-label="Modo">
+            <button type="button" class="dz-seg-btn" data-mode="corrida" role="radio">🏁 Corrida<small>vence quem terminar primeiro</small></button>
+            <button type="button" class="dz-seg-btn" data-mode="relogio" role="radio">⏱ Contra o relógio<small>vence quem digitar mais</small></button>
+          </div>
+        </div>
+        <div class="dz-m-row" id="dz-m-clock-row">
+          <label class="dz-m-label" for="dz-m-seconds">Tempo</label>
+          <select id="dz-m-seconds" class="dz-select">
+            <option value="30">30 segundos</option><option value="60">1 minuto</option>
+            <option value="90">1 minuto e meio</option><option value="120">2 minutos</option>
+          </select>
+          <label class="dz-check"><input type="checkbox" id="dz-m-mascot" /> 🙂 Turma contra o mascote <small>(todos somam letras para vencer o Bingolino)</small></label>
+        </div>
+        <div class="dz-m-row">
+          <span class="dz-m-label">Texto</span>
+          <div class="dz-seg" role="radiogroup" aria-label="Origem do texto">
+            <button type="button" class="dz-seg-btn" data-source="level" role="radio">⌨️ Fase do Teclado Mágico</button>
+            <button type="button" class="dz-seg-btn" data-source="custom" role="radio">✏️ Meu texto</button>
+          </div>
+        </div>
+        <div class="dz-m-row" id="dz-m-level-row">
+          <label class="dz-m-label" for="dz-m-level">Fase</label>
+          <select id="dz-m-level" class="dz-select dz-select-wide"></select>
+        </div>
+        <div class="dz-m-row" id="dz-m-custom-row">
+          <label class="dz-m-label" for="dz-m-custom">Seu texto</label>
+          <textarea id="dz-m-custom" class="dz-textarea" rows="3" maxlength="600" placeholder="Ex.: A primavera começa em setembro e as flores enfeitam a escola."></textarea>
+        </div>
+        <div class="dz-m-row">
+          <span class="dz-m-label">Opções</span>
+          <label class="dz-check"><input type="checkbox" id="dz-m-upper" /> 🔠 Apenas maiúsculas</label>
+          <label class="dz-check"><input type="checkbox" id="dz-m-names" checked /> 🏷 Mostrar nomes no telão</label>
+        </div>
+        <p class="form-error" id="dz-m-error" role="alert"></p>
+      </section>
+
+      <section class="card-block dz-m-controls">
+        <button type="button" class="btn btn-success btn-lg" id="dz-m-start">▶ Dar a largada</button>
+        <button type="button" class="btn btn-danger" id="dz-m-stop" hidden>⏹ Encerrar rodada</button>
+        <button type="button" class="btn btn-ghost" id="dz-m-lock">🔒 Fechar entrada</button>
+        <button type="button" class="btn btn-ghost" id="dz-m-end">🌙 Encerrar sala</button>
+      </section>
+
+      <section class="card-block dz-m-results" id="dz-m-results" hidden>
+        <h2>🏆 Resultado da rodada <span id="dz-m-round"></span></h2>
+        <div class="dz-podium" id="dz-m-podium"></div>
+        <div class="dz-mascot-score" id="dz-m-mascot-score" hidden></div>
+        <ol class="dz-ranking" id="dz-m-ranking"></ol>
+      </section>
+    </main>
+
+    <aside class="dz-m-side">
+      <section class="card-block dz-m-join">
+        <h3>📲 Turma, entrem aqui!</h3>
+        <img id="dz-m-qr" class="dz-qr" alt="QR Code para entrar no desafio" />
+        <a id="dz-m-url" class="dz-url" target="_blank" rel="noopener"></a>
+        <p class="muted">Ou no painel: <strong>Desafio de Digitação</strong> → código <strong id="dz-m-code2">-----</strong></p>
+      </section>
+      <section class="card-block">
+        <h3>👥 Na sala <span class="count-badge" id="dz-m-count2">0</span></h3>
+        <ul class="dz-m-players" id="dz-m-players"></ul>
+      </section>
+    </aside>
+  </div>
+</section>
+
+<!-- ======================= TELÃO ======================= -->
+<section id="dz-telao" class="screen screen-top dz-telao">
+  <button class="btn-back telao-back" id="dz-telao-back" type="button" title="Fechar o telão e voltar ao painel do professor">← Voltar</button>
+
+  <div id="dz-t-missing" class="dz-t-center" hidden>
+    <div data-mascot data-mood="wow" data-base-mood="wow"></div>
+    <h1 class="title-game">Sala não encontrada</h1>
+    <p>Abra o telão pelo botão 📺 no painel do desafio.</p>
+  </div>
+
+  <div id="dz-t-lobby" class="dz-t-lobby" hidden>
+    <div class="dz-t-lobby-left">
+      <h1 class="title-game dz-t-title">🏁 Desafio de Digitação</h1>
+      <p class="dz-t-call">Entre no desafio! 👇</p>
+      <img id="dz-t-qr" class="dz-qr dz-t-qr" alt="QR Code para entrar no desafio" />
+      <p class="dz-t-code">Código: <strong id="dz-t-code">-----</strong></p>
+      <p class="dz-t-mode" id="dz-t-mode"></p>
+    </div>
+    <div class="dz-t-lobby-right">
+      <p class="speech" id="dz-t-count">Ninguém entrou ainda…</p>
+      <div class="dz-friends dz-t-friends" id="dz-t-friends"></div>
+    </div>
+  </div>
+
+  <div id="dz-t-race" class="dz-t-race" hidden>
+    <div class="dz-t-race-head">
+      <h1 class="title-game dz-t-race-title" id="dz-t-race-title">🏁 Corrida!</h1>
+      <span class="dz-t-timer" id="dz-t-timer">0:00</span>
+    </div>
+    <div class="dz-t-mascot" id="dz-t-mascot" hidden>
+      <div class="dz-t-mbar"><span class="dz-t-mlabel">👥 Turma</span><div class="dz-t-mtrack"><span id="dz-t-mteam"></span></div><b id="dz-t-mteam-n">0</b></div>
+      <div class="dz-t-mbar is-mascot"><span class="dz-t-mlabel">🙂 Bingolino</span><div class="dz-t-mtrack"><span id="dz-t-mmascot"></span></div><b id="dz-t-mmascot-n">0</b></div>
+    </div>
+    <div class="dz-t-lanes" id="dz-t-lanes"></div>
+  </div>
+
+  <div id="dz-t-results" class="dz-t-results" hidden>
+    <h1 class="title-game dz-t-race-title">🏆 Pódio</h1>
+    <div class="dz-podium dz-t-podium" id="dz-t-podium"></div>
+    <div class="dz-mascot-score dz-t-mascot-score" id="dz-t-mascot-score" hidden></div>
+    <ol class="dz-ranking dz-t-ranking" id="dz-t-ranking"></ol>
+  </div>
+
+  <div class="dz-countdown" id="dz-t-countdown" hidden><span id="dz-t-countdown-num">3</span></div>
+</section>

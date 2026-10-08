@@ -95,7 +95,10 @@
       const base = `/games/${game.id}/`;
       const client = game.client || {};
       const promise = (async () => {
-        await Promise.all((client.styles || []).map((file) => loadStyle(base + file)));
+        // caminhos normalizados: um jogo pode usar arquivos de outro
+        // (ex.: '../digitacao/keyboard.js') sem baixá-los duas vezes
+        const url = (file) => new URL(base + file, location.origin).pathname;
+        await Promise.all((client.styles || []).map((file) => loadStyle(url(file))));
         const view = client.view
           ? await fetch(base + client.view).then((r) => (r.ok ? r.text() : Promise.reject(new Error('Falha ao carregar a tela do jogo.'))))
           : '';
@@ -107,7 +110,7 @@
           window.BingoMascot.mount(host);
         }
         // scripts em ordem: um jogo pode dividir o código em vários arquivos
-        for (const file of client.scripts || []) await loadScript(base + file);
+        for (const file of client.scripts || []) await loadScript(url(file));
         return client.persistent ? '' : view;
       })();
       promise.catch(() => loading.delete(game.id));

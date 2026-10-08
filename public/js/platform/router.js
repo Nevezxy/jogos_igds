@@ -7,6 +7,7 @@
 //   /professor        área do professor (turma e ferramentas dos jogos)
 //   /professor/<id>   ferramenta de um jogo (ex.: /professor/bingo, a sala do bingo)
 //   /telao?sala=CODE  telão do bingo (sem login; a rota só carrega o bingo)
+//   /telao/<id>?sala=CODE  telão de outro jogo (o módulo do jogo exporta `screen`)
 // Links antigos /?sala=CODE (QR Codes já impressos) viram /jogos/bingo?sala=CODE.
 
 (function () {
@@ -95,6 +96,15 @@
     const path = location.pathname.replace(/\/+$/, '') || '/';
     const params = new URLSearchParams(location.search);
 
+    const screenMatch = path.match(/^\/telao\/([a-z0-9-]+)$/);
+    if (screenMatch) {
+      return window.Plataforma.ensureLoaded(screenMatch[1])
+        .then(({ module }) => { if (module.screen) module.screen.start(); else go('/', { replace: true }); })
+        .catch((e) => {
+          console.error(e);
+          toast('Não consegui abrir o telão 😵 Recarregue a página.', 'error');
+        });
+    }
     if (path === '/telao') {
       // o telão do bingo começa sozinho quando os scripts do bingo carregam
       return window.Plataforma.ensureLoaded('bingo').catch((e) => {
