@@ -41,6 +41,24 @@ const games = [
     server: require('./digitacao/server'),
   },
   {
+    id: 'matematica',
+    name: 'Conta Comigo',
+    icon: '🔢',
+    tagline: 'Contas de +, −, × e ÷, da unidade ao milhar, e depois negativos, potências e raízes!',
+    mode: 'solo',
+    status: 'active',
+    color: 'green',
+    isNew: true,
+    // teclado numérico na tela: funciona no tablet e no celular
+    requiresKeyboard: false,
+    client: {
+      styles: ['game.css'],
+      view: 'view.html',
+      scripts: ['levels.js', 'problems.js', 'emoji.js', 'game.js'],
+    },
+    server: require('./matematica/server'),
+  },
+  {
     id: 'desafio',
     name: 'Desafio de Digitação',
     icon: '🏁',

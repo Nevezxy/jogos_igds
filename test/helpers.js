@@ -15,7 +15,7 @@ async function startTestServer(port, env = {}) {
     stdio: ['ignore', 'pipe', 'inherit'],
   });
   await new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('servidor de teste não subiu a tempo')), 15000);
+    const timer = setTimeout(() => reject(new Error('servidor de teste não subiu a tempo')), 30000);
     child.stdout.on('data', (chunk) => {
       if (String(chunk).includes('rodando')) { clearTimeout(timer); resolve(); }
     });

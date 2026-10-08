@@ -10,7 +10,8 @@ Jogos de hoje:
 
 | Jogo | Modo | O que é |
 |------|------|---------|
-| ⌨️ **Teclado Mágico** | sozinho(a) | Digitação com os 10 dedos: teclado ABNT2 na tela com uma cor por dedo, mãos que mostram o dedo certo e 58 fases (letras, palavras, acentos, frases, pontuação, números e textos). |
+| ⌨️ **Teclado Mágico** | sozinho(a) | Digitação com os 10 dedos: teclado ABNT2 na tela com uma cor por dedo, mãos que mostram o dedo certo e 127 fases (letras, palavras, acentos, frases, pontuação, números e textos). |
+| 🔢 **Conta Comigo** | sozinho(a) | Matemática: +, −, × e ÷ da unidade ao milhar, depois números negativos, potências, raízes e expressões. 142 fases, figurinhas no lugar dos números nas contas pequenas e teclado numérico na tela (funciona no tablet). |
 | 🏁 **Desafio de Digitação** | com a turma | Corrida de digitação ao vivo: o professor escolhe o texto (uma fase do Teclado Mágico ou um texto dele) e o modo, a turma digita junta e o telão mostra a pista com os bichinhos e o pódio. |
 | 🎯 **Bingo** | com a turma | Bingo em tempo real conduzido pelo professor, com ~20 crianças em celulares, tablets ou computadores, e um telão opcional para o projetor. |
 
@@ -126,9 +127,15 @@ CMD ["node", "server.js"]
 - Maiúsculas acendem também o **Shift do lado oposto**; **acentos** são
   ensinados em dois passos (aperte o acento, solte, depois a letra), com o
   aviso "acento pronto". Dica em texto para cada tecla e aviso de Caps Lock.
-- **10 mundos, 58 fases:** fileira do meio → de cima → de baixo →
-  maiúsculas → palavras → acentuação → frases → pontuação → números e
-  símbolos → textos. As fases de letras só usam as teclas já aprendidas.
+- **10 mundos, 127 fases** (12 a 14 por mundo): fileira do meio → de cima →
+  de baixo → maiúsculas → palavras → acentuação → frases → pontuação →
+  números e símbolos → textos. As fases de letras só usam as teclas já
+  aprendidas.
+- **Mapa de fases** (o mesmo do Conta Comigo, em `js/shared/levelmap.js`):
+  fase feita em verde com ✓, tentada sem estrela em laranja com ↻,
+  pendente em branco tracejado, e a próxima em amarelo ("agora"). Cada mundo
+  mostra quantas fases já fez, e o filtro "Todas · Pendentes · Feitas"
+  esconde o resto.
 - **Todas as fases liberadas:** a criança escolhe qualquer fase no mapa
   (chave `ALL_UNLOCKED` em `levels.js`; com `false`, cada fase abre quando a
   anterior tem 1 ⭐ e o professor pode liberar todas para um educando).
@@ -143,6 +150,37 @@ CMD ["node", "server.js"]
   Lock ligado, avisa que não precisa segurar o Shift). As duas opções ficam
   guardadas no aparelho.
 - Precisa de teclado físico; em tablet/celular aparece um aviso.
+
+### 🔢 Conta Comigo (matemática)
+- **9 mundos, 142 fases** (12 a 21 por mundo): ➕ adição e ➖ subtração (até
+  5, até 10, até 20, dezena e centena sem e com vai-um/empréstimo, milhar,
+  número que falta), ✖️ multiplicação (tabuadas das mais fáceis às mais
+  difíceis, ×10/×100/×1000, dezena e centena × unidade, dezena × dezena),
+  ➗ divisão (tabuada ao contrário, dezena e centena ÷ unidade, com resto),
+  🎲 misturadas ("qual é o sinal?", contas em sequência), 🌡️ números
+  negativos, 🚀 potências, 🌱 raízes (quadrada e cúbica) e 🧠 expressões
+  (ordem das operações, parênteses, colchetes, a diferença entre −3² e (−3)²).
+- **Rodada de 10 contas.** Errou: dica que ensina o caminho (vai-um,
+  empréstimo, tabuada, regra dos sinais...) e uma 2ª tentativa. Errou de
+  novo: o jogo mostra a resposta e a conta volta nas próximas rodadas
+  daquela fase (revisão).
+- **Estrelas:** acerto de primeira vale 1 e na 2ª tentativa vale ½;
+  6 = ⭐, 8 = ⭐⭐, 9 + tempo médio dentro do alvo da fase = ⭐⭐⭐. Não há
+  cronômetro na tela.
+- **🍎 Figurinhas** (com 5 temas): nas contas pequenas os números viram
+  desenhos que mostram a operação: grupos que se juntam (+), figurinhas
+  riscadas (−), cestas com grupos iguais (×), repartir entre crianças (÷);
+  nas dezenas e centenas, material dourado (placa, barra e cubinho). Nas
+  primeiras fases dá para responder escolhendo entre 3 opções; com
+  figurinhas o tempo não conta para a 3ª estrela.
+- **Teclado numérico na tela** (e o do computador), com a tecla − nos
+  mundos de negativos em diante; divisão com resto tem dois campos
+  (quociente e resto). **🔊 Ler em voz alta** (voz do navegador em pt-BR).
+- **O servidor refaz as contas:** o navegador manda só a semente da rodada
+  e as respostas; o servidor gera as mesmas contas (mesmo `levels.js` e
+  `problems.js`) e confere cada uma.
+- Na área do professor: mundo e fase atual, estrelas, % de acerto de
+  primeira e as contas que mais erra ("7 × 8").
 
 ### 🏁 Desafio de Digitação
 - O professor cria a sala na área do professor (**Desafio de Digitação**), a
@@ -227,6 +265,8 @@ jogos_igds/
 │       ├── registry.js       # ⭐ Lista de jogos (o painel, o carregador e as rotas leem daqui)
 │       ├── digitacao/
 │       │   └── server.js     # Teclado Mágico: valida resultados, estrelas, progresso e resumos
+│       ├── matematica/
+│       │   └── server.js     # Conta Comigo: refaz as contas pela semente, estrelas, revisão e resumos
 │       ├── desafio/
 │       │   ├── raceManager.js    # Salas, rodadas, teclas conferidas no servidor, pódio
 │       │   ├── socketHandlers.js # Eventos "dz:" e o relógio que encerra as rodadas
@@ -242,6 +282,7 @@ jogos_igds/
 │   ├── css/                  # tokens, base, animações, componentes, telas e platform.css
 │   ├── js/
 │   │   ├── shared/           # Usados por todos os jogos: socket, mascote, bichinhos, som, efeitos, ui
+│   │   │                     #    e levelmap.js (mapa de fases: feitas, tentadas, pendentes e a próxima)
 │   │   └── platform/
 │   │       ├── api.js        # Chamadas à API com o token do educando (window.PlataformaApi)
 │   │       ├── auth.js       # Login "É você?", criação de conta e sessão (window.PlataformaAuth)
@@ -251,6 +292,12 @@ jogos_igds/
 │   │       ├── router.js     # Rotas (History API)
 │   │       └── app.js        # Som, cliques e navegação comuns a todas as telas
 │   └── games/
+│       ├── matematica/       # 🔢 Conta Comigo (carregado sob demanda)
+│       │   ├── levels.js     # Mundos e fases (usado também pelo servidor)
+│       │   ├── problems.js   # Gerador com semente, conferência, dicas, textos e voz (também no servidor)
+│       │   ├── emoji.js      # Figurinhas e material dourado
+│       │   ├── game.js       # Telas: mapa, antes da fase, jogando (teclado numérico), resultado
+│       │   └── view.html, game.css
 │       ├── desafio/          # 🏁 Desafio de digitação (persistente; usa teclado, mãos e motor do Teclado Mágico)
 │       │   ├── view.html     # Telas: entrar, espera, corrida, resultado, painel do professor e telão
 │       │   ├── common.js     # Relógio acertado com o servidor, pódio, ranking, contagem 3-2-1
@@ -401,6 +448,7 @@ npm test
 | Arquivo | O que testa |
 |---------|-------------|
 | `test/digitacao.test.js` | Teclado Mágico sem navegador: motor (precisão, PPM, acento composto e decomposto), ABNT2 (Shift do lado oposto, acentos, `?` e `;`), fases e estrelas, todo exercício digitável e só com as teclas da fase, validação do servidor. |
+| `test/matematica.test.js` | Conta Comigo: regras do gerador em todas as fases (vai-um/empréstimo onde deve, divisão exata, negativos só nos mundos certos, "qual é o sinal?" com uma resposta só), mesma semente = mesmas contas, servidor conferindo respostas, estrelas, revisão e área do professor. |
 | `test/platform.test.js` | Contas (nome e sobrenome, maiúsculas/acentos/espaços, conta repetida, sessão, bichinho, sair) e progresso pela API (estrelas do servidor, fase bloqueada, velocidade impossível, resumos). |
 | `test/teacher.test.js` | Área do professor com PIN: cadastro em lote, autocadastro, renomear, juntar contas, liberar fases, desativar, sala de bingo só pelo professor. |
 | `test/desafio.test.js` | Desafio de digitação: sala com PIN, mesmo texto para todos, teclas conferidas no servidor, teto de velocidade, fim automático, pódio, relógio contra o mascote, progresso, telão sem tokens. |

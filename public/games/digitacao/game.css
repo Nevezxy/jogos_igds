@@ -89,78 +89,7 @@
 }
 .tm-toggle input { width: 20px; height: 20px; accent-color: var(--green-dark); }
 
-.tm-worlds { display: grid; gap: 16px; margin-top: 12px; }
-.tm-world {
-  --world: var(--violet);
-  background: var(--surface);
-  border: var(--stroke) solid var(--ink);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 6px 0 var(--ink);
-  overflow: hidden;
-}
-.tm-world.is-locked { opacity: .65; }
-.tm-world-head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 16px;
-  background: var(--world);
-  border-bottom: var(--stroke) solid var(--ink);
-  font-family: var(--font-display);
-  font-weight: 800;
-}
-.tm-world-icon { font-size: 1.6rem; }
-.tm-world-name { font-size: 1.2rem; }
-.tm-world-stars {
-  margin-left: auto;
-  padding: 2px 10px;
-  background: #fff;
-  border: 2px solid var(--ink);
-  border-radius: 999px;
-  font-size: .95rem;
-}
-.tm-levels {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
-  gap: 10px;
-  padding: 14px;
-}
-.tm-level {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 10px 6px 8px;
-  background: var(--surface-2);
-  border: 2px solid var(--ink);
-  border-radius: var(--radius-md);
-  box-shadow: 0 4px 0 var(--ink);
-  font: inherit;
-  color: var(--ink);
-  cursor: pointer;
-  transition: transform .12s var(--ease-bounce);
-}
-.tm-level:hover:not(:disabled) { transform: translateY(-3px); }
-.tm-level:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
-.tm-level:focus-visible { outline: 3px solid var(--pink); outline-offset: 3px; }
-.tm-level:disabled { cursor: not-allowed; opacity: .55; }
-.tm-level.is-done { background: #fff; }
-.tm-level.is-next { background: var(--yellow); animation: gentlePulse 1.6s ease-in-out infinite; }
-.tm-level-num {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  border: 2px solid var(--ink);
-  background: var(--world);
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 1.15rem;
-}
-.tm-level-title { font-weight: 800; font-size: .85rem; line-height: 1.15; min-height: 2.3em; display: flex; align-items: center; }
-.tm-level-stars { color: var(--yellow-dark); letter-spacing: 2px; font-size: 1rem; }
+/* o mapa dos mundos é o compartilhado (.lm-*, em platform.css) */
 
 /* ================= TREINO LIVRE ================= */
 
@@ -514,5 +443,5 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .kb-key.is-next, .tm-ch.is-current, .tm-level.is-next { animation: none; }
+  .kb-key.is-next, .tm-ch.is-current { animation: none; }
 }

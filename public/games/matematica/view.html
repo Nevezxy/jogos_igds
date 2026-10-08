@@ -1,0 +1,96 @@
+<div class="cc">
+
+  <!-- ============ MAPA ============ -->
+  <section class="cc-screen" data-cc="map">
+    <div class="cc-map-head">
+      <div data-mascot class="cc-mascot"></div>
+      <p class="speech" id="cc-map-speech" aria-live="polite">Vamos fazer contas?</p>
+      <div class="cc-stars-total" title="Estrelas conquistadas">⭐ <strong id="cc-total-stars">0</strong><span class="cc-stars-max">/<span id="cc-max-stars">0</span></span></div>
+    </div>
+
+    <div class="cc-toolbar">
+      <button type="button" class="btn btn-primary btn-lg" id="cc-continue">▶ Continuar</button>
+      <label class="cc-toggle" title="Nas contas pequenas, os números viram figurinhas (e dá para escolher a resposta entre 3)">
+        <input type="checkbox" id="cc-emoji" />
+        <span>🍎 Figurinhas</span>
+      </label>
+      <div class="cc-themes" id="cc-themes" role="radiogroup" aria-label="Tema das figurinhas" hidden></div>
+      <label class="cc-toggle" id="cc-speech-toggle" title="O jogo lê cada conta em voz alta" hidden>
+        <input type="checkbox" id="cc-speech" />
+        <span>🔊 Ler em voz alta</span>
+      </label>
+    </div>
+
+    <div id="cc-worlds"></div>
+  </section>
+
+  <!-- ============ ANTES DA FASE ============ -->
+  <section class="cc-screen" data-cc="intro" hidden>
+    <div class="cc-card cc-intro-card">
+      <p class="cc-intro-world" id="cc-intro-world"></p>
+      <h3 class="cc-intro-title" id="cc-intro-title"></h3>
+      <p class="cc-intro-text" id="cc-intro-world-text"></p>
+      <p class="cc-intro-tip" id="cc-intro-tip"></p>
+      <div class="cc-intro-example">
+        <span class="cc-intro-example-label">Exemplo:</span>
+        <span id="cc-intro-example"></span>
+      </div>
+      <p class="cc-intro-note" id="cc-intro-emoji" hidden></p>
+      <ul class="cc-intro-rules">
+        <li>🔟 São 10 contas. Errou? Você ganha uma dica e tenta de novo.</li>
+        <li>🐢 Sem pressa: acertar de primeira vale mais que ser rápido.</li>
+        <li id="cc-intro-review" hidden>🔁 Algumas contas que você errou antes vão voltar para você treinar.</li>
+      </ul>
+      <div class="cc-intro-actions">
+        <button type="button" class="btn btn-ghost" data-cc-go="map">← Mapa</button>
+        <button type="button" class="btn btn-success btn-lg" id="cc-start">Começar! <span class="cc-kbd">Enter</span></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ JOGANDO ============ -->
+  <section class="cc-screen" data-cc="play" hidden>
+    <div class="cc-play-head">
+      <button type="button" class="btn-mini" id="cc-quit" title="Sair da fase">✕ Sair</button>
+      <strong class="cc-play-title" id="cc-play-title"></strong>
+      <div class="cc-dots" id="cc-dots" aria-label="Contas da rodada"></div>
+      <button type="button" class="btn-mini" id="cc-say" title="Ouvir a conta" hidden>🔊</button>
+    </div>
+
+    <div class="cc-stage">
+      <div class="cc-problem" id="cc-problem" aria-live="polite"></div>
+      <p class="cc-caption" id="cc-caption" hidden></p>
+
+      <div class="cc-answer" id="cc-answer"></div>
+      <p class="cc-feedback" id="cc-feedback" aria-live="assertive"></p>
+      <button type="button" class="btn btn-primary" id="cc-next-problem" hidden>Continuar ▶ <span class="cc-kbd">Enter</span></button>
+
+      <div class="cc-pad" id="cc-pad"></div>
+    </div>
+  </section>
+
+  <!-- ============ RESULTADO ============ -->
+  <section class="cc-screen" data-cc="result" hidden>
+    <div class="cc-card cc-result-card">
+      <div class="cc-result-stars" aria-hidden="true">
+        <span class="cc-star">★</span><span class="cc-star">★</span><span class="cc-star">★</span>
+      </div>
+      <h3 class="cc-result-title" id="cc-result-title"></h3>
+      <p class="cc-result-msg" id="cc-result-msg"></p>
+      <div class="cc-result-stats">
+        <div><b id="cc-res-first">0</b><small>✅ de primeira</small></div>
+        <div><b id="cc-res-second">0</b><small>🟡 na 2ª tentativa</small></div>
+        <div><b id="cc-res-time">0 s</b><small>⏱ por conta</small></div>
+      </div>
+      <div class="cc-missed" id="cc-missed" hidden>
+        <strong>📝 Para treinar mais:</strong>
+        <ul id="cc-missed-list"></ul>
+      </div>
+      <div class="cc-result-actions">
+        <button type="button" class="btn btn-ghost" data-cc-go="map">🗺️ Mapa</button>
+        <button type="button" class="btn btn-violet" id="cc-retry">🔁 Jogar de novo</button>
+        <button type="button" class="btn btn-success" id="cc-next">Próxima fase ▶</button>
+      </div>
+    </div>
+  </section>
+</div>

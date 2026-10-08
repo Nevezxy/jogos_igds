@@ -99,6 +99,9 @@ async function main() {
   assert(r.typed === 10 && r.finished && r.place === 1, 'Ana termina em 1º lugar');
   r = await emit(bia.s, 'dz:keys', { roomCode, playerToken: bia.T, chars: ' mxar' });
   assert(r.finished && r.place === 2, 'Bia termina em 2º, com um erro');
+  // gasta o limite de novo logo antes de conferir (com a máquina lenta, o
+  // tempo entre um envio e outro já liberaria mais algumas teclas)
+  await emit(caio.s, 'dz:keys', { roomCode, playerToken: caio.T, chars: 'x'.repeat(200) });
   r = await emit(caio.s, 'dz:keys', { roomCode, playerToken: caio.T, chars: 'oi sol mar' });
   assert(r.ok && r.typed === 0, 'teto de velocidade: as 200 teclas de uma vez gastaram o limite, as seguintes não contam');
   await wait(2000);

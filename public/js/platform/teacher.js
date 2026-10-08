@@ -133,6 +133,14 @@
     bingo(d) {
       return d && d.wins ? `🏆 ${d.wins}` : '<span class="muted">—</span>';
     },
+    matematica(d) {
+      if (!d || !d.problems) return '<span class="muted">—</span>';
+      const facts = d.toughest.length
+        ? `<div class="teacher-keys teacher-facts" title="Contas que mais erra">${d.toughest.map((f) => `<span>${escapeHtml(f)}</span>`).join('')}</div>`
+        : '';
+      return `<div class="teacher-game"><strong>${escapeHtml(d.current)}</strong>
+        <span>⭐ ${d.stars}/${d.maxStars} · ${d.levelsDone}/${d.totalLevels} fases · ${d.accuracy}% de primeira</span>${facts}</div>`;
+    },
     desafio(d) {
       if (!d || !d.races) return '<span class="muted">—</span>';
       return `<div class="teacher-game"><strong>🏁 ${d.races} ${d.races === 1 ? 'corrida' : 'corridas'}${d.wins ? ` · 🏆 ${d.wins}` : ''}</strong>

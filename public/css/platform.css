@@ -385,3 +385,186 @@
   background: var(--surface-2);
 }
 .teacher-modal-box textarea { resize: vertical; }
+
+/* ================= MAPA DE FASES (jogos com fases) ================= */
+/* public/js/shared/levelmap.js: feita ✓ (verde), tentou ↻ (laranja),
+   pendente • (tracejada), próxima ▶ (amarela). */
+
+.lm-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 12px; }
+.lm-count {
+  padding: 4px 12px;
+  background: var(--surface);
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  font-weight: 800;
+}
+.lm-legend { display: flex; flex-wrap: wrap; gap: 6px 12px; font-weight: 700; font-size: .85rem; color: #fff; }
+.lm-legend-item i {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  font-style: normal;
+  font-weight: 900;
+  font-size: .75rem;
+  color: var(--ink);
+  background: #fff;
+}
+.lm-legend-item.is-done i { background: var(--green); }
+.lm-legend-item.is-tried i { background: var(--orange); }
+.lm-legend-item.is-pending i { border-style: dashed; }
+.lm-legend-item.is-next i { background: var(--yellow); }
+.lm-filters { display: flex; gap: 6px; margin-left: auto; }
+.lm-filter {
+  padding: 4px 12px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 800;
+  font-size: .9rem;
+  cursor: pointer;
+}
+.lm-filter small { font-weight: 700; color: var(--ink-soft); }
+.lm-filter[aria-checked="true"] { background: var(--yellow); box-shadow: 0 3px 0 var(--ink); }
+
+.lm-worlds { display: grid; gap: 16px; margin-top: 12px; }
+.lm-world {
+  --world: var(--violet);
+  background: var(--surface);
+  border: var(--stroke) solid var(--ink);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 6px 0 var(--ink);
+  overflow: hidden;
+}
+.lm-world.is-locked { opacity: .65; }
+.lm-world-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  padding: 10px 16px;
+  background: var(--world);
+  font-family: var(--font-display);
+  font-weight: 800;
+}
+.lm-world-icon { font-size: 1.6rem; }
+.lm-world-name { font-size: 1.2rem; }
+.lm-world-badges { display: flex; gap: 6px; margin-left: auto; }
+.lm-world-done, .lm-world-stars {
+  padding: 2px 10px;
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  font-size: .95rem;
+}
+.lm-world-done.is-complete { background: var(--green); }
+.lm-world-meter { height: 8px; background: rgba(30, 18, 64, .12); border-bottom: var(--stroke) solid var(--ink); }
+.lm-world-meter i { display: block; height: 100%; width: 0; background: var(--green-dark); }
+.lm-levels {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: 10px;
+  padding: 14px;
+}
+.lm-level {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 6px 8px;
+  background: #fff;
+  border: 2px dashed rgba(30, 18, 64, .45);
+  border-radius: var(--radius-md);
+  font: inherit;
+  color: var(--ink);
+  cursor: pointer;
+  transition: transform .12s var(--ease-bounce);
+}
+.lm-level:hover:not(:disabled) { transform: translateY(-3px); }
+.lm-level:active:not(:disabled) { transform: translateY(3px); }
+.lm-level:focus-visible { outline: 3px solid var(--pink); outline-offset: 3px; }
+.lm-level:disabled { cursor: not-allowed; opacity: .55; }
+.lm-level-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2px solid var(--ink);
+  background: var(--surface-2);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.15rem;
+}
+.lm-level-tag {
+  position: absolute;
+  top: -9px;
+  right: -7px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  font-weight: 900;
+  font-size: .9rem;
+}
+.lm-level-title { font-weight: 800; font-size: .85rem; line-height: 1.15; min-height: 2.3em; display: flex; align-items: center; text-align: center; }
+.lm-level-stars { color: rgba(30, 18, 64, .3); letter-spacing: 2px; font-size: 1rem; }
+.lm-level-now {
+  position: absolute;
+  bottom: -9px;
+  padding: 0 8px;
+  background: var(--ink);
+  color: #fff;
+  border-radius: 999px;
+  font-size: .7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+/* feita */
+.lm-level.is-done {
+  background: #DDF8E8;
+  border: 2px solid var(--ink);
+  box-shadow: 0 4px 0 var(--ink);
+}
+.lm-level.is-done .lm-level-num { background: var(--world); }
+.lm-level.is-done .lm-level-tag { display: inline-flex; background: var(--green); }
+.lm-level.is-done .lm-level-stars { color: var(--yellow-dark); }
+/* tentou, sem estrela */
+.lm-level.is-tried { background: #FFF1E4; border: 2px solid var(--orange-dark); }
+.lm-level.is-tried .lm-level-tag { display: inline-flex; background: var(--orange); }
+/* próxima */
+.lm-level.is-next {
+  background: var(--yellow);
+  border: 2px solid var(--ink);
+  box-shadow: 0 4px 0 var(--ink);
+  animation: gentlePulse 1.6s ease-in-out infinite;
+}
+.lm-level.is-next .lm-level-num { background: #fff; }
+.lm-level.is-next .lm-level-tag { display: inline-flex; background: #fff; }
+.lm-empty {
+  padding: 18px;
+  background: var(--surface);
+  border: var(--stroke) solid var(--ink);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  font-weight: 800;
+}
+@media (max-width: 560px) {
+  .lm-filters { margin-left: 0; }
+  .lm-levels { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); padding: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lm-level.is-next { animation: none; }
+}
+.teacher-facts span { font-family: var(--font-body); font-weight: 800; font-size: .8rem; white-space: nowrap; }

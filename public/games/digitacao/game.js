@@ -65,10 +65,6 @@
       return (progress.levels && progress.levels[id] && progress.levels[id].stars) || 0;
     }
 
-    function starsText(n) {
-      return '★'.repeat(n) + '☆'.repeat(3 - n);
-    }
-
     function renderMap() {
       const total = Levels.totalStars(progress);
       $('#tm-total-stars').textContent = total;
@@ -82,57 +78,17 @@
       cont.textContent = next ? `▶ Continuar: ${next.title}` : '🏆 Jogar de novo a primeira fase';
       cont.dataset.level = next ? next.id : Levels.LEVELS[0].id;
 
-      const worldsEl = $('#tm-worlds');
-      worldsEl.innerHTML = '';
-      Levels.WORLDS.forEach((world, w) => {
-        const worldEl = document.createElement('div');
-        worldEl.className = 'tm-world';
-        worldEl.style.setProperty('--world', `var(--${world.color})`);
-        const locked = !Levels.isUnlocked(progress, world.levels[0].id);
-        worldEl.classList.toggle('is-locked', locked);
-        const earned = world.levels.reduce((n, l) => n + levelStars(l.id), 0);
-
-        const head = document.createElement('div');
-        head.className = 'tm-world-head';
-        const icon = document.createElement('span');
-        icon.className = 'tm-world-icon';
-        icon.textContent = locked ? '🔒' : world.icon;
-        const name = document.createElement('span');
-        name.className = 'tm-world-name';
-        name.textContent = `Mundo ${w + 1} · ${world.name}`;
-        const stars = document.createElement('span');
-        stars.className = 'tm-world-stars';
-        stars.textContent = `⭐ ${earned}/${world.levels.length * 3}`;
-        head.append(icon, name, stars);
-
-        const path = document.createElement('div');
-        path.className = 'tm-levels';
-        world.levels.forEach((level, i) => {
-          const unlocked = Levels.isUnlocked(progress, level.id);
-          const s = levelStars(level.id);
-          const btn = document.createElement('button');
-          btn.type = 'button';
-          btn.className = 'tm-level';
-          btn.disabled = !unlocked;
-          btn.classList.toggle('is-done', s > 0);
-          btn.classList.toggle('is-next', next && next.id === level.id);
-          btn.title = unlocked ? level.title : 'Ganhe 1 estrela na fase anterior para liberar';
-          btn.setAttribute('aria-label', `Fase ${i + 1}: ${level.title}. ${unlocked ? `${s} de 3 estrelas` : 'bloqueada'}`);
-          const num = document.createElement('span');
-          num.className = 'tm-level-num';
-          num.textContent = unlocked ? i + 1 : '🔒';
-          const label = document.createElement('span');
-          label.className = 'tm-level-title';
-          label.textContent = level.title;
-          const st = document.createElement('span');
-          st.className = 'tm-level-stars';
-          st.textContent = starsText(s);
-          btn.append(num, label, st);
-          btn.addEventListener('click', () => { sound.play('pop'); openIntro(level); });
-          path.appendChild(btn);
-        });
-        worldEl.append(head, path);
-        worldsEl.appendChild(worldEl);
+      // mapa compartilhado: feitas, tentadas, pendentes e a próxima bem diferentes
+      window.LevelMap.render($('#tm-worlds'), {
+        worlds: Levels.WORLDS,
+        storageKey: 'tm_map_filter',
+        nextId: next ? next.id : null,
+        stateOf: (level) => ({
+          stars: levelStars(level.id),
+          plays: (progress.levels && progress.levels[level.id] && progress.levels[level.id].plays) || 0,
+          locked: !Levels.isUnlocked(progress, level.id),
+        }),
+        onPick: (level) => { sound.play('pop'); openIntro(level); },
       });
     }
 
