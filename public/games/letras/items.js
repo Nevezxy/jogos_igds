@@ -32,7 +32,12 @@
     let out;
     switch (gen.t) {
       case 'chars': out = [...gen.chars]; break;
-      case 'list': out = gen.items ? gen.items.slice() : LISTS()[gen.list].slice(); break;
+      case 'list':
+        out = gen.items ? gen.items.slice() : LISTS()[gen.list].slice();
+        // sem acento (e sem ç) antes do mundo dos acentos; `single`: sem nomes compostos
+        if (gen.accents === 'none') out = out.filter((w) => !ACCENTED.test(w.toLowerCase()) && !w.toLowerCase().includes('ç'));
+        if (gen.single) out = out.filter((w) => !w.includes(' '));
+        break;
       case 'words': {
         out = Content.WORD_BANK.filter((w) => {
           if (gen.letters && ![...w].every((ch) => gen.letters.includes(ch))) return false;

@@ -42,6 +42,11 @@
   const SYL_CH = ['cha', 'che', 'chi', 'cho', 'chu', 'lha', 'lhe', 'lhi', 'lho', 'nha', 'nhe', 'nhi', 'nho', 'nhu'];
   const SYL_QU = ['que', 'qui', 'qua', 'quo', 'gue', 'gui', 'gua', 'ce', 'ci', 'ça', 'ço', 'çu', 'ge', 'gi'];
 
+  // A ordem dos mundos é a ordem da dificuldade, uma novidade por vez:
+  // letra solta → sílaba → palavra → palavra com maiúscula (Shift) →
+  // palavra com acento → grande final. Dentro do mundo, as peças também vão
+  // crescendo. `key` guarda o id antigo da fase quando ela mudou de lugar
+  // (assim ninguém perde as estrelas).
   const WORLDS = [
     {
       id: 'l1', icon: '🔤', name: 'Letras e números', color: 'yellow', pace: 'letra',
@@ -54,19 +59,8 @@
       ],
     },
     {
-      id: 'l2', icon: '🔠', name: 'Maiúsculas', color: 'violet', pace: 'letra', caseSensitive: true,
-      intro: 'Agora a letra tem que ser MAIÚSCULA: segure o Shift do lado contrário da letra (ou ligue o Caps Lock).',
-      contents: [
-        { title: 'Letras maiúsculas', gen: { t: 'chars', chars: 'ABCDEFGHIJKLMNOPQRSTUVWXYZÇ' }, tip: 'Shift + a letra.' },
-        { title: 'Nomes', gen: { t: 'list', list: 'nomes' }, pace: 'palavra', tip: 'Nomes começam com letra maiúscula.' },
-        { title: 'Lugares do Brasil', gen: { t: 'list', list: 'lugares' }, pace: 'palavra', tip: 'Cidades e estados, com maiúscula.' },
-        { title: 'Siglas', gen: { t: 'list', list: 'siglas' }, pace: 'silaba', tip: 'Siglas são todas em maiúscula.' },
-        { title: 'PALAVRAS GRITADAS', gen: { t: 'words', min: 3, max: 6, accents: 'none', upper: 'all' }, pace: 'palavra', tip: 'A palavra inteira em maiúscula.' },
-      ],
-    },
-    {
       id: 'l3', icon: '🔡', name: 'Sílabas', color: 'pink', pace: 'silaba',
-      intro: 'Sílabas caindo! Ba, me, pra, lha... são os pedacinhos das palavras.',
+      intro: 'Agora caem pedacinhos de palavras: sílabas de 2 e 3 letras. Ba, me, pra, lha...',
       contents: [
         { title: 'Sílabas simples', gen: { t: 'list', list: 'syllables' }, tip: 'Ba, be, bi, bo, bu...' },
         { title: 'Sílabas com R e L', gen: { t: 'list', list: 'silabasRL' }, tip: 'Bra, pla, tre: duas consoantes juntas.' },
@@ -76,28 +70,39 @@
     },
     {
       id: 'l4', icon: '📝', name: 'Palavras', color: 'sky', pace: 'palavra',
-      intro: 'Palavras inteiras caindo! Comece pela primeira letra e vá até o fim.',
+      intro: 'Palavras inteiras caindo, das curtinhas às compridas! Comece pela primeira letra e vá até o fim.',
       contents: [
-        { title: 'Palavras de 2 e 3 letras', gen: { t: 'words', min: 2, max: 3, accents: 'none' }, pace: 'silaba', tip: 'Palavras curtinhas.' },
-        { title: 'Palavras de 4 e 5 letras', gen: { t: 'words', min: 4, max: 5, accents: 'none' }, tip: 'Palavras médias.' },
-        { title: 'Palavras de 6 letras ou mais', gen: { t: 'words', min: 6, max: 9, accents: 'none' }, pace: 'longa', tip: 'Palavras compridas: letra por letra.' },
-        { title: 'Letras difíceis', gen: { t: 'words', min: 3, max: 8, accents: 'none', has: ['q', 'z', 'x', 'k', 'w', 'y'] }, tip: 'Palavras com Q, Z, X, K, W e Y.' },
-        { title: 'Ações', gen: { t: 'list', list: 'verbos' }, tip: 'Correr, pular, cantar: palavras de ação.' },
+        { key: 'a', title: 'Palavras de 2 e 3 letras', gen: { t: 'words', min: 2, max: 3, accents: 'none' }, pace: 'silaba', tip: 'Palavras curtinhas.' },
+        { key: 'b', title: 'Palavras de 4 e 5 letras', gen: { t: 'words', min: 4, max: 5, accents: 'none' }, tip: 'Palavras médias.' },
+        { key: 'e', title: 'Ações', gen: { t: 'list', list: 'verbos' }, tip: 'Correr, pular, cantar: palavras de ação.' },
+        { key: 'd', title: 'Letras difíceis', gen: { t: 'words', min: 3, max: 8, accents: 'none', has: ['q', 'z', 'x', 'k', 'w', 'y'] }, tip: 'Palavras com Q, Z, X, K, W e Y.' },
+        { key: 'c', title: 'Palavras de 6 letras ou mais', gen: { t: 'words', min: 6, max: 9, accents: 'none' }, pace: 'longa', tip: 'Palavras compridas: letra por letra.' },
+      ],
+    },
+    {
+      id: 'l2', icon: '🔠', name: 'Maiúsculas', color: 'violet', pace: 'palavra', caseSensitive: true,
+      intro: 'Agora a maiúscula conta: segure o Shift do lado contrário da letra (ou ligue o Caps Lock).',
+      contents: [
+        { key: 'a', title: 'Letras maiúsculas', gen: { t: 'chars', chars: 'ABCDEFGHIJKLMNOPQRSTUVWXYZÇ' }, pace: 'letra', tip: 'Shift + a letra.' },
+        { key: 'd', title: 'Siglas', gen: { t: 'list', list: 'siglas' }, pace: 'silaba', tip: 'Siglas são todas em maiúscula.' },
+        { key: 'b', title: 'Nomes', gen: { t: 'list', list: 'nomes', accents: 'none' }, tip: 'Nomes começam com letra maiúscula.' },
+        { key: 'c', title: 'Lugares do Brasil', gen: { t: 'list', list: 'lugares', accents: 'none', single: true }, tip: 'Cidades e estados, com maiúscula.' },
+        { key: 'e', title: 'PALAVRAS GRITADAS', gen: { t: 'words', min: 3, max: 6, accents: 'none', upper: 'all' }, tip: 'A palavra inteira em maiúscula.' },
       ],
     },
     {
       id: 'l5', icon: '✨', name: 'Palavras com acento', color: 'violet', pace: 'palavra',
       intro: 'Palavras com acento: aperte a tecla do acento, solte, e depois a letra.',
       contents: [
-        { title: 'Acento agudo ´', gen: { t: 'words', min: 2, max: 8, accents: 'need', acc: 'áéíóú' }, tip: 'O acento agudo fica à direita do P.' },
-        { title: 'Til ~', gen: { t: 'words', min: 2, max: 8, accents: 'need', acc: 'ãõ' }, tip: 'O til fica à direita do Ç.' },
-        { title: 'Circunflexo ^', gen: { t: 'words', min: 2, max: 9, accents: 'need', acc: 'âêô' }, tip: 'O circunflexo é Shift + a tecla do til.' },
-        { title: 'Cedilha ç', gen: { t: 'words', min: 3, max: 9, has: ['ç'] }, tip: 'O Ç tem tecla própria, à direita do L.' },
+        { key: 'd', title: 'Cedilha ç', gen: { t: 'words', min: 3, max: 9, accents: 'need', acc: 'ç' }, tip: 'O Ç tem tecla própria, à direita do L.' },
+        { key: 'a', title: 'Acento agudo ´', gen: { t: 'words', min: 2, max: 8, accents: 'need', acc: 'áéíóú' }, tip: 'O acento agudo fica à direita do P.' },
+        { key: 'b', title: 'Til ~', gen: { t: 'words', min: 2, max: 8, accents: 'need', acc: 'ãõ' }, tip: 'O til fica à direita do Ç.' },
+        { key: 'c', title: 'Circunflexo ^', gen: { t: 'words', min: 2, max: 9, accents: 'need', acc: 'âêô' }, tip: 'O circunflexo é Shift + a tecla do til.' },
       ],
     },
     {
       id: 'l6', icon: '🏆', name: 'Grande final', color: 'red', pace: 'longa',
-      intro: 'O grande final: maiúsculas, acentos, palavras gigantes e duas palavras de uma vez.',
+      intro: 'O grande final: maiúsculas, acentos, duas palavras de uma vez e palavras gigantes.',
       noChallenge: true, // o mundo inteiro já é desafio
       contents: [
         { title: 'Maiúscula e acento', gen: { t: 'words', min: 3, max: 9, accents: 'need', acc: 'áéíóúãõâêô', upper: 'first' }, caseSensitive: true, pace: 'palavra', tip: 'Primeiro a maiúscula, e não esqueça o acento.' },
@@ -120,7 +125,7 @@
     world.levels = [];
     const add = (content, pace, extra = {}) => {
       const level = {
-        id: `${world.id}${extra.idSuffix || 'abcdefgh'[world.levels.length]}`,
+        id: `${world.id}${extra.idSuffix || content.key || 'abcdefgh'[world.levels.length]}`,
         title: content.title,
         topic: content.title,
         fullTitle: content.title,

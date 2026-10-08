@@ -26,6 +26,16 @@ const errors = [];
 const assert = (cond, msg) => { if (!cond) errors.push(msg); else console.log('OK:', msg); };
 const throwsCode = (fn, code) => { try { fn(); return false; } catch (e) { return e.code === code; } };
 
+// ---------------- dificuldade progressiva ----------------
+const order = Levels.WORLDS.map((w) => w.name);
+assert(order.indexOf('Palavras') < order.indexOf('Maiúsculas') && order.indexOf('Maiúsculas') < order.indexOf('Acentuação') && order.indexOf('Acentuação') < order.indexOf('Frases'),
+  `mundos em ordem de dificuldade: ${order.join(' → ')}`);
+const ACC = /[áéíóúãõâêôàü]/;
+const accentWorld = Levels.WORLDS.findIndex((w) => w.name === 'Acentuação');
+const early = Levels.LEVELS.filter((l) => l.worldIndex < accentWorld);
+const withAccent = early.filter((l) => Array.from({ length: 15 }, () => Content.generate(l)).some((t) => ACC.test(String(t.text || t))));
+assert(withAccent.length === 0, `nenhum acento antes do mundo da acentuação${withAccent.length ? `: ${withAccent.map((l) => l.id).join(', ')}` : ''}`);
+
 // ---------------- motor ----------------
 let clock = 0;
 const now = () => clock;

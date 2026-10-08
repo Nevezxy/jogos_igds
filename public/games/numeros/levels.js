@@ -37,6 +37,8 @@
   const table = (list) => calc({ t: 'mul', a: { list }, b: [0, 10], swap: true });
   const divBy = (list) => calc({ t: 'div', d: { list }, q: [0, 10], amax: 99 });
 
+  // A ordem é a da dificuldade; `key` guarda o id antigo da fase que mudou
+  // de lugar (assim ninguém perde as estrelas).
   const WORLDS = [
     {
       id: 'n1', icon: '🎲', name: 'Dados e dominós', color: 'pink', pace: 'dado',
@@ -62,9 +64,9 @@
       intro: 'Contas de mais e de menos com dezenas e centenas. Resolva de cabeça!',
       contents: [
         { title: 'Dezenas inteiras', gen: calc({ t: 'pick', of: [{ t: 'add', a: [10, 90, 10], b: [10, 90, 10], max: 100 }, { t: 'sub', a: [20, 100, 10], b: [10, 90, 10] }] }), tip: '30 + 40 é como 3 + 4, com um zero no fim.' },
-        { title: 'Dezena e unidade', gen: calc({ t: 'pick', of: [{ t: 'add', a: [10, 89], b: [1, 9], carry: 'no', swap: true }, { t: 'sub', a: [11, 99], b: [1, 9], borrow: 'no' }] }), tip: 'Mexa só nas unidades: a dezena fica igual.' },
-        { title: 'Dezena e dezena', gen: calc({ t: 'pick', of: [{ t: 'add', a: [10, 88], b: [10, 88], carry: 'no', max: 99 }, { t: 'sub', a: [20, 99], b: [10, 89], borrow: 'no' }] }), pace: 'longa', tip: 'Unidade com unidade, dezena com dezena.' },
-        { title: 'Centenas inteiras', gen: calc({ t: 'pick', of: [{ t: 'add', a: [100, 900, 100], b: [100, 900, 100], max: 1000 }, { t: 'sub', a: [200, 1000, 100], b: [100, 900, 100] }] }), tip: '300 + 400 é como 3 + 4, com dois zeros no fim.' },
+        { key: 'd', title: 'Centenas inteiras', gen: calc({ t: 'pick', of: [{ t: 'add', a: [100, 900, 100], b: [100, 900, 100], max: 1000 }, { t: 'sub', a: [200, 1000, 100], b: [100, 900, 100] }] }), tip: '300 + 400 é como 3 + 4, com dois zeros no fim.' },
+        { key: 'b', title: 'Dezena e unidade', gen: calc({ t: 'pick', of: [{ t: 'add', a: [10, 89], b: [1, 9], carry: 'no', swap: true }, { t: 'sub', a: [11, 99], b: [1, 9], borrow: 'no' }] }), tip: 'Mexa só nas unidades: a dezena fica igual.' },
+        { key: 'c', title: 'Dezena e dezena', gen: calc({ t: 'pick', of: [{ t: 'add', a: [10, 88], b: [10, 88], carry: 'no', max: 99 }, { t: 'sub', a: [20, 99], b: [10, 89], borrow: 'no' }] }), pace: 'longa', tip: 'Unidade com unidade, dezena com dezena.' },
       ],
     },
     {
@@ -141,7 +143,7 @@
     world.levels = [];
     const add = (content, pace, extra = {}) => {
       const level = {
-        id: `${world.id}${extra.idSuffix || 'abcdefghi'[world.levels.length]}`,
+        id: `${world.id}${extra.idSuffix || content.key || 'abcdefghi'[world.levels.length]}`,
         title: content.title,
         topic: content.title,
         fullTitle: content.title,

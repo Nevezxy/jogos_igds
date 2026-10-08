@@ -29,6 +29,10 @@ function checkLetras() {
   assert(Letras.LEVELS.length >= 30 && Letras.WORLDS.every((w) => w.levels.length >= 4), `Letras Cadentes: ${Letras.LEVELS.length} fases, todas diferentes`);
   assert(new Set(Letras.LEVELS.map((l) => JSON.stringify(l.gen))).size === Letras.LEVELS.length, 'nenhuma fase repete o conteúdo de outra');
   assert(Letras.getWorld('l1').contents.every((c) => c.gen.t === 'chars'), 'letras e números num mundo só');
+  assert(Letras.WORLDS.map((w) => w.id).join() === 'l1,l3,l4,l2,l5,l6', 'mundos em ordem de dificuldade: letra → sílaba → palavra → maiúscula → acento → final');
+  const ACC = /[áéíóúãõâêôàü]/i;
+  const before = Letras.LEVELS.filter((l) => l.worldIndex < Letras.WORLDS.findIndex((w) => w.id === 'l5'));
+  assert(before.every((l) => [1, 2, 3].every((s) => LetrasItems.makeItems(l, s).every((it) => !ACC.test(it)))), 'nenhum acento antes do mundo dos acentos');
   assert(new Set(Letras.LEVELS.map((l) => l.id)).size === Letras.LEVELS.length, 'ids de fase sem repetir');
   for (const level of Letras.LEVELS) {
     for (let s = 1; s <= 40; s++) {

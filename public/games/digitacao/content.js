@@ -356,9 +356,12 @@
         parts = sample(pool, level.count || 12);
         break;
       }
-      case 'list':
-        parts = sample(LISTS[level.list], level.count || 8);
+      case 'list': {
+        // `plain`: sem acento (fases que vêm antes do mundo dos acentos)
+        const pool = level.plain ? LISTS[level.list].filter((w) => !ACCENTED.test(w)) : LISTS[level.list];
+        parts = sample(pool, level.count || 8);
         break;
+      }
       case 'syllables':
         parts = sample(SYLLABLES, level.count || 14);
         break;
