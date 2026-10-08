@@ -1,0 +1,104 @@
+<div class="lc">
+
+  <!-- ============ MAPA ============ -->
+  <section class="lc-screen" data-lc="map">
+    <div class="lc-map-head">
+      <div data-mascot class="lc-mascot"></div>
+      <p class="speech" id="lc-map-speech" aria-live="polite">Pegue as letras antes que caiam no chão!</p>
+      <div class="lc-stars-total" title="Estrelas conquistadas">⭐ <strong id="lc-total-stars">0</strong><span class="lc-stars-max">/<span id="lc-max-stars">0</span></span></div>
+    </div>
+
+    <p class="lc-notice" id="lc-touch-notice" hidden>⌨️ Este jogo precisa de um teclado de verdade. No tablet ou no celular, ligue um teclado (por exemplo, bluetooth) para jogar.</p>
+
+    <div class="lc-toolbar">
+      <button type="button" class="btn btn-primary btn-lg" id="lc-continue">▶ Continuar</button>
+      <label class="lc-toggle" title="Mostra no teclado da tela a próxima tecla e o dedo certo">
+        <input type="checkbox" id="lc-show-kb" checked />
+        <span>⌨️ Teclado de ajuda</span>
+      </label>
+    </div>
+
+    <div id="lc-worlds"></div>
+  </section>
+
+  <!-- ============ ANTES DA FASE ============ -->
+  <section class="lc-screen" data-lc="intro" hidden>
+    <div class="lc-card">
+      <p class="lc-intro-world" id="lc-intro-world"></p>
+      <h3 class="lc-intro-title" id="lc-intro-title"></h3>
+      <p class="lc-intro-text" id="lc-intro-world-text"></p>
+      <p class="lc-intro-tip" id="lc-intro-tip"></p>
+      <div class="lc-intro-example" id="lc-intro-example" aria-label="Exemplos do que vai cair"></div>
+      <ul class="lc-intro-rules">
+        <li>☁️ As peças caem do céu. Digite cada uma antes que chegue ao chão.</li>
+        <li>🎯 Comece pela peça mais perto do chão: a primeira letra escolhe a peça.</li>
+        <li id="lc-intro-case">🔡 Maiúscula ou minúscula, tanto faz.</li>
+        <li>⏸ Precisa parar? Aperte Esc ou o botão de pausa.</li>
+      </ul>
+      <div class="lc-intro-actions">
+        <button type="button" class="btn btn-ghost" data-lc-go="map">← Mapa</button>
+        <button type="button" class="btn btn-success btn-lg" id="lc-start">Começar! <span class="lc-kbd">Enter</span></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ JOGANDO ============ -->
+  <section class="lc-screen" data-lc="play" hidden>
+    <div class="lc-play-head">
+      <button type="button" class="btn-mini" id="lc-quit" title="Sair da fase">✕ Sair</button>
+      <strong class="lc-play-title" id="lc-play-title"></strong>
+      <div class="lc-stats">
+        <span class="lc-stat" title="Peças pegas">✅ <b id="lc-stat-caught">0</b></span>
+        <span class="lc-stat" title="Peças que caíram no chão">💥 <b id="lc-stat-lost">0</b></span>
+        <span class="lc-stat" title="Peças que ainda vão cair">☁️ <b id="lc-stat-left">0</b></span>
+      </div>
+      <button type="button" class="btn-mini" id="lc-pause-btn" title="Pausar (Esc)">⏸ Pausar</button>
+    </div>
+    <div class="lc-progress" aria-hidden="true"><span id="lc-progress-bar"></span></div>
+
+    <div class="lc-sky" id="lc-sky">
+      <div class="lc-ground" id="lc-ground" aria-hidden="true"></div>
+      <div class="lc-overlay" id="lc-countdown" hidden><span id="lc-countdown-n">3</span></div>
+      <button type="button" class="lc-overlay lc-pause" id="lc-pause" hidden>
+        <span class="lc-pause-icon">⏸</span>
+        <span>Pausado</span>
+        <small>Clique aqui ou aperte qualquer tecla para continuar</small>
+      </button>
+    </div>
+    <textarea id="lc-input" class="lc-input" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Digite aqui"></textarea>
+
+    <div class="lc-help" id="lc-help">
+      <p class="lc-hint" id="lc-hint" aria-live="polite"></p>
+      <div class="lc-alerts">
+        <span class="lc-alert" id="lc-caps" hidden>⇪ O Caps Lock está ligado.</span>
+        <span class="lc-alert lc-alert-dead" id="lc-dead" hidden>✨ Acento pronto! Agora aperte a letra.</span>
+      </div>
+      <div class="lc-kb" id="lc-kb" aria-hidden="true"></div>
+    </div>
+  </section>
+
+  <!-- ============ RESULTADO ============ -->
+  <section class="lc-screen" data-lc="result" hidden>
+    <div class="lc-card lc-result-card">
+      <div class="lc-result-stars" aria-hidden="true">
+        <span class="lc-star">★</span><span class="lc-star">★</span><span class="lc-star">★</span>
+      </div>
+      <h3 class="lc-result-title" id="lc-result-title"></h3>
+      <p class="lc-result-msg" id="lc-result-msg"></p>
+      <div class="lc-result-stats">
+        <div><b id="lc-res-caught">0</b><small>✅ pegas</small></div>
+        <div><b id="lc-res-acc">100%</b><small>🎯 teclas certas</small></div>
+        <div><b id="lc-res-time">0:00</b><small>⏱ tempo</small></div>
+      </div>
+      <div class="lc-lost" id="lc-lost" hidden>
+        <strong>💥 Caíram no chão:</strong>
+        <div class="lc-lost-list" id="lc-lost-list"></div>
+      </div>
+      <div class="lc-result-actions">
+        <button type="button" class="btn btn-ghost" data-lc-go="map">🗺️ Mapa</button>
+        <button type="button" class="btn btn-violet" id="lc-retry">🔁 Jogar de novo</button>
+        <button type="button" class="btn btn-success" id="lc-next">Próxima fase ▶</button>
+      </div>
+    </div>
+  </section>
+</div>

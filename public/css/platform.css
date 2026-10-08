@@ -126,6 +126,14 @@
   max-width: 1000px;
   margin: 0 auto;
 }
+.game-section {
+  grid-column: 1 / -1;
+  margin: 10px 0 -8px;
+  color: #fff;
+  font-size: 1.5rem;
+  text-shadow: 0 3px 0 rgba(30, 18, 64, .35);
+}
+.game-section:first-child { margin-top: 0; }
 .game-grid-empty { color: #fff; font-weight: 800; text-align: center; grid-column: 1 / -1; }
 
 .game-card {

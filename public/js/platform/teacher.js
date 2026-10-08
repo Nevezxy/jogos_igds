@@ -133,6 +133,14 @@
     bingo(d) {
       return d && d.wins ? `🏆 ${d.wins}` : '<span class="muted">—</span>';
     },
+    letras(d) {
+      if (!d || !d.pieces) return '<span class="muted">—</span>';
+      const tough = d.toughest.length
+        ? `<div class="teacher-keys teacher-facts" title="O que mais caiu ou mais errou">${d.toughest.map((k) => `<span>${escapeHtml(k === ' ' ? '␣' : k)}</span>`).join('')}</div>`
+        : '';
+      return `<div class="teacher-game"><strong>${escapeHtml(d.current)}</strong>
+        <span>⭐ ${d.stars}/${d.maxStars} · ${d.levelsDone}/${d.totalLevels} fases · pega ${d.caughtPct}%</span>${tough}</div>`;
+    },
     matematica(d) {
       if (!d || !d.problems) return '<span class="muted">—</span>';
       const facts = d.toughest.length

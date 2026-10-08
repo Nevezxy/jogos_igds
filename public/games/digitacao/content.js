@@ -398,7 +398,7 @@
     { id: 'numeros', icon: '🔢', name: 'Números', make: () => sample(SENTENCES.numeros, 4).join(' ') },
   ];
 
-  const api = { generate, PRACTICE, WORD_BANK, LISTS, SENTENCES, TEXTS };
+  const api = { generate, PRACTICE, WORD_BANK, LISTS, SENTENCES, TEXTS, SYLLABLES };
   // no navegador vira window.DigitacaoContent; no servidor (Desafio de
   // digitação) é usado com require()
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

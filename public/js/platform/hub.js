@@ -1,6 +1,7 @@
 // public/js/platform/hub.js
 // Painel de seleção de jogos: quem está logado (com troca de bichinho e
-// "Não sou eu / Sair") e um cartão por jogo do registro (/api/games).
+// "Não sou eu / Sair") e um cartão por jogo do registro (/api/games),
+// separados por assunto (`subject` no registro).
 // Nenhum jogo fica fixo no HTML — um jogo novo no registro aparece aqui.
 
 (function () {
@@ -10,6 +11,14 @@
   const go = (url) => window.PlataformaRouter.go(url);
 
   const grid = document.getElementById('game-grid');
+  // Seções do painel, nesta ordem. Jogo sem `subject` vai para "Outros".
+  const SUBJECTS = [
+    { id: 'digitacao', label: '⌨️ Digitação' },
+    { id: 'matematica', label: '🔢 Matemática' },
+    { id: 'mouse', label: '🖱️ Mouse' },
+    { id: 'turma', label: '👥 Com a turma' },
+    { id: 'outros', label: '🎲 Outros' },
+  ];
   const MODE_LABELS = {
     turma: '👥 com a turma',
     solo: '🙋 sozinho(a)',
@@ -96,7 +105,16 @@
       return;
     }
     grid.innerHTML = '';
-    games.forEach((game, i) => grid.appendChild(cardFor(game, i)));
+    let i = 0;
+    for (const subject of SUBJECTS) {
+      const list = games.filter((g) => (SUBJECTS.some((s) => s.id === g.subject) ? g.subject : 'outros') === subject.id);
+      if (!list.length) continue;
+      const head = document.createElement('h2');
+      head.className = 'game-section';
+      head.textContent = subject.label;
+      grid.appendChild(head);
+      list.forEach((game) => grid.appendChild(cardFor(game, i++)));
+    }
     renderSummaries();
   }
 

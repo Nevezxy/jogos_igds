@@ -11,6 +11,7 @@ Jogos de hoje:
 | Jogo | Modo | O que é |
 |------|------|---------|
 | ⌨️ **Teclado Mágico** | sozinho(a) | Digitação com os 10 dedos: teclado ABNT2 na tela com uma cor por dedo, mãos que mostram o dedo certo e 127 fases (letras, palavras, acentos, frases, pontuação, números e textos). |
+| 🔤 **Letras Cadentes** | sozinho(a) | Letras, números, sílabas e palavras caem do céu e a criança digita cada uma antes que chegue ao chão. 108 fases, com teclado de ajuda na tela. |
 | 🔢 **Conta Comigo** | sozinho(a) | Matemática: mundo das figurinhas, adição e subtração da unidade ao milhar, multiplicação e divisão até a dezena, depois números negativos, potências, raízes e expressões. 152 fases e teclado numérico na tela (funciona no tablet). |
 | 🏁 **Desafio de Digitação** | com a turma | Corrida de digitação ao vivo: o professor escolhe o texto (uma fase do Teclado Mágico ou um texto dele) e o modo, a turma digita junta e o telão mostra a pista com os bichinhos e o pódio. |
 | 🎯 **Bingo** | com a turma | Bingo em tempo real conduzido pelo professor, com ~20 crianças em celulares, tablets ou computadores, e um telão opcional para o projetor. |
@@ -151,6 +152,29 @@ CMD ["node", "server.js"]
   guardadas no aparelho.
 - Precisa de teclado físico; em tablet/celular aparece um aviso.
 
+### 🔤 Letras Cadentes (digitação)
+- Letras, números, sílabas e palavras caem do céu; a criança digita cada
+  uma antes que chegue ao chão. **Alvo travado:** a primeira letra escolhe
+  a peça mais perto do chão que começa com ela (fica amarela) e as letras
+  seguintes completam aquela peça; letra errada faz a peça tremer e conta
+  um erro, mas não perde a peça. Esc ou Backspace soltam o alvo.
+- **9 mundos, 108 fases:** letras do meio, de cima e de baixo, letras e
+  números, maiúsculas, sílabas, palavras simples, palavras com acento e
+  desafio. Cada mundo tem 4 conteúdos, e cada conteúdo vem em 3 velocidades
+  (🐢 devagar, 🐇 médio, 🚀 rápido: tempo de queda, intervalo e quantas
+  peças ao mesmo tempo).
+- **Sem game over:** a rodada vai até a última peça. Estrelas: pegar 60% =
+  ⭐, 80% = ⭐⭐, 95% com até 10% de teclas erradas = ⭐⭐⭐.
+- Acentos como no Teclado Mágico; maiúscula só conta nos mundos de
+  maiúsculas e desafio (nos outros, o Caps Lock ligado não atrapalha).
+- **Teclado de ajuda** (pode desligar): mostra a próxima tecla e o dedo
+  certo, com a dica em texto.
+- Pausa com Esc, pelo botão ⏸, ou sozinha quando a criança troca de aba
+  ou a página perde o foco.
+- O servidor refaz a lista de peças pela semente e confere o resultado;
+  na área do professor aparecem a fase, as estrelas, quanto a criança pega
+  e o que mais cai (ou mais erra).
+
 ### 🔢 Conta Comigo (matemática)
 - **9 mundos, 152 fases** (12 a 37 por mundo, com etapas no mapa; toda fase
   tem pelo menos 10 contas diferentes, para não repetir conta na rodada):
@@ -289,6 +313,7 @@ jogos_igds/
 │   ├── js/
 │   │   ├── shared/           # Usados por todos os jogos: socket, mascote, bichinhos, som, efeitos, ui
 │   │   │                     #    e levelmap.js (mapa de fases: feitas, tentadas, pendentes e a próxima)
+│   │   │                     #    e falling.js (motor de queda dos jogos "Cadentes")
 │   │   └── platform/
 │   │       ├── api.js        # Chamadas à API com o token do educando (window.PlataformaApi)
 │   │       ├── auth.js       # Login "É você?", criação de conta e sessão (window.PlataformaAuth)
@@ -298,6 +323,10 @@ jogos_igds/
 │   │       ├── router.js     # Rotas (History API)
 │   │       └── app.js        # Som, cliques e navegação comuns a todas as telas
 │   └── games/
+│       ├── letras/           # 🔤 Letras Cadentes (usa teclado, dica e palavras do Teclado Mágico)
+│       │   ├── levels.js     # Mundos, conteúdos × velocidades e estrelas (também no servidor)
+│       │   ├── items.js      # O que cai em cada fase, com semente (também no servidor)
+│       │   └── game.js, view.html, game.css
 │       ├── matematica/       # 🔢 Conta Comigo (carregado sob demanda)
 │       │   ├── levels.js     # Mundos e fases (usado também pelo servidor)
 │       │   ├── problems.js   # Gerador com semente, conferência, dicas, textos e voz (também no servidor)
@@ -454,6 +483,7 @@ npm test
 | Arquivo | O que testa |
 |---------|-------------|
 | `test/digitacao.test.js` | Teclado Mágico sem navegador: motor (precisão, PPM, acento composto e decomposto), ABNT2 (Shift do lado oposto, acentos, `?` e `;`), fases e estrelas, todo exercício digitável e só com as teclas da fase, validação do servidor. |
+| `test/cadentes.test.js` | Letras Cadentes: peças certas em todas as fases (só as teclas da fase, sem acento onde não pode, tudo digitável no ABNT2), mesma semente = mesmas peças, servidor recusando resultado impossível, estrelas, progresso, painel por assunto e área do professor. |
 | `test/matematica.test.js` | Conta Comigo: regras do gerador em todas as fases (vai-um/empréstimo onde deve, divisão exata, negativos só nos mundos certos, "qual é o sinal?" com uma resposta só), mesma semente = mesmas contas, servidor conferindo respostas, estrelas, revisão e área do professor. |
 | `test/platform.test.js` | Contas (nome e sobrenome, maiúsculas/acentos/espaços, conta repetida, sessão, bichinho, sair) e progresso pela API (estrelas do servidor, fase bloqueada, velocidade impossível, resumos). |
 | `test/teacher.test.js` | Área do professor com PIN: cadastro em lote, autocadastro, renomear, juntar contas, liberar fases, desativar, sala de bingo só pelo professor. |

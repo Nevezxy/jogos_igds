@@ -7,6 +7,7 @@
 // Campos:
 //   id, name, icon, tagline   — o que aparece no cartão do painel
 //   mode     'solo' | 'turma' — jogo individual ou com a turma em tempo real
+//   subject  seção do painel: 'digitacao' | 'matematica' | 'mouse' | 'turma'
 //   status   'active' | 'soon' | 'hidden'
 //   color    cor do cartão (nome de token do tema: sky, pink, green, ...)
 //   client   arquivos em public/games/<id>/: { styles: [], view, scripts: [] },
@@ -29,6 +30,7 @@ const games = [
     icon: '⌨️',
     tagline: 'Aprenda a digitar com os 10 dedos: letras, palavras, acentos e frases!',
     mode: 'solo',
+    subject: 'digitacao',
     status: 'active',
     color: 'sky',
     isNew: true,
@@ -41,11 +43,34 @@ const games = [
     server: require('./digitacao/server'),
   },
   {
+    id: 'letras',
+    name: 'Letras Cadentes',
+    icon: '🔤',
+    tagline: 'Letras e palavras caem do céu: digite cada uma antes que chegue ao chão!',
+    mode: 'solo',
+    subject: 'digitacao',
+    status: 'active',
+    color: 'violet',
+    isNew: true,
+    requiresKeyboard: true,
+    // usa o teclado, a dica e o banco de palavras do Teclado Mágico
+    client: {
+      styles: ['../digitacao/game.css', 'game.css'],
+      view: 'view.html',
+      scripts: [
+        '../digitacao/layouts/abnt2.js', '../digitacao/content.js', '../digitacao/keyboard.js',
+        '../digitacao/hands.js', '../digitacao/hint.js', 'levels.js', 'items.js', 'game.js',
+      ],
+    },
+    server: require('./letras/server'),
+  },
+  {
     id: 'matematica',
     name: 'Conta Comigo',
     icon: '🔢',
     tagline: 'Contas de +, −, × e ÷, da unidade ao milhar, e depois negativos, potências e raízes!',
     mode: 'solo',
+    subject: 'matematica',
     status: 'active',
     color: 'green',
     isNew: true,
@@ -64,6 +89,7 @@ const games = [
     icon: '🏁',
     tagline: 'Corrida de digitação com a turma toda, ao vivo, com telão e pódio!',
     mode: 'turma',
+    subject: 'turma',
     status: 'active',
     color: 'orange',
     isNew: true,
@@ -92,6 +118,7 @@ const games = [
     icon: '🎯',
     tagline: 'Bingo de números, palavras e emojis com a turma toda!',
     mode: 'turma',
+    subject: 'turma',
     status: 'active',
     color: 'pink',
     // persistent: o HTML (view.html) entra na página uma vez e fica; o jogo
