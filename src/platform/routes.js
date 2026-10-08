@@ -106,9 +106,14 @@ function createPlatformRouter(registry) {
 
   router.get('/teacher/students', asTeacher(() => ({
     students: teacher.classList(registry),
+    classes: accounts.listClasses(),
     settings: teacher.settings.all(),
   })));
-  router.post('/teacher/students', asTeacher((req) => teacher.bulkRegister(body(req).names)));
+  router.post('/teacher/students', asTeacher((req) => teacher.bulkRegister(body(req).names, body(req).className)));
+  // turma de um ou mais educandos: { ids: [...], className } (vazio = sem turma)
+  router.post('/teacher/students/class', asTeacher((req) => ({
+    className: accounts.setClass(body(req).ids, body(req).className),
+  })));
   router.post('/teacher/students/merge', asTeacher((req) => {
     teacher.mergeStudents(registry, body(req).fromId, body(req).intoId);
     return {};

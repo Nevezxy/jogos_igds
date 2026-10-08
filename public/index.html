@@ -147,6 +147,13 @@
       <input type="search" id="teacher-search" class="teacher-search" placeholder="Procurar educando..." aria-label="Procurar educando" />
       <button type="button" class="btn btn-success" id="teacher-bulk">➕ Cadastrar turma</button>
     </div>
+    <div class="teacher-classes" id="teacher-classes" role="radiogroup" aria-label="Filtrar por turma"></div>
+    <div class="teacher-selection" id="teacher-selection" hidden>
+      <strong id="teacher-selection-count"></strong>
+      <button type="button" class="btn-mini" id="teacher-selection-class">🏫 Mudar a turma</button>
+      <button type="button" class="btn-mini" id="teacher-selection-clear">✖ Limpar seleção</button>
+    </div>
+    <datalist id="teacher-class-options"></datalist>
     <label class="teacher-setting">
       <input type="checkbox" id="teacher-allow-signup" />
       <span>Educandos podem criar a própria conta no login</span>

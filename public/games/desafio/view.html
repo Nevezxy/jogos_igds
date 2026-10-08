@@ -177,6 +177,13 @@
           <ul id="dz-live-help-list"></ul>
         </div>
 
+        <div class="dz-live-alerts">
+          <span>🔔 Avisar quando a criança estiver</span>
+          <label>parada há mais de <input type="number" id="dz-live-idle-secs" min="5" max="120" step="1" inputmode="numeric" aria-label="Segundos sem digitar para avisar" /> s</label>
+          <label>ou com acerto abaixo de <input type="number" id="dz-live-low-acc" min="50" max="100" step="5" inputmode="numeric" aria-label="Precisão mínima antes de avisar" /> %</label>
+          <button type="button" class="btn-mini" id="dz-live-alerts-reset" title="Voltar para 12 s e 80%">↺ padrão</button>
+        </div>
+
         <div class="dz-live-tools">
           <span class="dz-m-label">Ordenar</span>
           <div class="dz-seg" role="radiogroup" aria-label="Ordenar a tabela">

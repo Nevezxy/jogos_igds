@@ -232,6 +232,27 @@
 }
 .dz-live-help[hidden] { display: none; }
 .dz-live-help ul { margin: 6px 0 0; padding-left: 20px; display: grid; gap: 2px; font-weight: 700; }
+.dz-live-alerts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  margin-bottom: 12px;
+  font-size: .9rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+.dz-live-alerts label { display: inline-flex; align-items: center; gap: 4px; }
+.dz-live-alerts input {
+  width: 4em;
+  padding: 2px 6px;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  color: var(--ink);
+  background: var(--surface);
+  text-align: center;
+}
 .dz-live-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 8px; }
 .dz-seg-mini { padding: 4px 12px; font-size: .88rem; }
 .dz-live-table-wrap { overflow-x: auto; }

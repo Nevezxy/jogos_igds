@@ -62,9 +62,12 @@ CREATE TABLE IF NOT EXISTS wins (
 `);
 
 // Migrações simples: colunas acrescentadas depois que o banco já existia.
+// Devolve true quando a coluna acabou de ser criada.
 function addColumnIfMissing(table, column, definition) {
   const columns = db.prepare(`PRAGMA table_info(${table})`).all().map((c) => c.name);
-  if (!columns.includes(column)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+  if (columns.includes(column)) return false;
+  db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+  return true;
 }
 addColumnIfMissing('players', 'student_id', 'TEXT');
 
@@ -134,6 +137,7 @@ function insertWin(roomCode, playerId, playerName, pattern, matchNumber) {
 
 module.exports = {
   db,
+  addColumnIfMissing,
   upsertRoom,
   markRoomEnded,
   upsertPlayer,

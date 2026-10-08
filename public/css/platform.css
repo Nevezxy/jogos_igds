@@ -285,6 +285,50 @@
   font: inherit;
   font-weight: 700;
 }
+.teacher-classes { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.teacher-classes:empty { display: none; }
+.teacher-class-chip {
+  padding: 4px 12px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 800;
+  font-size: .9rem;
+  cursor: pointer;
+}
+.teacher-class-chip small { font-weight: 700; color: var(--ink-soft); }
+.teacher-class-chip[aria-checked="true"] { background: var(--yellow); box-shadow: 0 3px 0 var(--ink); }
+.teacher-class-chip.is-none { border-style: dashed; }
+.teacher-selection {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-top: 12px;
+  padding: 8px 14px;
+  background: var(--surface-2);
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-sm);
+}
+.teacher-selection[hidden] { display: none; }
+.teacher-table .teacher-check { width: 32px; }
+.teacher-table .teacher-check input { width: 18px; height: 18px; accent-color: var(--green-dark); cursor: pointer; }
+.teacher-table tr.is-selected td { background: #FFF6CC; }
+.teacher-class-btn {
+  padding: 1px 10px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 800;
+  font-size: .85rem;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.teacher-class-btn.is-none { border-style: dashed; background: transparent; color: var(--ink-soft); font-weight: 700; }
 .teacher-setting { display: inline-flex; align-items: center; gap: 8px; margin: 12px 0 4px; font-weight: 800; cursor: pointer; }
 .teacher-setting input { width: 20px; height: 20px; accent-color: var(--green-dark); }
 .teacher-empty { margin: 16px 0 0; }
@@ -300,7 +344,7 @@
   white-space: nowrap;
 }
 .teacher-table td { padding: 10px; border-bottom: 1px solid var(--line); vertical-align: top; font-weight: 600; }
-.teacher-table td:first-child { white-space: nowrap; }
+.teacher-table td:nth-child(2) { white-space: nowrap; } /* nome (a 1ª coluna é a caixinha) */
 .teacher-table td .avatar-badge { width: 34px; height: 34px; font-size: 1.2rem; vertical-align: middle; margin-right: 4px; }
 .teacher-table tr.is-inactive td { opacity: .55; }
 .teacher-game { display: flex; flex-direction: column; gap: 2px; font-size: .9rem; }

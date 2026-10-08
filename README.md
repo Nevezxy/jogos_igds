@@ -166,7 +166,9 @@ CMD ["node", "server.js"]
   uma linha por criança (progresso no texto, PPM, precisão, erros e
   situação) com ordenação por posição, nome, precisão ou "quem precisa de
   ajuda", e um aviso de quem pode precisar de ajuda: parado há mais de 12 s,
-  errando bastante (menos de 80% de acerto) ou que saiu da página.
+  errando bastante (menos de 80% de acerto) ou que saiu da página. Os dois
+  limites (5 a 120 s; 50 a 100%) mudam na própria tela e ficam guardados no
+  navegador do professor (botão "↺ padrão" volta para 12 s e 80%).
 - **Contra trapaça:** cada tecla é conferida no servidor pelo mesmo motor do
   Teclado Mágico, com teto de 20 teclas por segundo.
 - Cada rodada conta no progresso da criança (painel e área do professor).
@@ -194,8 +196,15 @@ CMD ["node", "server.js"]
 - **Renomear** (ex.: "Ana Souza 5A" para diferenciar duas crianças),
   **juntar** duas contas da mesma criança (fica o melhor progresso de cada
   fase), **liberar todas as fases**, **desativar/reativar**.
-- **Cadastrar a turma** de uma vez (um nome por linha) e **ligar/desligar o
-  autocadastro** (desligado, só o professor cria contas).
+- **Turmas:** cada educando pode ter uma turma ("5A", "3º ano B"). Botões
+  no alto da lista filtram por turma (com quantos tem em cada uma e "Sem
+  turma"); a turma de cada um muda clicando nela, ou marcando vários e
+  usando "🏫 Mudar a turma". Quem cria a conta com a turma no nome ("Ana
+  Souza 5A") já entra nela; turmas escritas de outro jeito ("5a") caem na
+  que já existe. Mudar a turma não mexe no progresso.
+- **Cadastrar a turma** de uma vez (um nome por linha, todos na turma
+  escolhida) e **ligar/desligar o autocadastro** (desligado, só o professor
+  cria contas).
 
 ---
 

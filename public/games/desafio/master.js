@@ -25,9 +25,20 @@
   let qrFor = null;
   let sortBy = 'position';
 
-  // quando avisar o professor
-  const IDLE_MS = 12000; // sem digitar há 12 s
-  const LOW_ACCURACY = 80; // menos de 80% de acerto (depois de 10 letras)
+  // Quando avisar o professor. O professor muda na própria tela; fica
+  // guardado neste navegador.
+  const ALERTS_KEY = 'desafio_alertas_v1';
+  const ALERT_LIMITS = { idleSecs: [5, 120, 12], accuracy: [50, 100, 80] }; // [mín, máx, padrão]
+  const alerts = { idleSecs: 12, accuracy: 80 };
+  try {
+    const saved = JSON.parse(localStorage.getItem(ALERTS_KEY)) || {};
+    for (const k of Object.keys(alerts)) if (Number.isFinite(saved[k])) alerts[k] = saved[k];
+  } catch (e) { /* padrão */ }
+  const clampAlert = (k, v) => {
+    const [min, max, def] = ALERT_LIMITS[k];
+    const n = Math.round(Number(v));
+    return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : def;
+  };
 
   function load() {
     try { return JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch (e) { return null; }
@@ -200,11 +211,11 @@
     if (!p.connected) return { cls: 'is-away', text: '📴 saiu da página', attention: 'saiu da página' };
     if (t < s.startAt) return { cls: '', text: '⏳ na largada', attention: null };
     const idle = t - (p.lastKeyAt || s.startAt);
-    if (idle > IDLE_MS) {
+    if (idle > alerts.idleSecs * 1000) {
       const secs = Math.floor(idle / 1000);
       return { cls: 'is-idle', text: `💤 parado há ${secs} s`, attention: p.correct ? `parado há ${secs} s` : `ainda não começou (${secs} s)` };
     }
-    if (p.correct >= 10 && p.accuracy < LOW_ACCURACY) {
+    if (p.correct >= 10 && p.accuracy < alerts.accuracy) {
       return { cls: 'is-errors', text: '⚠️ errando bastante', attention: `errando bastante (${Math.round(p.accuracy)}% de acerto)` };
     }
     return { cls: '', text: '✍️ digitando', attention: null };
@@ -222,6 +233,25 @@
     setPressed('#dz-live [data-sort]', 'sort', sortBy);
     if (state) renderLive(state);
   }));
+
+  // limites dos avisos ("parado há mais de N s", "acerto abaixo de N%")
+  [['dz-live-idle-secs', 'idleSecs'], ['dz-live-low-acc', 'accuracy']].forEach(([id, key]) => {
+    const input = $(id);
+    input.value = alerts[key];
+    input.addEventListener('change', () => {
+      alerts[key] = clampAlert(key, input.value);
+      input.value = alerts[key];
+      try { localStorage.setItem(ALERTS_KEY, JSON.stringify(alerts)); } catch (e) { /* ignore */ }
+      if (state) renderLive(state);
+    });
+  });
+  $('dz-live-alerts-reset').addEventListener('click', () => {
+    for (const k of Object.keys(alerts)) { alerts[k] = ALERT_LIMITS[k][2]; }
+    $('dz-live-idle-secs').value = alerts.idleSecs;
+    $('dz-live-low-acc').value = alerts.accuracy;
+    try { localStorage.removeItem(ALERTS_KEY); } catch (e) { /* ignore */ }
+    if (state) renderLive(state);
+  });
 
   function liveTimer(s, t) {
     if (t < s.startAt) return `largada em ${Math.ceil((s.startAt - t) / 1000)}`;

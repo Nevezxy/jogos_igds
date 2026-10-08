@@ -124,6 +124,31 @@ async function main() {
   assert(r.ok && r.roomCode, 'professor cria a sala');
   sock.close();
 
+  // ---- turmas ----
+  r = await api('POST', '/api/teacher/students', { names: 'Davi Rocha\nElisa Prado', className: ' 5b ' }, T);
+  assert(r.created.length === 2, 'cadastro em lote com turma');
+  r = await api('POST', '/api/teacher/students', { names: 'Fabio Reis', className: '5B' }, T);
+  r = await api('POST', '/api/teacher/students', { names: 'Gil Matos', className: '<script>' }, T);
+  assert(r.code === 'TURMA_INVALIDA', 'turma com símbolos é recusada');
+  r = await api('POST', '/api/teacher/students', { names: 'Hugo Alves 4C' }, T);
+  r = await api('GET', '/api/teacher/students', null, T);
+  const byName = (n) => r.students.find((s) => s.name === n);
+  assert(byName('Davi Rocha').className === '5B' && byName('Fabio Reis').className === '5B',
+    'turma fica em maiúscula (" 5b " -> "5B") e quem escreve igual cai nela');
+  assert(byName('Hugo Alves 4C').className === '4C', 'turma no nome ("Hugo Alves 4C") vira a turma da conta');
+  assert(byName('Bruno Lima').className === null, 'quem não tem turma fica sem turma');
+  assert(JSON.stringify(r.classes) === JSON.stringify(['4C', '5B']), 'lista das turmas, em ordem');
+  const ids = [byName('Bruno Lima').id, byName('Davi Rocha').id];
+  let c = await api('POST', '/api/teacher/students/class', { ids, className: '4c' }, T);
+  assert(c.ok && c.className === '4C', 'muda a turma de vários de uma vez');
+  c = await api('POST', '/api/teacher/students/class', { ids: [byName('Elisa Prado').id], className: '' }, T);
+  assert(c.ok && c.className === null, 'tira da turma');
+  c = await api('POST', '/api/teacher/students/class', { ids: ['nao-existe'], className: '4C' }, T);
+  assert(c.status === 404, 'educando inexistente é recusado');
+  r = await api('GET', '/api/teacher/students', null, T);
+  assert(byName('Bruno Lima').className === '4C' && byName('Davi Rocha').className === '4C' && byName('Elisa Prado').className === null,
+    'turmas gravadas');
+
   await api('POST', '/api/teacher/logout', null, T);
   r = await api('GET', '/api/teacher/students', null, T);
   assert(r.status === 401, 'depois de sair, o token do professor não vale');

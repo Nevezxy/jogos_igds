@@ -2,8 +2,9 @@
 // Área do professor (/professor): PIN (quando o servidor tem PROFESSOR_PIN),
 // ferramentas dos jogos (`teacherTool` no registro; ex.: a sala de bingo, em
 // /professor/<id>) e a
-// turma: progresso de cada educando, cadastro em lote, renomear, juntar
-// contas repetidas, liberar fases, desativar e ligar/desligar o autocadastro.
+// turma: progresso de cada educando, separado por turma (filtro, mudar a
+// turma de vários de uma vez), cadastro em lote, renomear, juntar contas
+// repetidas, liberar fases, desativar e ligar/desligar o autocadastro.
 // O token do professor fica no localStorage e vai no cabeçalho X-Teacher-Token.
 
 (function () {
@@ -12,10 +13,18 @@
   const go = (url) => window.PlataformaRouter.go(url);
 
   const STORAGE_KEY = 'igds_teacher_v1';
+  const FILTER_KEY = 'igds_teacher_turma_v1';
+  const ALL = '*';
+  const NONE = '';
   let token = null;
   let pinRequired = false;
   let students = [];
+  let classes = [];
+  let classFilter = ALL; // ALL, NONE (sem turma) ou o nome da turma
+  const selected = new Set();
   let pendingUrl = '/professor';
+
+  try { classFilter = localStorage.getItem(FILTER_KEY) ?? ALL; } catch (e) { /* ignore */ }
 
   try { token = localStorage.getItem(STORAGE_KEY); } catch (e) { /* ignore */ }
 
@@ -147,27 +156,109 @@
       ...[...ids].filter((id) => !catalog.some((g) => g.id === id)).map((id) => ({ id, icon: '🎲', name: id })),
     ];
     const head = document.getElementById('teacher-head');
-    head.innerHTML = '<th>Educando</th><th>Último acesso</th>'
+    head.innerHTML = '<th class="teacher-check"><input type="checkbox" id="teacher-check-all" aria-label="Selecionar todos da lista" /></th>'
+      + '<th>Educando</th><th>Turma</th><th>Último acesso</th>'
       + gameColumns.map((g) => `<th>${escapeHtml(g.icon)} ${escapeHtml(g.name)}</th>`).join('')
       + '<th>Ações</th>';
   }
+
+  // ---------------- turmas ----------------
+
+  const inClass = (s, filter) => (filter === ALL ? true : (s.className || NONE) === filter);
+
+  function setFilter(value) {
+    classFilter = value;
+    try { localStorage.setItem(FILTER_KEY, value); } catch (e) { /* ignore */ }
+    selected.clear();
+    renderClasses();
+    renderRows();
+  }
+
+  // Um botão por turma (com quantos educandos tem), mais "Todas" e "Sem turma".
+  function renderClasses() {
+    const wrap = document.getElementById('teacher-classes');
+    const withoutClass = students.filter((s) => !s.className).length;
+    if (classFilter !== ALL && classFilter !== NONE && !classes.includes(classFilter)) classFilter = ALL;
+    if (classFilter === NONE && !withoutClass) classFilter = ALL;
+    document.getElementById('teacher-class-options').innerHTML = classes.map((c) => `<option value="${escapeHtml(c)}"></option>`).join('');
+    if (!classes.length) { wrap.innerHTML = ''; return; } // ainda sem turmas: nada para filtrar
+    const chips = [
+      { value: ALL, label: 'Todas', count: students.length },
+      ...classes.map((c) => ({ value: c, label: `🏫 ${c}`, count: students.filter((s) => s.className === c).length })),
+      ...(withoutClass ? [{ value: NONE, label: 'Sem turma', count: withoutClass, none: true }] : []),
+    ];
+    wrap.innerHTML = chips.map((c) => `<button type="button" class="teacher-class-chip${c.none ? ' is-none' : ''}" role="radio"
+      aria-checked="${c.value === classFilter}" data-class="${escapeHtml(c.value)}">${escapeHtml(c.label)} <small>${c.count}</small></button>`).join('');
+    wrap.querySelectorAll('[data-class]').forEach((btn) => btn.addEventListener('click', () => { play('pop'); setFilter(btn.dataset.class); }));
+  }
+
+  function renderSelection() {
+    const bar = document.getElementById('teacher-selection');
+    bar.hidden = selected.size === 0;
+    document.getElementById('teacher-selection-count').textContent = selected.size === 1 ? '1 selecionado' : `${selected.size} selecionados`;
+  }
+
+  // Janela para escolher a turma de um ou mais educandos.
+  function chooseClass(list) {
+    const current = list.length === 1 ? (list[0].className || '') : '';
+    const who = list.length === 1 ? list[0].name : `${list.length} educandos`;
+    openModal({
+      title: `🏫 Turma de ${who}`,
+      okLabel: 'Salvar turma',
+      bodyHtml: `<label class="field"><span>Turma</span>
+        <input name="className" type="text" maxlength="20" list="teacher-class-options" value="${escapeHtml(current)}"
+          placeholder="ex.: 5A, 3º ano B" autocomplete="off" /></label>
+        ${classes.length ? `<div class="teacher-classes">${classes.map((c) => `<button type="button" class="teacher-class-chip" data-pick="${escapeHtml(c)}">🏫 ${escapeHtml(c)}</button>`).join('')}</div>` : ''}
+        <p class="muted">Deixe em branco para tirar da turma. Mudar a turma não mexe no progresso.</p>`,
+      async onOk(form) {
+        const res = await request('POST', '/students/class', { ids: list.map((s) => s.id), className: form.elements.className.value });
+        toast(res.className ? `${who} na turma ${res.className} 🏫` : `${who} sem turma agora`, 'success');
+        selected.clear();
+        loadClass();
+        return true;
+      },
+    });
+    document.querySelectorAll('#teacher-modal-body [data-pick]').forEach((btn) => btn.addEventListener('click', () => {
+      document.querySelector('#teacher-modal-body [name="className"]').value = btn.dataset.pick;
+    }));
+  }
+
+  document.getElementById('teacher-selection-class').addEventListener('click', () => {
+    chooseClass(students.filter((s) => selected.has(s.id)));
+  });
+  document.getElementById('teacher-selection-clear').addEventListener('click', () => { selected.clear(); renderRows(); });
 
   function renderRows() {
     const q = document.getElementById('teacher-search').value.trim().toLowerCase()
       .normalize('NFD').replace(/\p{M}/gu, '');
     const rows = document.getElementById('teacher-rows');
     rows.innerHTML = '';
-    const visible = students.filter((s) => !q || s.name.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '').includes(q));
-    document.getElementById('teacher-count').textContent = students.length;
+    const visible = students.filter((s) => inClass(s, classFilter)
+      && (!q || s.name.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '').includes(q)));
+    for (const id of [...selected]) if (!visible.some((s) => s.id === id)) selected.delete(id);
+    document.getElementById('teacher-count').textContent = classFilter === ALL ? students.length : `${visible.length}/${students.length}`;
     document.getElementById('teacher-empty').hidden = students.length > 0;
     document.getElementById('teacher-table').hidden = students.length === 0;
+    const checkAll = document.getElementById('teacher-check-all');
+    if (checkAll) {
+      checkAll.checked = visible.length > 0 && visible.every((s) => selected.has(s.id));
+      checkAll.indeterminate = !checkAll.checked && visible.some((s) => selected.has(s.id));
+      checkAll.onchange = () => {
+        visible.forEach((s) => (checkAll.checked ? selected.add(s.id) : selected.delete(s.id)));
+        renderRows();
+      };
+    }
+    renderSelection();
     visible.forEach((s) => {
       const tr = document.createElement('tr');
       tr.classList.toggle('is-inactive', !s.active);
+      tr.classList.toggle('is-selected', selected.has(s.id));
       const typing = s.games.digitacao;
       tr.innerHTML = `
+        <td class="teacher-check"><input type="checkbox" data-select ${selected.has(s.id) ? 'checked' : ''} aria-label="Selecionar ${escapeHtml(s.name)}" /></td>
         <td><span class="avatar-badge">${escapeHtml(s.avatar)}</span> <strong>${escapeHtml(s.name)}</strong>
           ${s.active ? '' : '<span class="teacher-badge teacher-badge-off">desativada</span>'}</td>
+        <td><button type="button" class="teacher-class-btn${s.className ? '' : ' is-none'}" data-act="turma" title="Mudar a turma">${s.className ? `🏫 ${escapeHtml(s.className)}` : '+ turma'}</button></td>
         <td>${escapeHtml(when(s.lastLoginAt))}</td>
         ${gameColumns.map((g) => `<td>${(GAME_CELLS[g.id] || genericCell)(s.games[g.id])}</td>`).join('')}
         <td class="teacher-actions">
@@ -177,6 +268,10 @@
           <button type="button" class="btn-mini" data-act="active">${s.active ? '⏸ Desativar' : '▶ Reativar'}</button>
         </td>`;
       tr.querySelectorAll('[data-act]').forEach((btn) => btn.addEventListener('click', () => ACTIONS[btn.dataset.act](s)));
+      tr.querySelector('[data-select]').addEventListener('change', (ev) => {
+        if (ev.target.checked) selected.add(s.id); else selected.delete(s.id);
+        renderRows();
+      });
       rows.appendChild(tr);
     });
   }
@@ -185,8 +280,10 @@
     try {
       const res = await request('GET', '/students');
       students = res.students;
+      classes = res.classes || [];
       document.getElementById('teacher-allow-signup').checked = Boolean(res.settings.allowSignup);
       await buildColumns();
+      renderClasses();
       renderRows();
     } catch (e) {
       if (e.code === 'PROFESSOR_NAO_AUTORIZADO') ensureAuth('/professor');
@@ -230,12 +327,13 @@
   }
 
   const ACTIONS = {
+    turma(s) { chooseClass([s]); },
     rename(s) {
       openModal({
         title: `✏️ Renomear ${s.name}`,
         bodyHtml: `<label class="field"><span>Nome e sobrenome</span>
           <input name="name" type="text" maxlength="40" value="${escapeHtml(s.name)}" autocomplete="off" /></label>
-          <p class="muted">Dica: para duas crianças com o mesmo nome, acrescente a turma ou outro sobrenome.</p>`,
+          <p class="muted">Dica: para duas crianças com o mesmo nome, acrescente outro sobrenome (ou a turma, como "Ana Souza 5A").</p>`,
         async onOk(form) {
           await request('POST', `/students/${s.id}/rename`, { name: form.elements.name.value });
           toast('Nome corrigido ✏️', 'success');
@@ -290,11 +388,14 @@
     openModal({
       title: '➕ Cadastrar turma',
       okLabel: 'Cadastrar',
-      bodyHtml: `<label class="field"><span>Um nome e sobrenome por linha</span>
+      bodyHtml: `<label class="field"><span>Turma (opcional)</span>
+        <input name="className" type="text" maxlength="20" list="teacher-class-options" placeholder="ex.: 5A"
+          value="${escapeHtml(classFilter !== ALL && classFilter !== NONE ? classFilter : '')}" autocomplete="off" /></label>
+        <label class="field"><span>Um nome e sobrenome por linha</span>
         <textarea name="names" rows="8" placeholder="Ana Souza&#10;Bruno Lima&#10;Carla Dias"></textarea></label>
         <p class="muted">Cada criança recebe um bichinho sorteado e pode trocar depois no painel.</p>`,
       async onOk(form) {
-        const res = await request('POST', '/students', { names: form.elements.names.value });
+        const res = await request('POST', '/students', { names: form.elements.names.value, className: form.elements.className.value });
         const skipped = res.skipped.length ? ` · ${res.skipped.length} pulado(s): ${res.skipped.map((x) => `${x.name} (${x.reason})`).join('; ')}` : '';
         toast(`${res.created.length} conta(s) criada(s)${skipped}`, res.skipped.length ? 'info' : 'success', 8000);
         loadClass();

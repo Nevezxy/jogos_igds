@@ -4,7 +4,7 @@
 // mesma conta que "João Silva"). Cada login gera um token de sessão, guardado
 // no navegador, que identifica o educando em todos os jogos.
 
-const { db } = require('./db');
+const { db, addColumnIfMissing } = require('./db');
 const { generateId, generateToken } = require('./idGenerator');
 const { normalizeAvatar, isNameAllowed, AVATARS } = require('./avatars');
 const settings = require('./settings');
@@ -29,6 +29,9 @@ CREATE TABLE IF NOT EXISTS student_sessions (
 );
 CREATE INDEX IF NOT EXISTS idx_student_sessions_student ON student_sessions(student_id);
 `);
+
+// Turma do educando ("5A", "3º ano B"). Opcional; o professor organiza.
+const classColumnIsNew = addColumnIfMissing('students', 'class_name', 'TEXT');
 
 const NAME_MIN = 3;
 const NAME_MAX = 40;
@@ -76,6 +79,28 @@ function formatDisplayName(name) {
   }).join(' ');
 }
 
+const CLASS_MAX = 20;
+
+// Turma que já vem no nome ("Ana Souza 5A" -> "5A"), ou null.
+function classFromName(name) {
+  const tag = cleanName(name).split(' ').find((w) => /\p{N}/u.test(w));
+  return tag ? tag.toUpperCase() : null;
+}
+
+// Confere a turma e devolve o nome dela (ou null para "sem turma"). Se já
+// existe uma turma igual escrita de outro jeito ("5a", "5A "), usa a de lá.
+function normalizeClass(value) {
+  const clean = cleanName(value);
+  if (!clean) return null;
+  if (clean.length > CLASS_MAX || !/^[\p{L}\p{N}][\p{L}\p{N}ºª°' .\-]*$/u.test(clean)) {
+    throw new AccountError('TURMA_INVALIDA', `A turma pode ter até ${CLASS_MAX} letras e números (ex.: 5A, 3º ano B).`);
+  }
+  const key = nameKey(clean);
+  const existing = stmts.classes.all().map((r) => r.class_name).find((c) => nameKey(c) === key);
+  // "5a" -> "5A", "3º ano b" -> "3º ano B"
+  return existing || clean.split(' ').map((w) => (/\p{N}/u.test(w) || w.length === 1 ? w.toUpperCase() : w)).join(' ');
+}
+
 // Confere o nome e devolve { display, key } ou lança AccountError.
 function validateName(name) {
   const clean = cleanName(name);
@@ -106,6 +131,7 @@ function publicStudent(row) {
     name: row.display_name,
     firstName: row.display_name.split(' ')[0],
     avatar: row.avatar,
+    className: row.class_name || null,
   };
 }
 
@@ -113,8 +139,8 @@ const stmts = {
   byKey: db.prepare('SELECT * FROM students WHERE name_key = ?'),
   byId: db.prepare('SELECT * FROM students WHERE id = ?'),
   insertStudent: db.prepare(`
-    INSERT INTO students (id, display_name, name_key, avatar, active, created_at, last_login_at)
-    VALUES (@id, @display_name, @name_key, @avatar, 1, @now, @last_login_at)
+    INSERT INTO students (id, display_name, name_key, avatar, active, created_at, last_login_at, class_name)
+    VALUES (@id, @display_name, @name_key, @avatar, 1, @now, @last_login_at, @class_name)
   `),
   touchLogin: db.prepare('UPDATE students SET last_login_at = ? WHERE id = ?'),
   setAvatar: db.prepare('UPDATE students SET avatar = ? WHERE id = ?'),
@@ -132,7 +158,17 @@ const stmts = {
   setActive: db.prepare('UPDATE students SET active = ? WHERE id = ?'),
   deleteSessionsOf: db.prepare('DELETE FROM student_sessions WHERE student_id = ?'),
   deleteStudent: db.prepare('DELETE FROM students WHERE id = ?'),
+  setClass: db.prepare('UPDATE students SET class_name = ? WHERE id = ?'),
+  classes: db.prepare("SELECT DISTINCT class_name FROM students WHERE class_name IS NOT NULL AND class_name <> ''"),
 };
+
+// Banco antigo: quem já tinha a turma no nome ("Ana Souza 5A") entra nela.
+if (classColumnIsNew) {
+  for (const row of stmts.list.all()) {
+    const tag = classFromName(row.display_name);
+    if (tag) stmts.setClass.run(normalizeClass(tag), row.id);
+  }
+}
 
 stmts.purgeSessions.run(Date.now() - SESSION_MAX_IDLE_MS);
 
@@ -168,8 +204,9 @@ function login(name) {
 }
 
 // `byTeacher`: cadastro feito pela área do professor (vale mesmo com o
-// autocadastro desligado e não abre sessão).
-function register(name, avatar, { byTeacher = false } = {}) {
+// autocadastro desligado e não abre sessão). `className`: turma; sem ela,
+// usa a que vier no nome ("Ana Souza 5A").
+function register(name, avatar, { byTeacher = false, className = null } = {}) {
   if (!byTeacher && !settings.get('allowSignup')) {
     throw new AccountError('CADASTRO_FECHADO', 'Peça ao professor(a) para criar a sua conta.', 403);
   }
@@ -177,6 +214,7 @@ function register(name, avatar, { byTeacher = false } = {}) {
   if (stmts.byKey.get(key)) {
     throw new AccountError('CONTA_JA_EXISTE', 'Já existe uma conta com esse nome.', 409);
   }
+  const turma = normalizeClass(className || classFromName(display));
   const row = {
     id: generateId('s_'),
     display_name: display,
@@ -185,6 +223,7 @@ function register(name, avatar, { byTeacher = false } = {}) {
     now: Date.now(),
     // cadastrada pelo professor: a criança ainda não entrou
     last_login_at: byTeacher ? null : Date.now(),
+    class_name: turma,
   };
   try {
     stmts.insertStudent.run(row);
@@ -252,6 +291,23 @@ function renameStudent(id, name) {
   return publicStudent(stmts.byId.get(row.id));
 }
 
+// Muda a turma de um ou mais educandos (null = sem turma).
+const setClassMany = db.transaction((ids, className) => {
+  const rows = ids.map(requireStudentRow);
+  const turma = normalizeClass(className);
+  for (const row of rows) stmts.setClass.run(turma, row.id);
+  return turma;
+});
+function setClass(ids, className) {
+  const list = [...new Set((Array.isArray(ids) ? ids : [ids]).map(String))];
+  if (!list.length) throw new AccountError('SEM_EDUCANDOS', 'Escolha pelo menos um educando.');
+  return setClassMany(list, className);
+}
+
+function listClasses() {
+  return stmts.classes.all().map((r) => r.class_name).sort((a, b) => a.localeCompare(b, 'pt-BR', { numeric: true }));
+}
+
 // Desativar: a conta não entra mais (e quem estava logado sai).
 function setActive(id, active) {
   const row = requireStudentRow(id);
@@ -269,6 +325,9 @@ module.exports = {
   requireStudentRow,
   listStudents,
   renameStudent,
+  setClass,
+  listClasses,
+  normalizeClass,
   setActive,
   removeMergedStudent,
   AccountError,

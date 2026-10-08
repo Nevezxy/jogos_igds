@@ -126,15 +126,17 @@ function setUnlockedAll(registry, studentId, gameId, value) {
   progress.saveProgress(student.id, game.id, updated);
 }
 
-// Cadastro da turma de uma vez: um nome por linha.
-function bulkRegister(names) {
+// Cadastro da turma de uma vez: um nome por linha, todos na turma `className`
+// (opcional).
+function bulkRegister(names, className) {
+  const turma = accounts.normalizeClass(className); // turma inválida: nem começa
   const list = (Array.isArray(names) ? names : String(names || '').split(/\r?\n/))
     .map((n) => String(n).trim()).filter(Boolean).slice(0, 100);
   const created = [];
   const skipped = [];
   for (const name of list) {
     try {
-      created.push(accounts.register(name, null, { byTeacher: true }).student.name);
+      created.push(accounts.register(name, null, { byTeacher: true, className: turma }).student.name);
     } catch (e) {
       if (!(e instanceof accounts.AccountError)) throw e;
       skipped.push({ name, reason: e.message });
