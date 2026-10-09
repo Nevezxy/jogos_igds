@@ -1,0 +1,47 @@
+/* 🌀 Labirinto: o desenho, o explorador e os botões */
+.lb-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; }
+.lb-svg {
+  width: min(640px, 100%, calc(100vh - 290px));
+  height: auto;
+  background: var(--surface);
+  border: var(--stroke) solid var(--ink);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 0 var(--ink);
+  touch-action: none;
+  user-select: none;
+}
+.lb-floor { fill: #FFFBEA; }
+.lb-walls { stroke: var(--ink); stroke-width: 4; stroke-linecap: round; fill: none; }
+.lb-trail rect { fill: rgba(155, 93, 229, .25); }
+.lb-player { transition: transform .12s ease-out; }
+.lb-player circle { fill: #FFE07A; stroke: var(--ink); stroke-width: 2.5; }
+.lb-arrow { fill: var(--pink-dark); stroke: var(--ink); stroke-width: 1.5; transition: transform .15s ease; }
+.lb-dark { fill: rgba(20, 12, 45, .93); }
+.lb-svg .lb-trail { opacity: 1; }
+.lb-pad { display: grid; grid-template-columns: repeat(3, 64px); gap: 8px; }
+.lb-pad.is-relative { grid-template-columns: repeat(3, 84px); }
+.lb-pad button {
+  height: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  border: var(--stroke) solid var(--ink);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 0 var(--ink);
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--ink);
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+}
+.lb-pad button small { font-size: .7rem; }
+.lb-pad button:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
+.lb-msg { min-height: 1.4em; margin: 0; font-weight: 800; color: #fff; text-shadow: 0 2px 0 var(--ink); text-align: center; }
+@media (min-width: 900px) {
+  .lb-wrap { flex-direction: row; flex-wrap: wrap; justify-content: center; align-items: center; }
+  .lb-msg { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { .lb-player, .lb-arrow { transition: none; } }

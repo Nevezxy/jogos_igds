@@ -15,6 +15,9 @@ Jogos de hoje:
 | 🔢 **Conta Comigo** | sozinho(a) | Matemática: mundo das figurinhas, adição e subtração da unidade ao milhar, multiplicação e divisão até a dezena, depois números negativos, potências, raízes e expressões. 143 fases, sequência 🔥 e teclado numérico na tela (funciona no tablet). |
 | ☄️ **Números Cadentes** | sozinho(a) | Contas, dados e dominós caem do céu e a criança digita o resultado antes que cheguem ao chão (sem Enter). 42 fases que aceleram, combo, peças especiais, recorde e teclado numérico na tela. |
 | 🖱️ **Click** | sozinho(a) | Treino do mouse (e do dedo no tablet): passar por cima, clicar, clicar duas vezes, segurar e arrastar. 30 fases que aceleram, figura escondida revelada a cada acerto, combo, peças especiais e recorde. |
+| 🃏 **Jogo da Memória** | sozinho(a) ou contra o robô | Pares de figura igual, número e quantidade, maiúscula e minúscula, palavra e figura, conta e resultado. 19 fases, de 6 a 24 cartas, e 3 robôs que também esquecem cartas. |
+| 🗼 **Torre de Hanói** | sozinho(a) | De 3 a 7 discos, torre bagunçada, "copie o modelo" e 4 pinos. 13 fases, estrelas pelo mínimo de movimentos e dica. |
+| 🌀 **Labirinto** | sozinho(a) | Labirintos sorteados a cada rodada: do pequeno ao grande, com chaves e portas, invisível, no escuro e "virar e andar". 17 fases. |
 | ❌ **Jogo da Velha** | sozinho(a) ou com um amigo pela rede | 3 × 3 e 4 × 4 contra 7 robôs, um mais esperto que o outro (o último nunca perde), ou contra um amigo em outro aparelho (código de sala ou pareamento automático). |
 | 🔴 **Ligue 4** | sozinho(a) ou com um amigo pela rede | Ligue 4 (7 × 6) e Ligue 5 (9 × 7) contra 10 robôs, ou contra um amigo pela rede. Ajuda opcional que mostra as ameaças. |
 | 🏁 **Desafio de Digitação** | com a turma | Corrida de digitação ao vivo: o professor escolhe o texto (uma fase do Teclado Mágico ou um texto dele) e o modo, a turma digita junta e o telão mostra a pista com os bichinhos e o pódio. |
@@ -325,6 +328,47 @@ CMD ["node", "server.js"]
   cada ação; na área do professor aparece a **% de acerto de cada ação**
   (por exemplo ✌️ 45%) e qual ação treinar.
 
+### 🧩 Jogos de raciocínio (Memória, Torre de Hanói, Labirinto)
+- **As mesmas telas para todos** (`js/shared/puzzleshell.js`): mapa de
+  fases, antes da fase (com "como jogar" e o recorde), jogando (com
+  "Recomeçar") e resultado (estrelas, recorde, números). Cada jogo só monta
+  a área de jogo. O servidor de todos é o mesmo (`src/games/puzzle.js`):
+  estrelas e recorde por fase, resumo do painel e do professor, juntar
+  contas; cada jogo traz o seu `check`, que refaz a fase pela semente
+  (`js/shared/rng.js`) e confere tudo.
+- **🃏 Jogo da Memória** (19 fases):
+  - os pares vêm em 5 mundos: figura igual, **número e quantidade** (3 ↔
+    🍎🍎🍎, em fileiras de 5 para contar fácil), **maiúscula e minúscula**,
+    **palavra e figura** e **conta e resultado** (somas, somar e tirar,
+    tabuada; cada resultado aparece uma vez só). As fases crescem de 6 a 24
+    cartas;
+  - **🤖 contra o robô** (mundo 6): cada um vira duas cartas; quem acha o
+    par joga de novo. O robô lembra de cada carta que vê com a chance do
+    nível (25%, 55%, 85%), inclusive as que a criança vira;
+  - estrelas sozinho: tentativas perto do número de pares (até 1,6× = 3,
+    até 2,4× = 2); contra o robô: vencer 3, empatar 2. O servidor refaz a
+    partida pelas cartas viradas.
+- **🗼 Torre de Hanói** (13 fases):
+  - torre clássica de 3 a 7 discos, **torre bagunçada** (começa misturada,
+    sempre pedindo um bom número de movimentos), **copie o modelo** (chegar
+    na arrumação desenhada) e **4 pinos** (5 a 7 discos);
+  - tocar num pino pega o disco de cima e tocar em outro solta; também dá
+    para arrastar ou usar as teclas 1 a 4;
+  - o mínimo de movimentos vem de uma busca em largura (`hanoi.js`), que
+    também dá a **💡 dica** do próximo movimento (com dica, no máximo 2
+    estrelas). 3 estrelas no mínimo, 2 até 1,5×.
+- **🌀 Labirinto** (17 fases, um labirinto novo a cada rodada):
+  - do 5 × 5 ao 13 × 13; **chaves e portas** (cada porta tem a chave da
+    sua cor, escondida antes dela; sempre há saída); **invisível** (as
+    paredes aparecem quando você bate); **no escuro** (só a lanterna em
+    volta); **virar e andar** (↶ ⬆ ↷, para treinar a esquerda e a direita
+    de quem está dentro);
+  - setas do teclado (ou W A S D), botões da tela (segurar repete) ou
+    deslizar o dedo. Rastro de por onde já passou;
+  - estrelas pelos passos comparados com o caminho mais curto (calculado
+    pegando as chaves que precisar). O servidor refaz o caminho comando a
+    comando.
+
 ### ♟️ Jogos de tabuleiro (Jogo da Velha e Ligue 4)
 - **A mesma base para todos** (`js/shared/boardgame.js`, e depois Dama e
   Xadrez): mapa de robôs, "contra um amigo", partida, resultado. Cada jogo
@@ -490,6 +534,7 @@ jogos_igds/
 │       │   ├── levels.js     # Mundos, conteúdos × velocidades e estrelas (também no servidor)
 │       │   ├── items.js      # O que cai em cada fase, com semente (também no servidor)
 │       │   └── game.js, view.html, game.css
+│       ├── memoria/, hanoi/, labirinto/  # 🧩 raciocínio: regras/gerador (também no servidor), levels.js, game.js
 │       ├── velha/, ligue4/   # ❌ 🔴 tabuleiros: rules.js (também no servidor), levels.js, game.js
 │       ├── click/            # 🖱️ Click
 │       │   ├── levels.js     # Mundos, ações, ritmo e estrelas (também no servidor)
@@ -662,6 +707,7 @@ npm test
 | `test/platform.test.js` | Contas (nome e sobrenome, maiúsculas/acentos/espaços, conta repetida, sessão, bichinho, sair) e progresso pela API (estrelas do servidor, fase bloqueada, velocidade impossível, resumos). |
 | `test/teacher.test.js` | Área do professor com PIN: cadastro em lote, autocadastro, renomear, juntar contas, liberar fases, desativar, sala de bingo só pelo professor, turmas e a evolução semana a semana. |
 | `test/tabuleiro.test.js` | Jogo da Velha e Ligue 4: regras (vitória em todas as direções, velha, coluna cheia, Ligue 5); o robô (o imbatível nunca perde, completa a linha, bloqueia, respeita o tempo); o servidor conferindo as partidas contra o robô e as estrelas; a partida pela rede (código, pareamento por turma, vez, lance inválido, empate, desistência, queda e volta, abandono). |
+| `test/raciocinio.test.js` | Memória (cartas de todas as fases, faces sem repetir, refazer a partida, contra o robô), Torre de Hanói (mínimos, fases bagunçadas não triviais, a dica sempre leva ao objetivo, 4 pinos) e Labirinto (todo labirinto tem saída, chaves pegáveis, porta trancada, modo relativo); o servidor conferindo e dando as estrelas. |
 | `test/offline.test.js` | Modo offline: o `/sw.js` sai com a versão e a lista de arquivos (sem as fotos grandes do Click), é JavaScript válido e vem com os cabeçalhos certos. |
 | `test/desafio.test.js` | Desafio de digitação: sala com PIN, mesmo texto para todos, teclas conferidas no servidor, teto de velocidade, fim automático, pódio, relógio contra o mascote, progresso, telão sem tokens. |
 | `test/integration.test.js` | Partida completa de bingo: entrada só com conta, mesma conta em dois aparelhos, sorteio, marcação, vitória, expulsão, nova partida, reconexão, encerramento. |
