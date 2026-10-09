@@ -15,6 +15,8 @@ Jogos de hoje:
 | 🔢 **Conta Comigo** | sozinho(a) | Matemática: mundo das figurinhas, adição e subtração da unidade ao milhar, multiplicação e divisão até a dezena, depois números negativos, potências, raízes e expressões. 143 fases, sequência 🔥 e teclado numérico na tela (funciona no tablet). |
 | ☄️ **Números Cadentes** | sozinho(a) | Contas, dados e dominós caem do céu e a criança digita o resultado antes que cheguem ao chão (sem Enter). 42 fases que aceleram, combo, peças especiais, recorde e teclado numérico na tela. |
 | 🖱️ **Click** | sozinho(a) | Treino do mouse (e do dedo no tablet): passar por cima, clicar, clicar duas vezes, segurar e arrastar. 30 fases que aceleram, figura escondida revelada a cada acerto, combo, peças especiais e recorde. |
+| ❌ **Jogo da Velha** | sozinho(a) ou com um amigo pela rede | 3 × 3 e 4 × 4 contra 7 robôs, um mais esperto que o outro (o último nunca perde), ou contra um amigo em outro aparelho (código de sala ou pareamento automático). |
+| 🔴 **Ligue 4** | sozinho(a) ou com um amigo pela rede | Ligue 4 (7 × 6) e Ligue 5 (9 × 7) contra 10 robôs, ou contra um amigo pela rede. Ajuda opcional que mostra as ameaças. |
 | 🏁 **Desafio de Digitação** | com a turma | Corrida de digitação ao vivo: o professor escolhe o texto (uma fase do Teclado Mágico ou um texto dele) e o modo, a turma digita junta e o telão mostra a pista com os bichinhos e o pódio. |
 | 🎯 **Bingo** | com a turma | Bingo em tempo real conduzido pelo professor, com ~20 crianças em celulares, tablets ou computadores, e um telão opcional para o projetor. |
 
@@ -323,6 +325,44 @@ CMD ["node", "server.js"]
   cada ação; na área do professor aparece a **% de acerto de cada ação**
   (por exemplo ✌️ 45%) e qual ação treinar.
 
+### ♟️ Jogos de tabuleiro (Jogo da Velha e Ligue 4)
+- **A mesma base para todos** (`js/shared/boardgame.js`, e depois Dama e
+  Xadrez): mapa de robôs, "contra um amigo", partida, resultado. Cada jogo
+  só traz as regras (`rules.js`, usadas também pelo servidor), as fases
+  (`levels.js`) e o desenho do tabuleiro (`game.js`).
+- **🤖 Contra o computador:** cada fase é um robô (`js/shared/bot.js`,
+  minimax com poda alfa-beta, com limite de profundidade e de tempo). Ele
+  pensa num Web Worker (`bot-worker.js`), sem travar a tela, e erra de
+  propósito nos níveis baixos. Quem começa alterna a cada partida.
+  Desfazer só nos níveis fáceis.
+  - Estrelas: ⭐⭐⭐ venceu sem desfazer, ⭐⭐ venceu desfazendo, ⭐ empatou.
+    Contra o robô imbatível da Velha, empatar já vale as 3.
+  - O servidor refaz a partida lance a lance (`src/games/boardgame.js`),
+    recusa lance inválido, partida que não acabou e tempo impossível.
+- **👫 Contra um amigo, pela rede** (`src/platform/match.js`, eventos
+  `bg:*` do Socket.IO). Cada um joga no seu aparelho:
+  - **🔑 código de sala:** 4 letras e QR Code (`/jogos/velha?sala=ABCD`
+    entra direto);
+  - **🎲 pareamento automático:** "Procurar adversário" junta quem está na
+    fila do mesmo jogo, primeiro da mesma turma e, depois de 8 s, qualquer
+    um;
+  - o **servidor é o juiz** de cada lance, com o mesmo `rules.js`;
+  - propor e aceitar empate, desistir. Quem cair tem 1 minuto para voltar
+    (a partida continua até depois de recarregar a página); senão, o outro
+    vence por abandono;
+  - conta no placar (vitórias, empates e derrotas contra amigos), mas não
+    dá estrela.
+- **❌ Jogo da Velha:** 3 × 3 (Robô Bobinho, Espertinho, Atento e
+  Imbatível) e 4 × 4 com 4 em linha (3 robôs).
+- **🔴 Ligue 4:** Ligue 4 (7 × 6, 6 robôs, até 8 jogadas à frente) e Ligue 5
+  (9 × 7, 4 robôs). A peça cai na coluna, com uma "fantasma" mostrando onde
+  vai parar. "⚠️ Mostrar ameaças" marca as colunas onde o adversário
+  ganharia na próxima jogada.
+- **Na área do professor:** o robô mais forte que já venceu, as estrelas e
+  o placar contra o robô e contra amigos.
+- Painel com as seções 🧩 Raciocínio e ♟️ Tabuleiro. Cada seção recolhe
+  com um toque, e o painel lembra no navegador.
+
 ### 🏁 Desafio de Digitação
 - O professor cria a sala na área do professor (**Desafio de Digitação**), a
   turma entra pelo QR Code ou pelo código, com a conta (nome e bichinho
@@ -450,6 +490,7 @@ jogos_igds/
 │       │   ├── levels.js     # Mundos, conteúdos × velocidades e estrelas (também no servidor)
 │       │   ├── items.js      # O que cai em cada fase, com semente (também no servidor)
 │       │   └── game.js, view.html, game.css
+│       ├── velha/, ligue4/   # ❌ 🔴 tabuleiros: rules.js (também no servidor), levels.js, game.js
 │       ├── click/            # 🖱️ Click
 │       │   ├── levels.js     # Mundos, ações, ritmo e estrelas (também no servidor)
 │       │   ├── targets.js    # Os alvos de cada rodada, com semente (também no servidor)
@@ -620,6 +661,7 @@ npm test
 | `test/matematica.test.js` | Conta Comigo: regras do gerador em todas as fases (vai-um/empréstimo onde deve, divisão exata, negativos só nos mundos certos, "qual é o sinal?" com uma resposta só), mesma semente = mesmas contas, servidor conferindo respostas, estrelas, revisão e área do professor. |
 | `test/platform.test.js` | Contas (nome e sobrenome, maiúsculas/acentos/espaços, conta repetida, sessão, bichinho, sair) e progresso pela API (estrelas do servidor, fase bloqueada, velocidade impossível, resumos). |
 | `test/teacher.test.js` | Área do professor com PIN: cadastro em lote, autocadastro, renomear, juntar contas, liberar fases, desativar, sala de bingo só pelo professor, turmas e a evolução semana a semana. |
+| `test/tabuleiro.test.js` | Jogo da Velha e Ligue 4: regras (vitória em todas as direções, velha, coluna cheia, Ligue 5); o robô (o imbatível nunca perde, completa a linha, bloqueia, respeita o tempo); o servidor conferindo as partidas contra o robô e as estrelas; a partida pela rede (código, pareamento por turma, vez, lance inválido, empate, desistência, queda e volta, abandono). |
 | `test/offline.test.js` | Modo offline: o `/sw.js` sai com a versão e a lista de arquivos (sem as fotos grandes do Click), é JavaScript válido e vem com os cabeçalhos certos. |
 | `test/desafio.test.js` | Desafio de digitação: sala com PIN, mesmo texto para todos, teclas conferidas no servidor, teto de velocidade, fim automático, pódio, relógio contra o mascote, progresso, telão sem tokens. |
 | `test/integration.test.js` | Partida completa de bingo: entrada só com conta, mesma conta em dois aparelhos, sorteio, marcação, vitória, expulsão, nova partida, reconexão, encerramento. |
