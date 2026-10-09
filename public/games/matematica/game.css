@@ -154,6 +154,61 @@
   text-align: center;
 }
 
+/* ✍️ conta armada: casa embaixo de casa, como no caderno */
+.cc-problem.is-armada { min-height: 0; }
+.cc-armada {
+  --cell: 54px;
+  display: inline-grid;
+  gap: 4px 6px;
+  align-items: center;
+  justify-items: center;
+  padding: 8px 18px 6px;
+  background:
+    linear-gradient(rgba(77, 150, 255, .12) 1px, transparent 1px) 0 0 / 100% 20px,
+    #FFFEF7;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-md);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 2.6rem;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.cc-adigit { width: var(--cell); text-align: center; }
+.cc-aop { width: var(--cell); text-align: center; color: var(--violet); }
+.cc-aline { grid-column: 1 / -1; width: 100%; height: 0; border-top: 5px solid var(--ink); border-radius: 3px; margin: 2px 0; }
+.cc-carry, .cc-carry-spot { width: 30px; height: 30px; }
+.cc-carry {
+  padding: 0;
+  background: transparent;
+  border: 2px dashed rgba(30, 18, 64, .35);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 1.1rem;
+  color: var(--orange);
+  cursor: pointer;
+}
+.cc-carry:hover { border-color: var(--orange); }
+.cc-carry.is-on { border-style: solid; border-color: var(--orange); background: #FFF1E2; }
+.cc-acell {
+  width: var(--cell);
+  height: calc(var(--cell) * 1.1);
+  display: grid;
+  place-items: center;
+  background: #fff;
+  border: 3px solid var(--ink);
+  border-radius: 10px;
+}
+.cc-acell.is-active { border-color: var(--violet); box-shadow: 0 0 0 4px rgba(155, 93, 229, .3); animation: ccCellBlink 1s ease-in-out infinite alternate; }
+@keyframes ccCellBlink { to { box-shadow: 0 0 0 7px rgba(155, 93, 229, .12); } }
+.cc-acell.is-filled { background: #DDF8E4; border-color: var(--green-dark); }
+.cc-acell.is-revealed { background: #FFF1E2; border-color: var(--orange); }
+.cc-answer.is-armada { display: none; }
+@media (max-width: 560px) {
+  .cc-armada { --cell: 38px; font-size: 1.9rem; gap: 3px 4px; padding: 6px 10px 4px; }
+  .cc-carry, .cc-carry-spot { width: 24px; height: 24px; }
+}
+
 /* a conta */
 .cc-problem { min-height: 96px; display: flex; align-items: center; justify-content: center; }
 .cc-expr {

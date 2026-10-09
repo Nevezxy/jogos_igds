@@ -13,12 +13,15 @@ const { Server } = require('socket.io');
 
 const registry = require('./src/games/registry');
 const { createPlatformRouter } = require('./src/platform/routes');
+const offline = require('./src/platform/offline');
 
 const PORT = process.env.PORT || 3000;
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+// /sw.js: guarda o app no navegador (escola com internet fraca)
+offline.mount(app);
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/health', (req, res) => {

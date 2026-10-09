@@ -76,8 +76,16 @@
       try { localStorage.setItem(TIMER_KEY, timer ? '1' : '0'); } catch (e) { /* ignore */ }
       sound.play('click');
       syncTimer();
+      if (screen === 'intro') showIntroRecord();
     }));
     syncTimer();
+    function showIntroRecord() {
+      if (!current) return;
+      const best = bestOf(current.id);
+      const mode = timer ? 'com cronômetro' : 'sem cronômetro';
+      $('#ck-intro-record').hidden = !best;
+      $('#ck-intro-record').textContent = best ? `🏆 Seu recorde ${mode}: ${best} pontos. Consegue bater?` : '';
+    }
 
     function show(name) {
       screen = name;
@@ -87,6 +95,8 @@
 
     // ---------------- mapa ----------------
     const levelData = (id) => (progress.levels && progress.levels[id]) || {};
+    // recorde de pontos do modo escolhido (com e sem cronômetro são separados)
+    const bestOf = (id, withTimer = timer) => (withTimer ? levelData(id).bestScoreTimer : levelData(id).bestScore) || 0;
     function renderMap() {
       const total = Levels.totalStars(progress);
       $('#ck-total-stars').textContent = total;
@@ -116,9 +126,7 @@
       $('#ck-intro-title').textContent = level.fullTitle;
       $('#ck-intro-world-text').textContent = level.indexInWorld === 0 ? world.intro : '';
       $('#ck-intro-tip').textContent = `💡 ${level.tip}`;
-      const best = levelData(level.id).bestScore || 0;
-      $('#ck-intro-record').hidden = !best;
-      $('#ck-intro-record').textContent = best ? `🏆 Seu recorde: ${best} pontos. Consegue bater?` : '';
+      showIntroRecord();
       const list = $('#ck-intro-kinds');
       list.innerHTML = '';
       level.kinds.forEach((kind) => {
@@ -601,7 +609,7 @@
         level, seed, items, picture, timer,
         tiles: buildPicture(level, picture), revealed: 0,
         specials: Kit.pickSpecials(items.length),
-        board: Kit.createBoard(arena, { best: levelData(level.id).bestScore || 0, onMultiplier: () => sound.play('tada') }),
+        board: Kit.createBoard(arena, { best: bestOf(level.id), onMultiplier: () => sound.play('tada') }),
         alive: [], next: 0, lastSpawn: -1e9, elapsed: 0, frozenUntil: 0,
         hits: 0, hitsBy: {}, lost: [], wrong: 0, wrongBy: {},
         holdT: null, drag: null, pointer: null, lastStep: null,
@@ -720,7 +728,7 @@
       const durationMs = Math.round(r.elapsed);
       const accuracy = r.hits + r.wrong ? Math.round((r.hits / (r.hits + r.wrong)) * 1000) / 10 : 0;
       const stars = Levels.starsFor(r.level.id, { hits: r.hits, count: r.items.length, accuracy, timer: r.timer });
-      const best = levelData(r.level.id).bestScore || 0;
+      const best = bestOf(r.level.id, r.timer);
       // a figura inteira aparece
       r.tiles.forEach((t) => t.classList.add('is-off'));
       arena.classList.add('is-revealed');
@@ -738,7 +746,9 @@
         });
         progress = res.progress;
       } catch (e) {
-        ui.toast('Não consegui salvar o seu resultado 😵 Confira a internet.', 'error', 5000);
+        // sem internet: o resultado fica guardado e vai sozinho quando ela voltar
+        if (e.queued) ui.toast(e.message, 'info', 6000);
+        else ui.toast('Não consegui salvar o seu resultado 😵 Confira a internet.', 'error', 5000);
       }
     }
 

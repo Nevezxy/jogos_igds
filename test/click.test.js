@@ -105,7 +105,7 @@ async function checkServer() {
     assert(r.code === 'RESULTADO_INVALIDO', 'pontos impossíveis são recusados');
 
     r = await send({ score: 900, bestStreak: 18 });
-    assert(r.ok && r.result.stars === 3 && r.progress.levels.c6c.bestScore === 900, 'acertou tudo sem errar = 3 estrelas, e o recorde fica guardado');
+    assert(r.ok && r.result.stars === 3 && r.progress.levels.c6c.bestScoreTimer === 900, 'acertou tudo sem errar = 3 estrelas, e o recorde fica guardado');
     r = await send({ wrong: items.length });
     assert(r.ok && r.result.stars === 2, 'acertou tudo mas fez muita ação errada = 2 estrelas');
     const doubles = items.map((it, i) => (it.kind === 'double' ? i : -1)).filter((i) => i >= 0);
@@ -116,8 +116,9 @@ async function checkServer() {
     // sem cronômetro: nenhum alvo some, as estrelas vêm das ações certas
     r = await send({ timer: false, lost: [0] });
     assert(r.code === 'RESULTADO_INVALIDO', 'sem cronômetro, alvo perdido é recusado');
-    r = await send({ timer: false, wrong: 1 });
+    r = await send({ timer: false, wrong: 1, score: 1500 });
     assert(r.ok && r.result.stars === 3, 'sem cronômetro: quase sem erro = 3 estrelas');
+    assert(r.progress.levels.c6c.bestScore === 1500 && r.progress.levels.c6c.bestScoreTimer === 900, 'recorde separado com e sem cronômetro');
     r = await send({ timer: false, wrong: items.length });
     assert(r.ok && r.result.stars === 1, 'sem cronômetro: metade das ações erradas = 1 estrela');
     r = await send({ timer: undefined, lost: [0] });

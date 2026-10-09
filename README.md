@@ -63,6 +63,28 @@ Wi-Fi; o painel do bingo mostra o QR Code e o link da rede local
 
 ## 2. Como hospedar
 
+### Internet fraca (modo offline)
+- **O app fica guardado no navegador** por um service worker (`/sw.js`,
+  montado por `src/platform/offline.js` a partir de
+  `src/platform/sw-template.js`): telas, scripts, estilos e todos os jogos.
+  Abre rápido e continua funcionando se a internet cair no meio da aula.
+  Uma versão nova no servidor muda a versão do `/sw.js`, e o navegador
+  atualiza o que tem guardado sozinho (na próxima vez que a página abre).
+- **Quem já entrou continua entrando:** sem internet, a criança que já
+  estava no aparelho segue logada, e o painel e o progresso vêm da última
+  resposta guardada **daquela mesma conta** (a chave do cache leva o token).
+- **Resultado guardado:** se a rodada termina sem internet, o resultado
+  fica numa caixa de saída no navegador e é enviado sozinho quando a
+  conexão volta (o servidor confere como sempre). Um selo no rodapé mostra
+  "📶 Sem internet" ou "⏳ N resultados esperando".
+- **Precisa de HTTPS** (ou `localhost`): é regra dos navegadores para o
+  service worker. Hospedado (Render, Railway...) já vem com HTTPS. Pela rede
+  da escola em `http://192.168...` o app funciona normalmente, mas sem
+  guardar os arquivos; a caixa de saída dos resultados funciona mesmo
+  assim.
+- O Bingo e o Desafio de Digitação são ao vivo com a turma: precisam da
+  conexão.
+
 É um servidor Node.js comum: sobe em qualquer provedor que rode Node e
 permita WebSockets persistentes.
 
@@ -196,19 +218,27 @@ CMD ["node", "server.js"]
   e o que mais cai (ou mais erra).
 
 ### 🔢 Conta Comigo (matemática)
-- **9 mundos, 143 fases** (11 a 33 por mundo, com etapas no mapa; toda fase
+- **10 mundos, 160 fases** (12 a 33 por mundo, com etapas no mapa; toda fase
   tem pelo menos 10 contas diferentes, para não repetir conta na rodada, e
   nada de fase trivial ou picada demais: as divisões vêm em pares, como
   "Dividir por 3 e por 4"):
   🍎 contando com figurinhas, ➕ adição e subtração juntas (unidade até 10,
   unidade até 20, dezena, centena e milhar, sem e com vai-um/empréstimo,
   número que falta), ✖️ multiplicação (tabuadas das mais fáceis às mais
-  difíceis, dezena × unidade), ➗ divisão (tabuada ao contrário, dezena ÷
-  unidade, com resto), 🎲 misturadas ("qual é o sinal?", contas em
-  sequência), 🌡️ números negativos, 🚀 potências, 🌱 raízes (quadrada e
+  difíceis, dezena × unidade), ✍️ conta armada, ➗ divisão (tabuada ao
+  contrário, dezena ÷ unidade, por 11 e 12, por 15, 20, 25 e 50, com resto),
+  🎲 misturadas ("qual é o sinal?", triplo e terça parte, completar 100,
+  contas em sequência), 🌡️ números negativos, 🚀 potências, 🌱 raízes (quadrada e
   cúbica) e 🧠 expressões (ordem das operações, parênteses, colchetes, a
   diferença entre −3² e (−3)²).
-- **Centena e milhar só na adição e subtração:** nos outros mundos nenhum
+- **✍️ Conta armada** (13 fases: somar, tirar e multiplicar armando, da
+  dezena ao milhar): a conta aparece em pé, casa embaixo de casa, como no
+  caderno, e o resultado é digitado **da direita para a esquerda** (cada
+  algarismo novo entra à esquerda; a casa da vez pisca). Em cima de cada
+  casa há uma caixinha do vai-um (ou do empréstimo) que a criança marca
+  tocando: é só ajuda, não conta ponto.
+- **Centena e milhar só na adição e subtração** (e na soma e subtração da
+  conta armada): nos outros mundos nenhum
   número da conta, nem o resultado, passa de 100 (`maxAbs` do mundo em
   `levels.js`; o gerador descarta o que passar).
 - **Rodada de 10 contas.** Errou: dica que ensina o caminho (vai-um,
@@ -351,6 +381,18 @@ CMD ["node", "server.js"]
   usando "🏫 Mudar a turma". Quem cria a conta com a turma no nome ("Ana
   Souza 5A") já entra nela; turmas escritas de outro jeito ("5a") caem na
   que já existe. Mudar a turma não mexe no progresso.
+- **Mostrar jogo:** a tabela mostra todos os jogos ou um só (com 7 jogos
+  ela ficava larga demais). A escolha fica guardada no navegador.
+- **📈 Evolução:** uma coluna com barrinhas das rodadas de cada uma das
+  últimas 6 semanas (a verde é a desta semana), mais as rodadas, as fases
+  novas (1ª estrela) e a precisão da semana, com ↑/↓ comparando com a
+  semana anterior em que jogou. Clicar abre a janela com a tabela semana a
+  semana, no total e em cada jogo. Segue o "Mostrar jogo". Vem do histórico
+  de rodadas (`game_results`), calculado no servidor (`teacher.evolution`).
+- **📥 Baixar planilha:** a lista de agora (turma, busca e jogo escolhidos)
+  em CSV com ";" e acentos certos, que abre direto no Excel em português e
+  no Google Planilhas: nome, turma, último acesso, rodadas, minutos, fases
+  novas e precisão dos últimos 7 dias e o resumo de cada jogo.
 - **Cadastrar a turma** de uma vez (um nome por linha, todos na turma
   escolhida) e **ligar/desligar o autocadastro** (desligado, só o professor
   cria contas).
@@ -577,7 +619,8 @@ npm test
 | `test/click.test.js` | Click: reconhecimento das ações com eventos de mentira (duplo clique dentro e fora do tempo, segurar curto demais, sair do alvo, soltar fora ou no lugar errado), alvos de todas as fases (mesma semente = mesma rodada, todas as ações aparecem, nenhuma fase igual a outra, mundos em ordem), servidor e área do professor. |
 | `test/matematica.test.js` | Conta Comigo: regras do gerador em todas as fases (vai-um/empréstimo onde deve, divisão exata, negativos só nos mundos certos, "qual é o sinal?" com uma resposta só), mesma semente = mesmas contas, servidor conferindo respostas, estrelas, revisão e área do professor. |
 | `test/platform.test.js` | Contas (nome e sobrenome, maiúsculas/acentos/espaços, conta repetida, sessão, bichinho, sair) e progresso pela API (estrelas do servidor, fase bloqueada, velocidade impossível, resumos). |
-| `test/teacher.test.js` | Área do professor com PIN: cadastro em lote, autocadastro, renomear, juntar contas, liberar fases, desativar, sala de bingo só pelo professor. |
+| `test/teacher.test.js` | Área do professor com PIN: cadastro em lote, autocadastro, renomear, juntar contas, liberar fases, desativar, sala de bingo só pelo professor, turmas e a evolução semana a semana. |
+| `test/offline.test.js` | Modo offline: o `/sw.js` sai com a versão e a lista de arquivos (sem as fotos grandes do Click), é JavaScript válido e vem com os cabeçalhos certos. |
 | `test/desafio.test.js` | Desafio de digitação: sala com PIN, mesmo texto para todos, teclas conferidas no servidor, teto de velocidade, fim automático, pódio, relógio contra o mascote, progresso, telão sem tokens. |
 | `test/integration.test.js` | Partida completa de bingo: entrada só com conta, mesma conta em dois aparelhos, sorteio, marcação, vitória, expulsão, nova partida, reconexão, encerramento. |
 | `test/features.test.js` | Bingo: nome e bichinho da conta, sair da sala, casa travada, "quase lá", sorteio automático, telão sem tokens, QR Code, bingo contando no progresso. |
@@ -615,5 +658,6 @@ npm run test:carga
 ## 8. Próximos passos possíveis
 
 - Outros layouts de teclado (US-Internacional) no Teclado Mágico.
+- Divisão armada (a "chave") na conta armada.
 - Minijogos de digitação (chuva de palavras).
 - Novos jogos: tabuada, ortografia, quiz.

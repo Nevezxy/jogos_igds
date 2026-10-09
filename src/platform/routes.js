@@ -106,6 +106,8 @@ function createPlatformRouter(registry) {
 
   router.get('/teacher/students', asTeacher(() => ({
     students: teacher.classList(registry),
+    evolution: teacher.evolution(),
+    evolutionWeeks: teacher.EVOLUTION_WEEKS,
     classes: accounts.listClasses(),
     settings: teacher.settings.all(),
   })));

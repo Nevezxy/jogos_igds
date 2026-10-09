@@ -148,6 +148,12 @@
       <button type="button" class="btn btn-success" id="teacher-bulk">➕ Cadastrar turma</button>
     </div>
     <div class="teacher-classes" id="teacher-classes" role="radiogroup" aria-label="Filtrar por turma"></div>
+    <div class="teacher-view-bar">
+      <label class="teacher-game-filter">Mostrar jogo:
+        <select id="teacher-game-filter" aria-label="Mostrar um jogo só na tabela"><option value="*">Todos os jogos</option></select>
+      </label>
+      <button type="button" class="btn-mini" id="teacher-export" title="Baixa a lista de agora (turma e jogo escolhidos) para abrir no Excel ou no Google Planilhas">📥 Baixar planilha</button>
+    </div>
     <div class="teacher-selection" id="teacher-selection" hidden>
       <strong id="teacher-selection-count"></strong>
       <button type="button" class="btn-mini" id="teacher-selection-class">🏫 Mudar a turma</button>
