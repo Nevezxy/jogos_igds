@@ -7,7 +7,8 @@
 // Campos:
 //   id, name, icon, tagline   — o que aparece no cartão do painel
 //   mode     'solo' | 'turma' — jogo individual ou com a turma em tempo real
-//   subject  seção do painel: 'digitacao' | 'matematica' | 'mouse' | 'turma'
+//   subject  seção do painel: 'digitacao' | 'matematica' | 'mouse' |
+//            'raciocinio' | 'tabuleiro' | 'turma'
 //   status   'active' | 'soon' | 'hidden'
 //   color    cor do cartão (nome de token do tema: sky, pink, green, ...)
 //   client   arquivos em public/games/<id>/: { styles: [], view, scripts: [] },
@@ -117,6 +118,44 @@ const games = [
       scripts: ['levels.js', 'targets.js', 'actions.js', 'game.js'],
     },
     server: require('./click/server'),
+  },
+  {
+    id: 'velha',
+    name: 'Jogo da Velha',
+    icon: '❌',
+    tagline: 'Três em linha contra robôs cada vez mais espertos, ou contra um amigo pela rede!',
+    mode: 'solo',
+    subject: 'tabuleiro',
+    status: 'active',
+    color: 'pink',
+    isNew: true,
+    requiresKeyboard: false,
+    // a parte de fora (robôs, amigo pela rede) é a mesma de todos os tabuleiros
+    client: {
+      styles: ['../../css/boardgame.css'],
+      view: 'view.html',
+      scripts: ['../../js/shared/boardlevels.js', '../../js/shared/boardgame.js', 'rules.js', 'levels.js', 'game.js'],
+    },
+    server: require('./velha/server'),
+  },
+  {
+    id: 'ligue4',
+    name: 'Ligue 4',
+    icon: '🔴',
+    tagline: 'Solte as peças e ligue 4 (ou 5) da mesma cor antes do adversário!',
+    mode: 'solo',
+    subject: 'tabuleiro',
+    status: 'active',
+    color: 'red',
+    isNew: true,
+    requiresKeyboard: false,
+    // a parte de fora (robôs, amigo pela rede) é a mesma de todos os tabuleiros
+    client: {
+      styles: ['../../css/boardgame.css'],
+      view: 'view.html',
+      scripts: ['../../js/shared/boardlevels.js', '../../js/shared/boardgame.js', 'rules.js', 'levels.js', 'game.js'],
+    },
+    server: require('./ligue4/server'),
   },
   {
     id: 'desafio',
