@@ -2,8 +2,9 @@
 
 > **Situação:** etapas **A** (seções novas no painel, base de tabuleiro,
 > robô, partida pela rede, ❌ Jogo da Velha e 🔴 Ligue 4) e **B** (🃏 Memória,
-> 🗼 Hanói, 🌀 Labirinto, com telas compartilhadas) concluídas. Próxima: C
-> (Dinheiro e Troco, Balança).
+> 🗼 Hanói, 🌀 Labirinto, com telas compartilhadas) e **C** (💰 Dinheiro e
+> Troco, ⚖️ Balança) concluídas. Próxima: D (Pixel Art, Diferenças,
+> Quebra-cabeça, Carrinhos).
 > Na etapa A, as estrelas ficaram por partida: ⭐⭐⭐ é vencer sem desfazer.
 > A "melhor de 3" saiu, para não alongar as fases.
 > **Decisões tomadas:**

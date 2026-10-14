@@ -167,6 +167,8 @@
     memoria(d) { return puzzleCell(d); },
     hanoi(d) { return puzzleCell(d); },
     labirinto(d) { return puzzleCell(d); },
+    dinheiro(d) { return puzzleCell(d); },
+    balanca(d) { return puzzleCell(d); },
     // jogos de tabuleiro: o robô mais forte vencido e o placar
     velha(d) { return boardCell(d); },
     ligue4(d) { return boardCell(d); },

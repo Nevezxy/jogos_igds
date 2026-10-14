@@ -14,6 +14,8 @@ Jogos de hoje:
 | 🔤 **Letras Cadentes** | sozinho(a) | Letras, números, sílabas e palavras caem do céu e a criança digita cada uma antes que chegue ao chão. 31 fases que aceleram durante a rodada, combo, peças especiais (⭐ 🧊 💥), recorde, opção "apenas maiúsculas" e o céu ocupando a tela toda. |
 | 🔢 **Conta Comigo** | sozinho(a) | Matemática: mundo das figurinhas, adição e subtração da unidade ao milhar, multiplicação e divisão até a dezena, depois números negativos, potências, raízes e expressões. 143 fases, sequência 🔥 e teclado numérico na tela (funciona no tablet). |
 | ☄️ **Números Cadentes** | sozinho(a) | Contas, dados e dominós caem do céu e a criança digita o resultado antes que cheguem ao chão (sem Enter). 42 fases que aceleram, combo, peças especiais, recorde e teclado numérico na tela. |
+| 💰 **Dinheiro e Troco** | sozinho(a) | Moedas e cédulas do Real: contar, pagar o valor exato, pagar com menos notas, dar o troco e a lojinha. 16 fases, de reais inteiros a centavos. |
+| ⚖️ **Equilibre a Balança** | sozinho(a) | Pôr pesos até a balança ficar reta: somar pesos, pesos nos dois pratos (subtração), gramas e quilos e "quanto pesa?". 10 fases. |
 | 🖱️ **Click** | sozinho(a) | Treino do mouse (e do dedo no tablet): passar por cima, clicar, clicar duas vezes, segurar e arrastar. 30 fases que aceleram, figura escondida revelada a cada acerto, combo, peças especiais e recorde. |
 | 🃏 **Jogo da Memória** | sozinho(a) ou contra o robô | Pares de figura igual, número e quantidade, maiúscula e minúscula, palavra e figura, conta e resultado. 19 fases, de 6 a 24 cartas, e 3 robôs que também esquecem cartas. |
 | 🗼 **Torre de Hanói** | sozinho(a) | De 3 a 7 discos, torre bagunçada, "copie o modelo" e 4 pinos. 13 fases, estrelas pelo mínimo de movimentos e dica. |
@@ -328,6 +330,36 @@ CMD ["node", "server.js"]
   cada ação; na área do professor aparece a **% de acerto de cada ação**
   (por exemplo ✌️ 45%) e qual ação treinar.
 
+### 💰 Dinheiro e Troco (matemática)
+- **Moedas e cédulas desenhadas no estilo do Real** (cor certa e o bicho
+  de cada nota: tartaruga no de 2, garça no de 5, arara no de 10, mico-leão
+  no de 20, onça no de 50, garoupa no de 100), sem copiar a arte oficial.
+  Tudo em centavos por dentro (`money.js`), para não ter erro de vírgula.
+- **5 mundos, 16 fases:** quanto tem aqui? (contar, 4 alternativas) →
+  pague o valor exato (até R$ 10, até R$ 50, com centavos, sem ver o
+  total) → com menos notas e moedas → dê o troco (em reais, com centavos,
+  troco grande) → lojinha (somar 2 ou 3 preços, compra e troco).
+- Toque numa nota ou moeda para pôr no balcão; toque no balcão para tirar.
+  Errou: dica ("passou", "ainda falta", "dá para usar menos notas") e mais
+  uma tentativa; no 2º erro, mostra um jeito certo. De primeira vale 1, na
+  segunda ½.
+- O servidor refaz as tarefas pela semente e confere cada resposta (todo
+  valor é pagável com o dinheiro da fase; qualquer jeito certo de pagar
+  vale).
+
+### ⚖️ Equilibre a Balança (matemática)
+- Balança de dois pratos que **inclina para o lado mais pesado** (os
+  pratos ficam retos). O objeto fica à esquerda; a criança põe pesos até
+  ficar reta.
+- **4 mundos, 10 fases:** equilibrar com pesos (até 10, 20, 50) → pesos
+  nos dois pratos (só dá pondo peso do lado do objeto: é uma subtração) →
+  gramas e quilos (1 kg = 1.000 g, 1,5 kg) → "quanto pesa?" (o peso do
+  objeto é "?": equilibre e escolha quanto ele pesa).
+- O gerador (`scale.js`) garante que sempre dá para equilibrar e calcula o
+  menor número de pesos; as estrelas são pelas trocas de peso a mais (e
+  respostas erradas no "quanto pesa?"). O servidor confere que cada balança
+  ficou reta.
+
 ### 🧩 Jogos de raciocínio (Memória, Torre de Hanói, Labirinto)
 - **As mesmas telas para todos** (`js/shared/puzzleshell.js`): mapa de
   fases, antes da fase (com "como jogar" e o recorde), jogando (com
@@ -534,6 +566,7 @@ jogos_igds/
 │       │   ├── levels.js     # Mundos, conteúdos × velocidades e estrelas (também no servidor)
 │       │   ├── items.js      # O que cai em cada fase, com semente (também no servidor)
 │       │   └── game.js, view.html, game.css
+│       ├── dinheiro/, balanca/  # 💰 ⚖️ matemática do dia a dia: gerador (também no servidor), levels.js, game.js
 │       ├── memoria/, hanoi/, labirinto/  # 🧩 raciocínio: regras/gerador (também no servidor), levels.js, game.js
 │       ├── velha/, ligue4/   # ❌ 🔴 tabuleiros: rules.js (também no servidor), levels.js, game.js
 │       ├── click/            # 🖱️ Click
@@ -708,6 +741,7 @@ npm test
 | `test/teacher.test.js` | Área do professor com PIN: cadastro em lote, autocadastro, renomear, juntar contas, liberar fases, desativar, sala de bingo só pelo professor, turmas e a evolução semana a semana. |
 | `test/tabuleiro.test.js` | Jogo da Velha e Ligue 4: regras (vitória em todas as direções, velha, coluna cheia, Ligue 5); o robô (o imbatível nunca perde, completa a linha, bloqueia, respeita o tempo); o servidor conferindo as partidas contra o robô e as estrelas; a partida pela rede (código, pareamento por turma, vez, lance inválido, empate, desistência, queda e volta, abandono). |
 | `test/raciocinio.test.js` | Memória (cartas de todas as fases, faces sem repetir, refazer a partida, contra o robô), Torre de Hanói (mínimos, fases bagunçadas não triviais, a dica sempre leva ao objetivo, 4 pinos) e Labirinto (todo labirinto tem saída, chaves pegáveis, porta trancada, modo relativo); o servidor conferindo e dando as estrelas. |
+| `test/dia-a-dia.test.js` | Dinheiro e Troco (todo valor é pagável com o dinheiro da fase, troco possível, alternativas, "menos notas", qualquer jeito certo vale) e Balança (sempre equilibra, mínimo certo, nos dois pratos precisa tirar, 1,5 kg); o servidor conferindo e dando as estrelas. |
 | `test/offline.test.js` | Modo offline: o `/sw.js` sai com a versão e a lista de arquivos (sem as fotos grandes do Click), é JavaScript válido e vem com os cabeçalhos certos. |
 | `test/desafio.test.js` | Desafio de digitação: sala com PIN, mesmo texto para todos, teclas conferidas no servidor, teto de velocidade, fim automático, pódio, relógio contra o mascote, progresso, telão sem tokens. |
 | `test/integration.test.js` | Partida completa de bingo: entrada só com conta, mesma conta em dois aparelhos, sorteio, marcação, vitória, expulsão, nova partida, reconexão, encerramento. |
