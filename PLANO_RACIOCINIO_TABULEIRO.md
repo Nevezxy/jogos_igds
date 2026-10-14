@@ -1,8 +1,9 @@
 # 🧩 ♟️ Plano: jogos de raciocínio, matemática do dia a dia e tabuleiro
 
-> **Situação:** etapa **A** concluída: seções novas no painel, base de
-> tabuleiro, robô, partida pela rede, ❌ Jogo da Velha e 🔴 Ligue 4. Próxima:
-> B (Memória, Hanói, Labirinto).
+> **Situação:** etapas **A** (seções novas no painel, base de tabuleiro,
+> robô, partida pela rede, ❌ Jogo da Velha e 🔴 Ligue 4) e **B** (🃏 Memória,
+> 🗼 Hanói, 🌀 Labirinto, com telas compartilhadas) concluídas. Próxima: C
+> (Dinheiro e Troco, Balança).
 > Na etapa A, as estrelas ficaram por partida: ⭐⭐⭐ é vencer sem desfazer.
 > A "melhor de 3" saiu, para não alongar as fases.
 > **Decisões tomadas:**

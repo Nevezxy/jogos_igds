@@ -163,6 +163,10 @@
       return `<div class="teacher-game"><strong>${escapeHtml(d.current)}</strong>
         <span>⭐ ${d.stars}/${d.maxStars} · ${d.levelsDone}/${d.totalLevels} fases · acerta ${d.hitPct}%${d.toughest ? ` · treinar: ${escapeHtml(d.toughest)}` : ''}</span>${kinds}</div>`;
     },
+    // jogos de raciocínio: fase atual, estrelas e quanto jogou
+    memoria(d) { return puzzleCell(d); },
+    hanoi(d) { return puzzleCell(d); },
+    labirinto(d) { return puzzleCell(d); },
     // jogos de tabuleiro: o robô mais forte vencido e o placar
     velha(d) { return boardCell(d); },
     ligue4(d) { return boardCell(d); },
@@ -180,6 +184,12 @@
         <span>melhor ${d.bestWpm} PPM · média ${d.avgWpm} PPM</span></div>`;
     },
   };
+  function puzzleCell(d) {
+    if (!d || !d.plays) return '<span class="muted">—</span>';
+    return `<div class="teacher-game"><strong>${escapeHtml(d.current)}</strong>
+      <span>⭐ ${d.stars}/${d.maxStars} · ${d.levelsDone}/${d.totalLevels} fases · ${d.minutes} min</span></div>`;
+  }
+
   function boardCell(d) {
     if (!d || !d.plays) return '<span class="muted">—</span>';
     const b = d.vsBot;

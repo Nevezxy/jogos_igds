@@ -1,0 +1,58 @@
+/* 🗼 Torre de Hanói: pinos, discos e o modelo */
+.hn-board { width: min(860px, 100%); }
+.hn-pegs {
+  display: grid;
+  grid-template-columns: repeat(var(--pegs), 1fr);
+  gap: 10px;
+  padding: 16px 14px 10px;
+  background: var(--surface);
+  border: var(--stroke) solid var(--ink);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 0 var(--ink);
+}
+.hn-peg {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: calc(28px * var(--n) + 90px);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+}
+.hn-peg:hover { background: rgba(155, 93, 229, .07); }
+.hn-peg.is-selected { background: rgba(255, 217, 61, .22); }
+.hn-peg.can-drop { background: rgba(31, 175, 96, .12); }
+.hn-peg.is-hint { animation: hnHint .8s ease-in-out 3 alternate; }
+@keyframes hnHint { to { background: rgba(255, 217, 61, .5); } }
+.hn-rod { position: absolute; bottom: 30px; width: 12px; height: calc(28px * var(--n) + 40px); background: #A6744B; border: 2px solid var(--ink); border-radius: 6px 6px 0 0; }
+.hn-stack { position: relative; display: flex; flex-direction: column; align-items: center; width: 100%; margin-bottom: 30px; }
+.hn-disc {
+  width: var(--w);
+  height: 26px;
+  margin-top: 2px;
+  background: var(--c);
+  border: 3px solid var(--ink);
+  border-radius: 13px;
+  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .18);
+  transition: transform .15s ease;
+}
+.hn-disc.is-lifted { transform: translateY(-34px); box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .18), 0 10px 0 rgba(30, 18, 64, .2); }
+.hn-base { position: absolute; bottom: 0; left: 4%; right: 4%; height: 30px; display: grid; place-items: center; background: #7A5233; border: 2px solid var(--ink); border-radius: 8px; color: #fff; font-family: var(--font-display); font-weight: 800; }
+.hn-model { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-weight: 800; color: #fff; text-shadow: 0 2px 0 var(--ink); }
+.hn-pegs.is-model { --scale: .55; padding: 6px 8px 4px; box-shadow: 0 4px 0 var(--ink); width: 280px; gap: 4px; }
+.hn-pegs.is-model .hn-peg { height: calc(12px * var(--n) + 36px); cursor: default; }
+.hn-pegs.is-model .hn-rod { bottom: 14px; width: 6px; height: calc(12px * var(--n) + 14px); }
+.hn-pegs.is-model .hn-stack { margin-bottom: 14px; }
+.hn-pegs.is-model .hn-disc { height: 11px; border-width: 2px; margin-top: 1px; }
+.hn-pegs.is-model .hn-base { height: 14px; font-size: .6rem; }
+.hn-tools { display: flex; align-items: center; gap: 12px; margin-top: 14px; }
+.hn-msg { font-weight: 800; color: #fff; text-shadow: 0 2px 0 var(--ink); }
+@media (max-width: 560px) {
+  .hn-pegs { gap: 4px; padding: 12px 6px 8px; }
+  .hn-disc { height: 20px; }
+  .hn-peg { height: calc(22px * var(--n) + 80px); }
+  .hn-rod { height: calc(22px * var(--n) + 34px); width: 9px; }
+}
