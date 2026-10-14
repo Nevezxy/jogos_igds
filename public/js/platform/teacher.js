@@ -166,7 +166,11 @@
     // jogos de raciocínio: fase atual, estrelas e quanto jogou
     memoria(d) { return puzzleCell(d); },
     hanoi(d) { return puzzleCell(d); },
+    carrinhos(d) { return puzzleCell(d); },
     labirinto(d) { return puzzleCell(d); },
+    pixel(d) { return puzzleCell(d); },
+    diferencas(d) { return puzzleCell(d); },
+    quebracabeca(d) { return puzzleCell(d); },
     dinheiro(d) { return puzzleCell(d); },
     balanca(d) { return puzzleCell(d); },
     // jogos de tabuleiro: o robô mais forte vencido e o placar
