@@ -2,9 +2,11 @@
 
 > **Situação:** etapas **A** (seções novas no painel, base de tabuleiro,
 > robô, partida pela rede, ❌ Jogo da Velha e 🔴 Ligue 4) e **B** (🃏 Memória,
-> 🗼 Hanói, 🌀 Labirinto, com telas compartilhadas) e **C** (💰 Dinheiro e
-> Troco, ⚖️ Balança) concluídas. Próxima: D (Pixel Art, Diferenças,
-> Quebra-cabeça, Carrinhos).
+> 🗼 Hanói, 🌀 Labirinto, com telas compartilhadas), **C** (💰 Dinheiro e
+> Troco, ⚖️ Balança) e **D** (🚗 Carrinhos, 🎨 Pixel Art, 🔍 Diferenças,
+> 🧩 Quebra-cabeça) concluídas. Próxima: E (Dama e Xadrez).
+> Na etapa D: Pixel Art com 30 desenhos (não 36), Diferenças com 20 fases e
+> Quebra-cabeça com 18 (uma foto por fase).
 > Na etapa A, as estrelas ficaram por partida: ⭐⭐⭐ é vencer sem desfazer.
 > A "melhor de 3" saiu, para não alongar as fases.
 > **Decisões tomadas:**

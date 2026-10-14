@@ -170,7 +170,7 @@ async function checkServer() {
     assert(r.code === 'RESULTADO_INVALIDO', 'labirinto: não chegou na saída = recusado');
 
     const games = (await api('GET', '/api/games')).games;
-    assert(games.filter((x) => x.subject === 'raciocinio').map((x) => x.id).join() === 'memoria,hanoi,labirinto', 'Memória, Hanói e Labirinto na seção 🧩 Raciocínio');
+    assert(games.filter((x) => x.subject === 'raciocinio').map((x) => x.id).join() === 'memoria,hanoi,carrinhos,labirinto,pixel,diferencas,quebracabeca', 'os 7 jogos na seção 🧩 Raciocínio, na ordem do plano');
     r = await api('GET', '/api/progress', null, kid);
     assert(/⭐ 3/.test(r.summaries.labirinto || ''), `cartão do painel ("${r.summaries.labirinto}")`);
     const t = (await api('POST', '/api/teacher/login', {})).token;

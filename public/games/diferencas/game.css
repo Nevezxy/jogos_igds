@@ -1,0 +1,27 @@
+/* 🔍 Encontre a Diferença: as duas cenas, as marcas e os pontinhos */
+.df-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; }
+.df-dots { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.df-dot { width: 20px; height: 20px; border: 3px solid var(--ink); border-radius: 50%; background: var(--surface); }
+.df-dot.is-on { background: var(--green); animation: bounceIn .4s var(--ease-bounce); }
+.df-scenes { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; width: 100%; }
+.df-scene {
+  width: min(560px, calc(50% - 6px), calc((100vh - 270px) * 4 / 3));
+  min-width: 260px;
+  height: auto;
+  border: var(--stroke) solid var(--ink);
+  border-radius: var(--radius-md);
+  box-shadow: 0 6px 0 var(--ink);
+  cursor: crosshair;
+  touch-action: manipulation;
+  user-select: none;
+}
+.df-found { fill: none; stroke: #00E676; stroke-width: 4; filter: drop-shadow(0 0 2px #1B5E20); animation: dfPop .35s var(--ease-bounce); }
+@keyframes dfPop { from { transform-box: fill-box; transform-origin: center; transform: scale(.3); } }
+.df-hint { fill: rgba(255, 224, 122, .25); stroke: #FFE07A; stroke-width: 4; stroke-dasharray: 8 6; animation: dfHint .8s ease-in-out infinite; }
+@keyframes dfHint { 50% { stroke: #fff; } }
+.df-miss { fill: #FF5252; font-size: 26px; font-weight: 900; text-anchor: middle; stroke: #fff; stroke-width: 1.5; paint-order: stroke; animation: dfMiss .7s ease-out forwards; }
+@keyframes dfMiss { to { opacity: 0; } }
+.df-tools { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center; }
+.df-msg { font-weight: 800; color: #fff; text-shadow: 0 2px 0 var(--ink); text-align: center; }
+@media (max-width: 640px) { .df-scene { width: 100%; } }
+@media (prefers-reduced-motion: reduce) { .df-found, .df-hint, .df-miss, .df-dot.is-on { animation: none; } }

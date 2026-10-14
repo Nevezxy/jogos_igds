@@ -20,6 +20,10 @@ Jogos de hoje:
 | 🃏 **Jogo da Memória** | sozinho(a) ou contra o robô | Pares de figura igual, número e quantidade, maiúscula e minúscula, palavra e figura, conta e resultado. 19 fases, de 6 a 24 cartas, e 3 robôs que também esquecem cartas. |
 | 🗼 **Torre de Hanói** | sozinho(a) | De 3 a 7 discos, torre bagunçada, "copie o modelo" e 4 pinos. 13 fases, estrelas pelo mínimo de movimentos e dica. |
 | 🌀 **Labirinto** | sozinho(a) | Labirintos sorteados a cada rodada: do pequeno ao grande, com chaves e portas, invisível, no escuro e "virar e andar". 17 fases. |
+| 🚗 **Carrinhos** | sozinho(a) | Tirar o carro vermelho do estacionamento arrastando os outros carros e caminhões. 40 estacionamentos, de 2 a 34 jogadas no mínimo, com dica. |
+| 🎨 **Pixel Art** | sozinho(a) | Pintura por número: cada quadradinho tem o número da cor. 30 desenhos, de 8 × 8 com 2 cores a 24 × 24 com 10 cores, balde, "pinte com contas" e galeria. |
+| 🔍 **Encontre a Diferença** | sozinho(a) | Duas cenas desenhadas pelo jogo (parque, fundo do mar, espaço), uma nova a cada rodada. 20 fases, de 3 diferenças fáceis a 10 sutis. |
+| 🧩 **Quebra-cabeça** | sozinho(a) | Fotos de bichos com peças de encaixe de verdade: de 4 a 48 peças, com a foto clarinha no fundo, sem ela e com peças viradas. 18 fases e galeria. |
 | ❌ **Jogo da Velha** | sozinho(a) ou com um amigo pela rede | 3 × 3 e 4 × 4 contra 7 robôs, um mais esperto que o outro (o último nunca perde), ou contra um amigo em outro aparelho (código de sala ou pareamento automático). |
 | 🔴 **Ligue 4** | sozinho(a) ou com um amigo pela rede | Ligue 4 (7 × 6) e Ligue 5 (9 × 7) contra 10 robôs, ou contra um amigo pela rede. Ajuda opcional que mostra as ameaças. |
 | 🏁 **Desafio de Digitação** | com a turma | Corrida de digitação ao vivo: o professor escolhe o texto (uma fase do Teclado Mágico ou um texto dele) e o modo, a turma digita junta e o telão mostra a pista com os bichinhos e o pódio. |
@@ -401,6 +405,53 @@ CMD ["node", "server.js"]
     pegando as chaves que precisar). O servidor refaz o caminho comando a
     comando.
 
+### 🚗 🎨 🔍 🧩 Jogos visuais (Carrinhos, Pixel Art, Diferenças, Quebra-cabeça)
+Usam as mesmas telas e o mesmo servidor dos jogos de raciocínio. Os dois
+com galeria (Pixel Art e Quebra-cabeça) mostram, no mapa, o que a criança
+já fez.
+- **🚗 Carrinhos** (40 fases, 5 mundos):
+  - estacionamento 6 × 6; carros (2 casas) e caminhões (3 casas) só andam
+    para a frente e para trás. Arrastar no trilho, ou tocar e usar as setas;
+  - as fases vêm de um banco gerado por `scripts/carrinhos-banco.js`: sorteia
+    estacionamentos, vai mexendo neles ficando com os mais difíceis e mede,
+    por busca em largura, o **mínimo exato** de jogadas (de 2 a 34). O banco
+    fica em `bank.js`;
+  - **💡 dica:** a próxima jogada certa (busca na hora, em milissegundos),
+    com tracejado no lugar; com dica, no máximo 2 estrelas. 3 estrelas até
+    1,25× o mínimo, 2 até 2×. O servidor refaz as jogadas uma a uma.
+- **🎨 Pixel Art** (30 desenhos, 5 mundos):
+  - os desenhos são gerados por `scripts/pixel-desenhos.js` (os pequenos
+    linha a linha, os grandes com formas), que também grava uma folha PNG
+    para conferir: coração, maçã, gato, foguete, bandeira do Brasil,
+    pinguim, coruja, arco-íris, girassol, robô, peixe-palhaço, casa...;
+  - escolher a cor na paleta (os quadradinhos dela piscam), tocar ou
+    segurar e arrastar. Arrastando, a cor errada só passa por cima; tocando
+    na cor errada, conta um erro e o quadradinho fica marcado para corrigir.
+    A paleta mostra quantos faltam de cada cor;
+  - **🪣 balde** (do mundo 2 em diante): pinta de uma vez a região grudada do
+    mesmo número. **🔍 lupa** nos quadros grandes;
+  - **🧮 pinte com contas** (mundo 5): no lugar do número, uma conta (+, −,
+    ×, ÷) cujo resultado é a cor;
+  - estrelas pelos erros, conforme o tamanho do desenho. O servidor refaz a
+    pintura (pincel e balde) e confere que ficou tudo certo.
+- **🔍 Encontre a Diferença** (20 fases, 5 mundos):
+  - cenas em SVG geradas pela semente (`scene.js`): 26 figuras desenhadas no
+    jogo, em 3 cenários. As diferenças: figura que sumiu, figura a mais, cor
+    trocada, cor de um detalhe, tamanho, lugar e figura virada; nas fases
+    "sutis", cores parecidas, mudanças pequenas e cenas cheias;
+  - tocar em qualquer uma das duas cenas marca a diferença nas duas; toque
+    errado mostra um ✕. **💡 dica** circula uma diferença;
+  - estrelas pelos toques errados e dicas. O servidor refaz a cena e os
+    toques.
+- **🧩 Quebra-cabeça** (18 fases, 5 mundos):
+  - as 18 fotos CC0 do Click recortadas em peças com encaixes de verdade
+    (`jigsaw.js`, caminhos SVG); de 2 × 2 a 8 × 6;
+  - arrastar até a moldura: perto do lugar certo (e na posição certa) a peça
+    gruda. Primeiro com a **sombra** da foto, depois sem (dá para segurar
+    👁️ e espiar), depois com **peças viradas** (tocar gira). "🧺 Arrumar
+    peças" junta as soltas;
+  - estrelas pelo tempo (uns segundos por peça); o recorde é o menor tempo.
+
 ### ♟️ Jogos de tabuleiro (Jogo da Velha e Ligue 4)
 - **A mesma base para todos** (`js/shared/boardgame.js`, e depois Dama e
   Xadrez): mapa de robôs, "contra um amigo", partida, resultado. Cada jogo
@@ -568,6 +619,7 @@ jogos_igds/
 │       │   └── game.js, view.html, game.css
 │       ├── dinheiro/, balanca/  # 💰 ⚖️ matemática do dia a dia: gerador (também no servidor), levels.js, game.js
 │       ├── memoria/, hanoi/, labirinto/  # 🧩 raciocínio: regras/gerador (também no servidor), levels.js, game.js
+│       ├── carrinhos/, pixel/, diferencas/, quebracabeca/  # 🚗 🎨 🔍 🧩 visuais: regras/gerador, bancos gerados, levels.js, game.js
 │       ├── velha/, ligue4/   # ❌ 🔴 tabuleiros: rules.js (também no servidor), levels.js, game.js
 │       ├── click/            # 🖱️ Click
 │       │   ├── levels.js     # Mundos, ações, ritmo e estrelas (também no servidor)
@@ -602,6 +654,7 @@ jogos_igds/
 │       │   └── hands.js      # Mãos em SVG
 │       └── bingo/            # 🎯 Bingo (carregado sob demanda, modo persistente): view.html com as telas,
 │                             #    master, player, join, screen (telão), overlays, packs, session e css
+├── scripts/                  # carrinhos-banco.js e pixel-desenhos.js: geram os bancos de fases
 ├── test/                     # Ver seção 6
 └── data/bingo.sqlite         # Criado automaticamente (contas, progresso e histórico do bingo)
 ```
@@ -741,6 +794,7 @@ npm test
 | `test/teacher.test.js` | Área do professor com PIN: cadastro em lote, autocadastro, renomear, juntar contas, liberar fases, desativar, sala de bingo só pelo professor, turmas e a evolução semana a semana. |
 | `test/tabuleiro.test.js` | Jogo da Velha e Ligue 4: regras (vitória em todas as direções, velha, coluna cheia, Ligue 5); o robô (o imbatível nunca perde, completa a linha, bloqueia, respeita o tempo); o servidor conferindo as partidas contra o robô e as estrelas; a partida pela rede (código, pareamento por turma, vez, lance inválido, empate, desistência, queda e volta, abandono). |
 | `test/raciocinio.test.js` | Memória (cartas de todas as fases, faces sem repetir, refazer a partida, contra o robô), Torre de Hanói (mínimos, fases bagunçadas não triviais, a dica sempre leva ao objetivo, 4 pinos) e Labirinto (todo labirinto tem saída, chaves pegáveis, porta trancada, modo relativo); o servidor conferindo e dando as estrelas. |
+| `test/visuais.test.js` | Carrinhos (o mínimo de cada fase confere com a busca, em ordem de dificuldade), Pixel Art (desenhos certos, as contas dão a cor, pincel e balde), Diferenças (toda cena tem as diferenças pedidas, separadas, e a mesma semente dá a mesma cena) e Quebra-cabeça (encaixes vizinhos se completam, as fotos existem); o servidor conferindo e dando as estrelas. |
 | `test/dia-a-dia.test.js` | Dinheiro e Troco (todo valor é pagável com o dinheiro da fase, troco possível, alternativas, "menos notas", qualquer jeito certo vale) e Balança (sempre equilibra, mínimo certo, nos dois pratos precisa tirar, 1,5 kg); o servidor conferindo e dando as estrelas. |
 | `test/offline.test.js` | Modo offline: o `/sw.js` sai com a versão e a lista de arquivos (sem as fotos grandes do Click), é JavaScript válido e vem com os cabeçalhos certos. |
 | `test/desafio.test.js` | Desafio de digitação: sala com PIN, mesmo texto para todos, teclas conferidas no servidor, teto de velocidade, fim automático, pódio, relógio contra o mascote, progresso, telão sem tokens. |

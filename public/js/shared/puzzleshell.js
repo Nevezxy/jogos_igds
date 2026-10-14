@@ -8,6 +8,7 @@
 //     record: { key: 'bestMoves', label: 'jogadas', lower: true },   recorde da fase
 //     rules(level) -> [textos]                                       "como jogar" antes da fase
 //     play(level, area, api) -> { destroy(), onKey?(ev) }           monta a fase
+//     mapExtra?(el, progress)                                        algo a mais no mapa (ex.: galeria)
 //   })
 // api (para o jogo): stats(html) mostra os números no cabeçalho;
 //   finish({ body, stars, stats: [{ value, label }], msg, record }) termina a
@@ -27,6 +28,7 @@
         </div>
         <div class="pz-toolbar"><button type="button" class="btn btn-primary btn-lg" data-pz-continue>▶ Continuar</button></div>
         <div data-pz-worlds></div>
+        <div data-pz-extra></div>
       </section>
 
       <section class="pz-screen" data-pz="intro" hidden>
@@ -112,6 +114,7 @@
         stateOf: (level) => ({ stars: levelData(level.id).stars || 0, plays: levelData(level.id).plays || 0 }),
         onPick: (level) => { sound.play('pop'); openIntro(level); },
       });
+      if (cfg.mapExtra) cfg.mapExtra($('[data-pz-extra]'), progress);
     }
 
     function openIntro(level) {
@@ -123,8 +126,10 @@
       $('[data-pz-intro-tip]').textContent = level.tip ? `💡 ${level.tip}` : '';
       $('[data-pz-intro-tip]').hidden = !level.tip;
       const best = bestOf(level.id);
-      $('[data-pz-intro-record]').hidden = !best;
-      $('[data-pz-intro-record]').textContent = best ? `🏆 Seu recorde: ${best} ${cfg.record.label}. Consegue ${cfg.record.lower ? 'fazer com menos' : 'bater'}?` : '';
+      $('[data-pz-intro-record]').hidden = best == null;
+      $('[data-pz-intro-record]').textContent = best == null ? '' : best === 0 && cfg.record.lower
+        ? `🏆 Seu recorde: 0 ${cfg.record.label}. Perfeito! 🌟`
+        : `🏆 Seu recorde: ${best} ${cfg.record.label}. Consegue ${cfg.record.lower ? 'fazer com menos' : 'bater'}?`;
       $('[data-pz-intro-rules]').innerHTML = (cfg.rules ? cfg.rules(level) : []).map((t) => `<li>${esc(t)}</li>`).join('');
       show('intro');
       setTimeout(() => $('[data-pz-start]').focus(), 60);
@@ -184,11 +189,11 @@
       $('[data-pz-result-stats]').innerHTML = (res.stats || []).map((s) => `<div><b>${esc(s.value)}</b><small>${esc(s.label)}</small></div>`).join('');
       const rec = $('[data-pz-record]');
       const value = res.record;
-      const beat = cfg.record && value != null && stars >= 1 && (!prevBest || (cfg.record.lower ? value < prevBest : value > prevBest));
+      const beat = cfg.record && value != null && stars >= 1 && (prevBest == null || (cfg.record.lower ? value < prevBest : value > prevBest));
       rec.classList.toggle('is-new', Boolean(beat));
       rec.textContent = !cfg.record || value == null ? '' : beat
-        ? (prevBest ? `🏆 Novo recorde: ${value} ${cfg.record.label} (antes: ${prevBest})` : '🏆 Primeiro recorde desta fase!')
-        : prevBest ? `Seu recorde nesta fase: ${prevBest} ${cfg.record.label}` : '';
+        ? (prevBest != null ? `🏆 Novo recorde: ${value} ${cfg.record.label} (antes: ${prevBest})` : '🏆 Primeiro recorde desta fase!')
+        : prevBest != null ? `Seu recorde nesta fase: ${prevBest} ${cfg.record.label}` : '';
       const next = Levels.LEVELS[r.level.index + 1];
       $('[data-pz-next]').hidden = !next;
       if (stars >= 1) { fx.confetti({ amount: 40 + stars * 50 }); sound.play(stars === 3 ? 'fanfare' : 'tada'); }
