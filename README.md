@@ -26,6 +26,8 @@ Jogos de hoje:
 | 🧩 **Quebra-cabeça** | sozinho(a) | Fotos de bichos com peças de encaixe de verdade: de 4 a 48 peças, com a foto clarinha no fundo, sem ela e com peças viradas. 18 fases e galeria. |
 | ❌ **Jogo da Velha** | sozinho(a) ou com um amigo pela rede | 3 × 3 e 4 × 4 contra 7 robôs, um mais esperto que o outro (o último nunca perde), ou contra um amigo em outro aparelho (código de sala ou pareamento automático). |
 | 🔴 **Ligue 4** | sozinho(a) ou com um amigo pela rede | Ligue 4 (7 × 6) e Ligue 5 (9 × 7) contra 10 robôs, ou contra um amigo pela rede. Ajuda opcional que mostra as ameaças. |
+| ⚫ **Dama** | sozinho(a) ou com um amigo pela rede | Dama brasileira oficial (captura obrigatória com lei da maioria, dama voadora) contra 5 robôs, ou contra um amigo pela rede. A captura de várias peças é feita passo a passo. |
+| ♟️ **Xadrez** | sozinho(a) ou com um amigo pela rede | "Fim de partida" (mate em 1, mate em 2, rei e dama ou torre contra rei) e partidas inteiras contra 6 robôs, ou contra um amigo pela rede. Regras completas. |
 | 🏁 **Desafio de Digitação** | com a turma | Corrida de digitação ao vivo: o professor escolhe o texto (uma fase do Teclado Mágico ou um texto dele) e o modo, a turma digita junta e o telão mostra a pista com os bichinhos e o pódio. |
 | 🎯 **Bingo** | com a turma | Bingo em tempo real conduzido pelo professor, com ~20 crianças em celulares, tablets ou computadores, e um telão opcional para o projetor. |
 
@@ -452,7 +454,7 @@ já fez.
     peças" junta as soltas;
   - estrelas pelo tempo (uns segundos por peça); o recorde é o menor tempo.
 
-### ♟️ Jogos de tabuleiro (Jogo da Velha e Ligue 4)
+### ♟️ Jogos de tabuleiro (Jogo da Velha, Ligue 4, Dama e Xadrez)
 - **A mesma base para todos** (`js/shared/boardgame.js`, e depois Dama e
   Xadrez): mapa de robôs, "contra um amigo", partida, resultado. Cada jogo
   só traz as regras (`rules.js`, usadas também pelo servidor), as fases
@@ -485,6 +487,36 @@ já fez.
   (9 × 7, 4 robôs). A peça cai na coluna, com uma "fantasma" mostrando onde
   vai parar. "⚠️ Mostrar ameaças" marca as colunas onde o adversário
   ganharia na próxima jogada.
+- **⚫ Dama brasileira** (5 robôs, até 8 lances à frente):
+  - regras oficiais (`dama/rules.js`): a pedra anda para a frente e captura
+    para a frente e para trás; a **dama voadora** anda e captura de longe;
+    **captura obrigatória com a lei da maioria**; as peças capturadas só
+    saem no fim e não são puladas duas vezes; a pedra que só passa pela
+    última fileira no meio da captura não vira dama; empate com 20 lances
+    de cada lado só com damas; perde quem fica sem lance;
+  - as peças que podem jogar ficam destacadas (piscando quando a captura é
+    obrigatória). Numa captura de várias peças, a criança toca em cada casa
+    onde a peça pousa, e as peças puladas ficam marcadas com ✕.
+- **♟️ Xadrez:**
+  - regras completas (`xadrez/rules.js`): roque, en passant, promoção com
+    escolha da peça, xeque, mate, afogamento, material insuficiente, 3
+    repetições e 50 lances. O gerador de lances confere com os números de
+    referência (perft) em 5 posições;
+  - **🏁 Fim de partida** (9 fases, como o *End of chess game* do GCompris):
+    mate em 1 (4), mate em 2 (3), rei e dama contra rei, rei e torre contra
+    rei. A criança joga com as brancas; 3 estrelas dando o mate em até o
+    número de lances da fase. Essas posições não aparecem no "jogar com um
+    amigo";
+  - **partidas** contra 6 robôs: do Comilão (só pensa em capturar) ao Mestre
+    (4 lances à frente e, no fim da busca, todas as trocas de peças, em
+    menos de 2 s). O robô ganhou uma busca de capturas (`bot.js`), usada
+    quando o jogo oferece `Rules.captures`;
+  - toque na peça para ver as casas possíveis; "⚠️ Mostrar peças atacadas"
+    marca as suas peças em perigo. O tabuleiro vira para quem joga de
+    pretas.
+- **Fases com posição própria:** no `boardlevels.js`, uma fase pode ter a
+  própria posição inicial (`variant`), a cor fixa da criança (`seat`) e um
+  número de lances para a 3ª estrela (`par`); o servidor confere tudo.
 - **Na área do professor:** o robô mais forte que já venceu, as estrelas e
   o placar contra o robô e contra amigos.
 - Painel com as seções 🧩 Raciocínio e ♟️ Tabuleiro. Cada seção recolhe
@@ -620,7 +652,7 @@ jogos_igds/
 │       ├── dinheiro/, balanca/  # 💰 ⚖️ matemática do dia a dia: gerador (também no servidor), levels.js, game.js
 │       ├── memoria/, hanoi/, labirinto/  # 🧩 raciocínio: regras/gerador (também no servidor), levels.js, game.js
 │       ├── carrinhos/, pixel/, diferencas/, quebracabeca/  # 🚗 🎨 🔍 🧩 visuais: regras/gerador, bancos gerados, levels.js, game.js
-│       ├── velha/, ligue4/   # ❌ 🔴 tabuleiros: rules.js (também no servidor), levels.js, game.js
+│       ├── velha/, ligue4/, dama/, xadrez/  # ❌ 🔴 ⚫ ♟️ tabuleiros: rules.js (também no servidor e no robô), levels.js, game.js
 │       ├── click/            # 🖱️ Click
 │       │   ├── levels.js     # Mundos, ações, ritmo e estrelas (também no servidor)
 │       │   ├── targets.js    # Os alvos de cada rodada, com semente (também no servidor)
@@ -792,6 +824,7 @@ npm test
 | `test/matematica.test.js` | Conta Comigo: regras do gerador em todas as fases (vai-um/empréstimo onde deve, divisão exata, negativos só nos mundos certos, "qual é o sinal?" com uma resposta só), mesma semente = mesmas contas, servidor conferindo respostas, estrelas, revisão e área do professor. |
 | `test/platform.test.js` | Contas (nome e sobrenome, maiúsculas/acentos/espaços, conta repetida, sessão, bichinho, sair) e progresso pela API (estrelas do servidor, fase bloqueada, velocidade impossível, resumos). |
 | `test/teacher.test.js` | Área do professor com PIN: cadastro em lote, autocadastro, renomear, juntar contas, liberar fases, desativar, sala de bingo só pelo professor, turmas e a evolução semana a semana. |
+| `test/dama-xadrez.test.js` | Dama brasileira (captura obrigatória, lei da maioria, captura para trás, dama voadora, peça capturada não é pulada de novo, coroação só no fim, empate só com damas) e Xadrez (perft em 5 posições, roque, en passant, promoção, mate, afogamento, material insuficiente, 3 repetições, 50 lances; o Fim de partida é mesmo mate em 1 e em 2); o robô acha mates e capturas; o servidor conferindo e dando as estrelas. |
 | `test/tabuleiro.test.js` | Jogo da Velha e Ligue 4: regras (vitória em todas as direções, velha, coluna cheia, Ligue 5); o robô (o imbatível nunca perde, completa a linha, bloqueia, respeita o tempo); o servidor conferindo as partidas contra o robô e as estrelas; a partida pela rede (código, pareamento por turma, vez, lance inválido, empate, desistência, queda e volta, abandono). |
 | `test/raciocinio.test.js` | Memória (cartas de todas as fases, faces sem repetir, refazer a partida, contra o robô), Torre de Hanói (mínimos, fases bagunçadas não triviais, a dica sempre leva ao objetivo, 4 pinos) e Labirinto (todo labirinto tem saída, chaves pegáveis, porta trancada, modo relativo); o servidor conferindo e dando as estrelas. |
 | `test/visuais.test.js` | Carrinhos (o mínimo de cada fase confere com a busca, em ordem de dificuldade), Pixel Art (desenhos certos, as contas dão a cor, pincel e balde), Diferenças (toda cena tem as diferenças pedidas, separadas, e a mesma semente dá a mesma cena) e Quebra-cabeça (encaixes vizinhos se completam, as fotos existem); o servidor conferindo e dando as estrelas. |

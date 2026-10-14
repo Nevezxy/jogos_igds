@@ -4,7 +4,10 @@
 > robô, partida pela rede, ❌ Jogo da Velha e 🔴 Ligue 4) e **B** (🃏 Memória,
 > 🗼 Hanói, 🌀 Labirinto, com telas compartilhadas), **C** (💰 Dinheiro e
 > Troco, ⚖️ Balança) e **D** (🚗 Carrinhos, 🎨 Pixel Art, 🔍 Diferenças,
-> 🧩 Quebra-cabeça) concluídas. Próxima: E (Dama e Xadrez).
+> 🧩 Quebra-cabeça) e **E** (⚫⚪ Dama brasileira e ♟️ Xadrez com o "Fim de
+> partida") concluídas: os 13 jogos do plano estão prontos.
+> Na etapa E: Dama com 5 robôs e Xadrez com 9 fases de "Fim de partida" e 6
+> robôs.
 > Na etapa D: Pixel Art com 30 desenhos (não 36), Diferenças com 20 fases e
 > Quebra-cabeça com 18 (uma foto por fase).
 > Na etapa A, as estrelas ficaram por partida: ⭐⭐⭐ é vencer sem desfazer.

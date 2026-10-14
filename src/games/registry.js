@@ -327,7 +327,45 @@ const games = [
       scripts: ['../../js/shared/boardlevels.js', '../../js/shared/boardgame.js', 'rules.js', 'levels.js', 'game.js'],
     },
     server: require('./ligue4/server'),
+  },  {
+    id: 'dama',
+    name: 'Dama',
+    icon: '⚫',
+    tagline: 'Dama brasileira oficial contra 5 robôs, ou contra um amigo pela rede. Capturar é obrigatório!',
+    mode: 'solo',
+    subject: 'tabuleiro',
+    status: 'active',
+    color: 'orange',
+    isNew: true,
+    requiresKeyboard: false,
+    // a parte de fora (robôs, amigo pela rede) é a mesma de todos os tabuleiros
+    client: {
+      styles: ['../../css/boardgame.css', 'game.css'],
+      view: 'view.html',
+      scripts: ['../../js/shared/boardlevels.js', '../../js/shared/boardgame.js', 'rules.js', 'levels.js', 'game.js'],
+    },
+    server: require('./dama/server'),
   },
+  {
+    id: 'xadrez',
+    name: 'Xadrez',
+    icon: '♟️',
+    tagline: 'Aprenda a dar xeque-mate no "Fim de partida" e jogue partidas contra 6 robôs, ou contra um amigo pela rede!',
+    mode: 'solo',
+    subject: 'tabuleiro',
+    status: 'active',
+    color: 'violet',
+    isNew: true,
+    requiresKeyboard: false,
+    // a parte de fora (robôs, amigo pela rede) é a mesma de todos os tabuleiros
+    client: {
+      styles: ['../../css/boardgame.css', 'game.css'],
+      view: 'view.html',
+      scripts: ['../../js/shared/boardlevels.js', '../../js/shared/boardgame.js', 'rules.js', 'levels.js', 'game.js'],
+    },
+    server: require('./xadrez/server'),
+  },
+
   {
     id: 'desafio',
     name: 'Desafio de Digitação',
