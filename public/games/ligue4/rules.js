@@ -37,7 +37,7 @@
 
   function initial(v = '4') {
     v = String(v);
-    const cfg = VARIANTS[v];
+    const cfg = Object.prototype.hasOwnProperty.call(VARIANTS, v) ? VARIANTS[v] : null;
     if (!cfg) throw new Error('variante desconhecida');
     return {
       v, cols: cfg.cols, rows: cfg.rows, k: cfg.k,

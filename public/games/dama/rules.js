@@ -33,7 +33,7 @@
   const inside = (r, c) => r >= 0 && r < 8 && c >= 0 && c < 8;
 
   function initial(v = 'brasileira') {
-    if (!VARIANTS[String(v)]) throw new Error('variante desconhecida');
+    if (!Object.prototype.hasOwnProperty.call(VARIANTS, String(v))) throw new Error('variante desconhecida');
     const board = [];
     for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) board.push((r + c) % 2 === 1 ? (r < 3 ? 'b' : r > 4 ? 'w' : '.') : '.');
     return { v: String(v), board, turn: 0, ply: 0, kingPlies: 0, last: null, captured: [], result: null };

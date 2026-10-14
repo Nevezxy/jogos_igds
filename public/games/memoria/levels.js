@@ -37,8 +37,9 @@
       intro: 'O par é a mesma letra, grande e pequena: A combina com a.',
       levels: [
         { id: 'mm3a', title: '6 letras', kind: 'case', pairs: 6, letters: 'ABDEFHMNRT', tip: 'A letra grande e a pequena têm o mesmo som.' },
-        { id: 'mm3b', title: '8 letras', kind: 'case', pairs: 8, letters: 'ABDEFGHJLMNQRT', tip: 'Cuidado: b e d, p e q parecem, mas são diferentes!' },
-        { id: 'mm3c', title: '12 letras', kind: 'case', pairs: 12, letters: 'ABCDEFGHIJLMNOPQRSTUVXZ', tip: 'O alfabeto quase todo.' },
+        { id: 'mm3b', title: '8 letras', kind: 'case', pairs: 8, letters: 'ABDEFGHJLMNPQRT', tip: 'Cuidado: b e d, p e q parecem, mas são diferentes!' },
+        // sem o I: o I maiúsculo e o l minúsculo são o mesmo tracinho em muitas fontes
+        { id: 'mm3c', title: '12 letras', kind: 'case', pairs: 12, letters: 'ABCDEFGHJLMNOPQRSTUVXZ', tip: 'O alfabeto quase todo.' },
       ],
     },
     {

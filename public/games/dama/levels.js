@@ -11,10 +11,10 @@
       intro: 'As brancas começam. Capturar é obrigatório, e vale a jogada que captura mais peças! Chegue do outro lado para virar dama.',
       levels: [
         { id: 'dm1', title: 'Robô Distraído', tip: 'Ele joga quase ao acaso. As peças que podem jogar ficam destacadas.', bot: { depth: 1, random: 0.4 }, undo: true },
-        { id: 'dm2', title: 'Robô Guloso', tip: 'Ele captura sempre que pode. Ofereça uma peça e capture duas de volta!', bot: { depth: 2, noise: 60 }, undo: true },
+        { id: 'dm2', title: 'Robô Guloso', tip: 'Ele só olha o lance seguinte. Ofereça uma peça e capture duas de volta!', bot: { depth: 2, noise: 60 }, undo: true },
         { id: 'dm3', title: 'Robô Atento', tip: 'Ele já pensa no seu lance seguinte. Mantenha as peças juntas.', bot: { depth: 4, noise: 25 } },
         { id: 'dm4', title: 'Robô Pensador', tip: 'Guarde a fileira de trás: assim ele demora a fazer dama.', bot: { depth: 6, noise: 8, maxMs: 1500 } },
-        { id: 'dm5', title: 'Robô Mestre', tip: 'O mais forte: pensa 8 lances à frente. Uma dama vale por três pedras!', bot: { depth: 8, maxMs: 1800 } },
+        { id: 'dm5', title: 'Robô Mestre', tip: 'O mais forte: pensa até 8 lances à frente. Uma dama vale por três pedras!', bot: { depth: 8, maxMs: 1800 } },
       ],
     },
   ];

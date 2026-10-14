@@ -59,7 +59,8 @@
 
   function initial(v = 'classico') {
     v = String(v);
-    const fen = VARIANTS[v] ? VARIANTS[v].fen : POSITIONS[v];
+    const own = (o) => Object.prototype.hasOwnProperty.call(o, v);
+    const fen = own(VARIANTS) ? VARIANTS[v].fen : own(POSITIONS) ? POSITIONS[v] : null;
     if (!fen) throw new Error('variante desconhecida');
     return fromFen(fen, v);
   }
@@ -257,7 +258,11 @@
     if (p === 'k') castle = castle.replace(/[kq]/g, '');
     for (const sq of [from, to]) if (CORNER[sq]) castle = castle.replace(CORNER[sq], '');
     const t = p.toUpperCase();
-    const ep = t === 'P' && Math.abs(to - from) === 16 ? (from + to) / 2 : -1;
+    // casa de en passant só quando um peão do outro lado pode mesmo capturar
+    // (senão a mesma posição contaria como diferente nas 3 repetições)
+    const enemyPawn = s.turn === 0 ? 'p' : 'P';
+    const nextTo = (d) => (to % 8) + d >= 0 && (to % 8) + d < 8 && b[to + d] === enemyPawn;
+    const ep = t === 'P' && Math.abs(to - from) === 16 && (nextTo(-1) || nextTo(1)) ? (from + to) / 2 : -1;
     const irreversible = t === 'P' || captured !== '.';
     const next = {
       v: s.v, board: b, turn: 1 - s.turn, castle, ep, half: irreversible ? 0 : s.half + 1, ply: s.ply + 1,
