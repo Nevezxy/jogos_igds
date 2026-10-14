@@ -88,6 +88,55 @@ function classList(registry) {
   });
 }
 
+// Evolução das últimas semanas, a partir do histórico de rodadas: para cada
+// educando, semana a semana (0 = últimos 7 dias, 1 = os 7 anteriores...),
+// quantas rodadas jogou, quantos minutos, a precisão média e quantas fases
+// conseguiu pela primeira vez (1ª estrela). No total e por jogo.
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+const EVOLUTION_WEEKS = 6;
+const evolutionStmts = {
+  rounds: db.prepare('SELECT student_id, game_id, accuracy, duration_ms, created_at FROM game_results WHERE created_at >= ?'),
+  firsts: db.prepare(`SELECT student_id, game_id, level_id, MIN(created_at) AS first FROM game_results
+    WHERE stars >= 1 GROUP BY student_id, game_id, level_id HAVING first >= ?`),
+};
+
+function evolution(now = Date.now(), weeks = EVOLUTION_WEEKS) {
+  const since = now - weeks * WEEK_MS;
+  const blank = () => Array.from({ length: weeks }, () => ({ rounds: 0, minutes: 0, accSum: 0, accN: 0, newLevels: 0 }));
+  const out = {};
+  const bucket = (studentId, gameId, ts) => {
+    const w = Math.floor((now - ts) / WEEK_MS);
+    if (w < 0 || w >= weeks) return null;
+    const s = out[studentId] || (out[studentId] = { all: blank(), games: {} });
+    const g = s.games[gameId] || (s.games[gameId] = blank());
+    return [s.all[w], g[w]];
+  };
+  for (const r of evolutionStmts.rounds.all(since)) {
+    const cells = bucket(r.student_id, r.game_id, r.created_at);
+    if (!cells) continue;
+    for (const c of cells) {
+      c.rounds++;
+      c.minutes += (r.duration_ms || 0) / 60000;
+      if (typeof r.accuracy === 'number') { c.accSum += r.accuracy; c.accN++; }
+    }
+  }
+  for (const r of evolutionStmts.firsts.all(since)) {
+    const cells = bucket(r.student_id, r.game_id, r.first);
+    if (cells) cells.forEach((c) => { c.newLevels++; });
+  }
+  const finish = (list) => list.map((c) => ({
+    rounds: c.rounds,
+    minutes: Math.round(c.minutes),
+    accuracy: c.accN ? Math.round(c.accSum / c.accN) : null,
+    newLevels: c.newLevels,
+  }));
+  for (const s of Object.values(out)) {
+    s.all = finish(s.all);
+    for (const id of Object.keys(s.games)) s.games[id] = finish(s.games[id]);
+  }
+  return out;
+}
+
 // Junta a conta `fromId` (criada por engano) na conta `intoId`: progresso de
 // cada jogo (o jogo decide como, em mergeAccounts), histórico de rodadas e
 // jogadores do bingo passam para a conta certa; a conta repetida some.
@@ -153,6 +202,8 @@ module.exports = {
   isValid,
   requireTeacher,
   classList,
+  evolution,
+  EVOLUTION_WEEKS,
   mergeStudents,
   setUnlockedAll,
   bulkRegister,

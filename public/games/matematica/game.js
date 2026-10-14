@@ -209,6 +209,9 @@
     }
 
     const problem = () => round.problems[round.i];
+    // ✍️ conta armada (mundo `armada`): + − × com o resultado escondido
+    const armada = (p = problem()) => Boolean(Levels.getWorld(round.level.world).armada)
+      && p.type === 'bin' && p.hide === 'c' && ['+', '-', '*'].includes(p.op);
     const choiceMode = () => round.emoji && round.level.choice && problem().fields === 1 && problem().hide !== 'op';
     const minusAllowed = () => Boolean(Levels.getWorld(round.level.world).minus);
 
@@ -224,10 +227,14 @@
       const box = $('#cc-problem');
       box.innerHTML = '';
       box.classList.remove('is-pictures');
+      box.classList.remove('is-armada');
       const pic = round.emoji ? Emoji.render(p, round.picture) : null;
       if (pic) {
         box.classList.add('is-pictures');
         box.appendChild(pic.node);
+      } else if (armada(p)) {
+        box.classList.add('is-armada');
+        box.appendChild(renderArmada(p));
       } else {
         box.appendChild(renderTokens(p.tokens));
       }
@@ -241,12 +248,75 @@
       if (speechOn) say(P.speech(p));
     }
 
+    // A conta armada, como no caderno: o vai-um (caixinhas que a criança
+    // marca, só de ajuda), o número de cima, o de baixo com o sinal, o traço
+    // e as casas do resultado, que enchem da direita para a esquerda.
+    function renderArmada(p) {
+      let top = String(p.a);
+      let bottom = String(p.b);
+      if (p.op === '*' && bottom.length > top.length) [top, bottom] = [bottom, top]; // o maior em cima
+      const ans = String(p.answer);
+      const cols = Math.max(top.length, bottom.length, ans.length);
+      const grid = document.createElement('div');
+      grid.className = 'cc-armada';
+      grid.style.gridTemplateColumns = `repeat(${cols + 1}, var(--cell))`;
+      grid.setAttribute('role', 'img');
+      grid.setAttribute('aria-label', P.text(p));
+      const cell = (cls, text = '') => grid.appendChild(Object.assign(document.createElement('span'), { className: cls, textContent: text }));
+      const digits = (str, cls) => {
+        const padded = str.padStart(cols, ' ');
+        [...padded].forEach((ch) => cell(`cc-adigit ${cls}`, ch.trim()));
+      };
+      // vai-um / empréstimo: uma caixinha em cima de cada casa, menos a das unidades
+      cell('cc-aop');
+      for (let c = 0; c < cols; c++) {
+        if (c === cols - 1) { cell('cc-carry-spot'); continue; }
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'cc-carry';
+        b.title = p.op === '-' ? 'Marque o empréstimo' : 'Marque o vai-um';
+        b.setAttribute('aria-label', b.title);
+        b.addEventListener('click', () => {
+          b.textContent = b.textContent ? '' : '1';
+          b.classList.toggle('is-on', Boolean(b.textContent));
+          sound.play('click');
+        });
+        grid.appendChild(b);
+      }
+      cell('cc-aop');
+      digits(top, 'is-top');
+      cell('cc-aop', P.SYMBOL[p.op]);
+      digits(bottom, 'is-bottom');
+      cell('cc-aline');
+      cell('cc-aop');
+      round.armCells = [];
+      for (let c = 0; c < cols; c++) round.armCells.push(cell('cc-acell'));
+      return grid;
+    }
+    // as casas do resultado: o que foi digitado fica encostado à direita
+    function renderArmadaAnswer() {
+      const cells = round.armCells || [];
+      const v = input[0];
+      const next = cells.length - 1 - v.length; // a próxima casa a preencher
+      cells.forEach((el, i) => {
+        const k = i - (cells.length - v.length);
+        el.textContent = k >= 0 ? v[k] : '';
+        el.classList.toggle('is-active', i === next && !waiting);
+      });
+    }
+
     // caixas de resposta (ou opções)
     function renderAnswer() {
       const p = problem();
       const wrap = $('#cc-answer');
       wrap.innerHTML = '';
       wrap.className = 'cc-answer';
+      if (armada(p)) {
+        // o resultado é escrito nas casas da própria conta
+        wrap.classList.add('is-armada');
+        renderArmadaAnswer();
+        return;
+      }
       if (p.hide === 'op') {
         wrap.classList.add('is-ops');
         ['+', '-', '*', '/'].forEach((op) => {
@@ -346,6 +416,15 @@
         return;
       }
       let v = input[field];
+      if (armada()) {
+        // conta armada: cada algarismo novo entra à esquerda (unidades primeiro)
+        if (k === '⌫') v = v.slice(1);
+        else if (/^\d$/.test(k) && v.length < (round.armCells || []).length) v = k + v;
+        input[field] = v;
+        sound.play('click');
+        renderAnswer();
+        return;
+      }
       if (k === '⌫') v = v.slice(0, -1);
       else if (k === '−' || k === '-') { if (minusAllowed()) v = v.startsWith('-') ? v.slice(1) : `-${v}`; }
       else if (/^\d$/.test(k)) { if (v.replace('-', '').length < 9) v = v === '0' ? k : v === '-0' ? `-${k}` : v + k; }
@@ -452,6 +531,15 @@
     function fillHole(value, cls = 'is-filled') {
       const hole = $('#cc-problem .cc-hole');
       const p = problem();
+      if (armada(p)) {
+        const s = String(value).padStart(round.armCells.length, ' ');
+        round.armCells.forEach((el, i) => {
+          el.textContent = s[i].trim();
+          el.classList.remove('is-active');
+          el.classList.add(cls);
+        });
+        return;
+      }
       if (hole) {
         hole.classList.add(cls);
         hole.textContent = p.fields === 2 ? `${P.fmt(value[0])} resto ${P.fmt(value[1])}` : p.hide === 'op' ? P.SYMBOL[value] : P.fmt(value);
@@ -508,7 +596,9 @@
         });
         progress = res.progress;
       } catch (e) {
-        ui.toast('Não consegui salvar o seu resultado 😵 Confira a internet.', 'error', 5000);
+        // sem internet: o resultado fica guardado e vai sozinho quando ela voltar
+        if (e.queued) ui.toast(e.message, 'info', 6000);
+        else ui.toast('Não consegui salvar o seu resultado 😵 Confira a internet.', 'error', 5000);
       }
     }
 

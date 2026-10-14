@@ -432,7 +432,9 @@
         });
         progress = res.progress;
       } catch (e) {
-        ui.toast('Não consegui salvar o seu resultado 😵 Confira a internet.', 'error', 5000);
+        // sem internet: o resultado fica guardado e vai sozinho quando ela voltar
+        if (e.queued) ui.toast(e.message, 'info', 6000);
+        else ui.toast('Não consegui salvar o seu resultado 😵 Confira a internet.', 'error', 5000);
       }
     }
 

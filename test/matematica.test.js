@@ -45,7 +45,10 @@ function checkGenerator() {
         if (world.id === 'mu' && Math.max(p.a, p.b) > 99) bad.push(`${level.id}: fator acima de 99 ${p.key}`);
         if (world.id === 'dv' && p.a > 99) bad.push(`${level.id}: dividendo acima de 99 ${p.key}`);
         // centena e milhar só na adição e subtração
-        if (world.id !== 'as' && P.numbersOf(p).some((n) => Math.abs(n) > 100)) bad.push(`${level.id}: número acima de 100 ${p.key}`);
+        // centena e milhar só onde tem soma e subtração (e na conta armada, só nelas)
+        const big = P.numbersOf(p).some((n) => Math.abs(n) > 100);
+        if (big && world.id !== 'as' && !(world.id === 'ca' && (p.op === '+' || p.op === '-'))) bad.push(`${level.id}: número acima de 100 ${p.key}`);
+        if (world.armada && !(p.type === 'bin' && ['+', '-', '*'].includes(p.op) && p.hide === 'c')) bad.push(`${level.id}: conta que não dá para armar ${p.key}`);
       }
     }
     // fase pequena demais repete conta na rodada de 10

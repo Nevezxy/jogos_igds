@@ -99,6 +99,12 @@ async function main() {
   assert(r.ok, 'com todas as fases abertas, uma fase lá na frente já vale');
   r = await api('GET', '/api/teacher/students', null, T);
   assert(r.students[0].games.digitacao.lockable === false, 'sem trilha bloqueada, a área do professor não oferece "liberar fases"');
+  // ---- evolução das semanas ----
+  const evo = r.evolution && r.evolution[anaRow.id];
+  assert(r.evolutionWeeks === 6 && evo && evo.all.length === 6 && evo.all[0].rounds >= 3 && evo.all.slice(1).every((w) => w.rounds === 0),
+    `evolução: as rodadas desta semana aparecem na semana 0 (${evo && evo.all[0].rounds})`);
+  assert(evo.games.digitacao[0].newLevels >= 2 && typeof evo.games.digitacao[0].accuracy === 'number',
+    'evolução por jogo: fases novas da semana e precisão média');
   r = await api('POST', `/api/teacher/students/${anaRow.id}/games/bingo/unlock-all`, { unlocked: true }, T);
   assert(r.code === 'SEM_FASES', 'jogo sem fases não tem o que liberar');
 

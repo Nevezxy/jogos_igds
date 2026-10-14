@@ -14,6 +14,7 @@
 
   const STORAGE_KEY = 'igds_teacher_v1';
   const FILTER_KEY = 'igds_teacher_turma_v1';
+  const GAME_FILTER_KEY = 'igds_teacher_jogo_v1';
   const ALL = '*';
   const NONE = '';
   let token = null;
@@ -21,10 +22,14 @@
   let students = [];
   let classes = [];
   let classFilter = ALL; // ALL, NONE (sem turma) ou o nome da turma
+  let gameFilter = ALL; // ALL ou o id de um jogo: a tabela mostra só ele
+  let evolution = {}; // id do educando -> { all: [semanas], games: { id: [semanas] } }
+  let evolutionWeeks = 6;
   const selected = new Set();
   let pendingUrl = '/professor';
 
   try { classFilter = localStorage.getItem(FILTER_KEY) ?? ALL; } catch (e) { /* ignore */ }
+  try { gameFilter = localStorage.getItem(GAME_FILTER_KEY) || ALL; } catch (e) { /* ignore */ }
 
   try { token = localStorage.getItem(STORAGE_KEY); } catch (e) { /* ignore */ }
 
@@ -188,12 +193,125 @@
       ...catalog.filter((g) => ids.has(g.id)),
       ...[...ids].filter((id) => !catalog.some((g) => g.id === id)).map((id) => ({ id, icon: '🎲', name: id })),
     ];
+    // "Mostrar jogo": todos ou um só (com 7 jogos a tabela fica larga demais)
+    const select = document.getElementById('teacher-game-filter');
+    if (gameFilter !== ALL && !gameColumns.some((g) => g.id === gameFilter)) gameFilter = ALL;
+    select.innerHTML = `<option value="${ALL}">Todos os jogos</option>`
+      + gameColumns.map((g) => `<option value="${escapeHtml(g.id)}">${escapeHtml(g.icon)} ${escapeHtml(g.name)}</option>`).join('');
+    select.value = gameFilter;
     const head = document.getElementById('teacher-head');
     head.innerHTML = '<th class="teacher-check"><input type="checkbox" id="teacher-check-all" aria-label="Selecionar todos da lista" /></th>'
       + '<th>Educando</th><th>Turma</th><th>Último acesso</th>'
-      + gameColumns.map((g) => `<th>${escapeHtml(g.icon)} ${escapeHtml(g.name)}</th>`).join('')
+      + `<th title="Rodadas por semana, das ${evolutionWeeks} últimas semanas (a da direita é a desta semana)">📈 Evolução</th>`
+      + shownColumns().map((g) => `<th>${escapeHtml(g.icon)} ${escapeHtml(g.name)}</th>`).join('')
       + '<th>Ações</th>';
   }
+  const shownColumns = () => (gameFilter === ALL ? gameColumns : gameColumns.filter((g) => g.id === gameFilter));
+
+  document.getElementById('teacher-game-filter').addEventListener('change', async (ev) => {
+    gameFilter = ev.target.value;
+    try { localStorage.setItem(GAME_FILTER_KEY, gameFilter); } catch (e) { /* ignore */ }
+    play('pop');
+    await buildColumns();
+    renderRows();
+  });
+
+  // ---------------- evolução ----------------
+
+  const noWeek = { rounds: 0, minutes: 0, accuracy: null, newLevels: 0 };
+  // semanas do educando (no jogo escolhido ou em todos), da mais antiga à de agora
+  function weeksOf(s) {
+    const ev = evolution[s.id];
+    const list = ev ? (gameFilter === ALL ? ev.all : ev.games[gameFilter]) : null;
+    return (list || Array.from({ length: evolutionWeeks }, () => noWeek)).slice().reverse();
+  }
+  // precisão desta semana comparada com a última semana em que jogou
+  function trend(weeks) {
+    const now = weeks[weeks.length - 1];
+    const before = weeks.slice(0, -1).reverse().find((w) => w.accuracy != null);
+    if (now.accuracy == null || !before) return '';
+    const d = now.accuracy - before.accuracy;
+    if (Math.abs(d) < 3) return '<span class="teacher-trend" title="Precisão parecida com a da semana anterior">→</span>';
+    return d > 0
+      ? `<span class="teacher-trend is-up" title="Precisão subiu ${d} pontos">↑ ${d}</span>`
+      : `<span class="teacher-trend is-down" title="Precisão caiu ${-d} pontos">↓ ${-d}</span>`;
+  }
+  function evolutionCell(s) {
+    const weeks = weeksOf(s);
+    const max = Math.max(1, ...weeks.map((w) => w.rounds));
+    const now = weeks[weeks.length - 1];
+    const bars = weeks.map((w, i) => {
+      const label = i === weeks.length - 1 ? 'esta semana' : `há ${weeks.length - 1 - i} semana(s)`;
+      return `<i style="height:${Math.round((w.rounds / max) * 100)}%" class="${w.rounds ? '' : 'is-zero'}" title="${label}: ${w.rounds} rodada(s)"></i>`;
+    }).join('');
+    const text = now.rounds
+      ? `${now.rounds} rodada${now.rounds === 1 ? '' : 's'} · ${now.newLevels} fase${now.newLevels === 1 ? '' : 's'} nova${now.newLevels === 1 ? '' : 's'}${now.accuracy != null ? ` · ${now.accuracy}%` : ''}`
+      : 'não jogou esta semana';
+    return `<button type="button" class="teacher-evo" data-act="evolution" title="Ver semana a semana">
+      <span class="teacher-evo-bars" aria-hidden="true">${bars}</span>
+      <span class="teacher-evo-text">${escapeHtml(text)} ${trend(weeks)}</span></button>`;
+  }
+
+  // Janela com a evolução semana a semana (em todos os jogos e em cada um).
+  function showEvolution(s) {
+    const ev = evolution[s.id] || { all: [], games: {} };
+    const label = (i) => (i === 0 ? 'Esta semana' : i === 1 ? 'Semana passada' : `Há ${i} semanas`);
+    const table = (list) => `<table class="teacher-evo-table"><thead><tr><th>Semana</th><th>Rodadas</th><th>Minutos</th><th>Fases novas</th><th>Precisão</th></tr></thead><tbody>
+      ${(list.length ? list : Array.from({ length: evolutionWeeks }, () => noWeek)).map((w, i) => `<tr class="${w.rounds ? '' : 'is-zero'}"><td>${label(i)}</td><td>${w.rounds}</td><td>${w.minutes}</td><td>${w.newLevels}</td><td>${w.accuracy != null ? `${w.accuracy}%` : '—'}</td></tr>`).join('')}
+      </tbody></table>`;
+    const games = gameColumns.filter((g) => ev.games[g.id] && ev.games[g.id].some((w) => w.rounds));
+    openModal({
+      title: `📈 Evolução de ${s.name}`,
+      okLabel: 'Fechar',
+      bodyHtml: `<p class="muted">As últimas ${evolutionWeeks} semanas. "Fases novas" são as fases em que ganhou a 1ª estrela naquela semana.</p>
+        <h4>Todos os jogos</h4>${table(ev.all)}
+        ${games.map((g) => `<h4>${escapeHtml(g.icon)} ${escapeHtml(g.name)}</h4>${table(ev.games[g.id])}`).join('')}
+        ${games.length ? '' : '<p class="muted">Nenhuma rodada nessas semanas.</p>'}`,
+      async onOk() { return true; },
+    });
+  }
+
+  // ---------------- planilha ----------------
+
+  // Tira o texto de uma célula da tabela (os resumos dos jogos são HTML).
+  function plain(html) {
+    const div = document.createElement('div');
+    div.innerHTML = html;
+    div.querySelectorAll('span, strong, div').forEach((el) => el.append(' '));
+    return div.textContent.replace(/\s+/g, ' ').trim();
+  }
+  const csvCell = (v) => {
+    const t = String(v ?? '');
+    return /[";\n]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t;
+  };
+  // A lista de agora (turma, busca e jogo escolhidos), em CSV com ";" e BOM:
+  // abre direto no Excel em português e no Google Planilhas.
+  function exportCsv() {
+    const visible = visibleStudents();
+    if (!visible.length) { toast('Ninguém na lista para baixar.', 'error'); return; }
+    const cols = shownColumns();
+    const header = ['Educando', 'Turma', 'Último acesso', 'Rodadas (7 dias)', 'Minutos (7 dias)', 'Fases novas (7 dias)', 'Precisão (7 dias)',
+      ...cols.map((g) => g.name)];
+    const lines = visible.map((s) => {
+      const now = weeksOf(s)[evolutionWeeks - 1] || noWeek;
+      return [s.name, s.className || '', s.lastLoginAt ? new Date(s.lastLoginAt).toLocaleString('pt-BR') : 'nunca',
+        now.rounds, now.minutes, now.newLevels, now.accuracy != null ? `${now.accuracy}%` : '',
+        ...cols.map((g) => plain((GAME_CELLS[g.id] || genericCell)(s.games[g.id])).replace(/^—$/, ''))];
+    });
+    const csv = '\ufeff' + [header, ...lines].map((row) => row.map(csvCell).join(';')).join('\r\n');
+    const turma = classFilter === ALL ? 'todas' : classFilter || 'sem-turma';
+    const jogo = gameFilter === ALL ? 'todos-os-jogos' : gameFilter;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    a.download = `turma-${turma}-${jogo}-${new Date().toISOString().slice(0, 10)}.csv`.replace(/[^\w.-]+/g, '-');
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    play('ding');
+    toast(`Planilha com ${visible.length} educando(s) baixada 📥`, 'success');
+  }
+  document.getElementById('teacher-export').addEventListener('click', exportCsv);
 
   // ---------------- turmas ----------------
 
@@ -261,13 +379,17 @@
   });
   document.getElementById('teacher-selection-clear').addEventListener('click', () => { selected.clear(); renderRows(); });
 
-  function renderRows() {
+  function visibleStudents() {
     const q = document.getElementById('teacher-search').value.trim().toLowerCase()
       .normalize('NFD').replace(/\p{M}/gu, '');
+    return students.filter((s) => inClass(s, classFilter)
+      && (!q || s.name.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '').includes(q)));
+  }
+
+  function renderRows() {
     const rows = document.getElementById('teacher-rows');
     rows.innerHTML = '';
-    const visible = students.filter((s) => inClass(s, classFilter)
-      && (!q || s.name.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '').includes(q)));
+    const visible = visibleStudents();
     for (const id of [...selected]) if (!visible.some((s) => s.id === id)) selected.delete(id);
     document.getElementById('teacher-count').textContent = classFilter === ALL ? students.length : `${visible.length}/${students.length}`;
     document.getElementById('teacher-empty').hidden = students.length > 0;
@@ -293,7 +415,8 @@
           ${s.active ? '' : '<span class="teacher-badge teacher-badge-off">desativada</span>'}</td>
         <td><button type="button" class="teacher-class-btn${s.className ? '' : ' is-none'}" data-act="turma" title="Mudar a turma">${s.className ? `🏫 ${escapeHtml(s.className)}` : '+ turma'}</button></td>
         <td>${escapeHtml(when(s.lastLoginAt))}</td>
-        ${gameColumns.map((g) => `<td>${(GAME_CELLS[g.id] || genericCell)(s.games[g.id])}</td>`).join('')}
+        <td>${evolutionCell(s)}</td>
+        ${shownColumns().map((g) => `<td>${(GAME_CELLS[g.id] || genericCell)(s.games[g.id])}</td>`).join('')}
         <td class="teacher-actions">
           <button type="button" class="btn-mini" data-act="rename" title="Corrigir o nome">✏️ Renomear</button>
           <button type="button" class="btn-mini" data-act="merge" title="Juntar com outra conta da mesma criança">🔀 Juntar</button>
@@ -314,6 +437,8 @@
       const res = await request('GET', '/students');
       students = res.students;
       classes = res.classes || [];
+      evolution = res.evolution || {};
+      evolutionWeeks = res.evolutionWeeks || 6;
       document.getElementById('teacher-allow-signup').checked = Boolean(res.settings.allowSignup);
       await buildColumns();
       renderClasses();
@@ -361,6 +486,7 @@
 
   const ACTIONS = {
     turma(s) { chooseClass([s]); },
+    evolution(s) { play('pop'); showEvolution(s); },
     rename(s) {
       openModal({
         title: `✏️ Renomear ${s.name}`,

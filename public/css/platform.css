@@ -731,3 +731,45 @@
 .cad-record:empty { display: none; }
 .cad-record.is-new { color: var(--pink-dark); font-size: 1.2rem; animation: bounceIn .5s var(--ease-bounce); }
 @media (prefers-reduced-motion: reduce) { .cad-badge { animation: none; } }
+
+/* área do professor: mostrar um jogo só, planilha e evolução */
+.teacher-view-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin: 8px 0 12px; }
+.teacher-game-filter { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; }
+.teacher-game-filter select { padding: 6px 10px; border: 2px solid var(--ink); border-radius: var(--radius-sm); font: inherit; font-weight: 700; background: var(--surface); }
+.teacher-evo { display: flex; align-items: flex-end; gap: 8px; padding: 4px 6px; background: none; border: 2px solid transparent; border-radius: var(--radius-sm); cursor: pointer; text-align: left; font: inherit; color: inherit; }
+.teacher-evo:hover, .teacher-evo:focus-visible { border-color: var(--ink); background: var(--surface-2); }
+.teacher-evo-bars { display: flex; align-items: flex-end; gap: 3px; height: 34px; flex-shrink: 0; }
+.teacher-evo-bars i { display: block; width: 8px; min-height: 3px; background: var(--violet); border-radius: 2px 2px 0 0; }
+.teacher-evo-bars i:last-child { background: var(--green-dark); }
+.teacher-evo-bars i.is-zero { background: rgba(30, 18, 64, .15); height: 3px !important; }
+.teacher-evo-text { font-size: .8rem; font-weight: 700; color: var(--ink-soft); min-width: 110px; }
+.teacher-trend { font-weight: 800; white-space: nowrap; }
+.teacher-trend.is-up { color: var(--green-dark); }
+.teacher-trend.is-down { color: var(--red); }
+.teacher-evo-table { width: 100%; border-collapse: collapse; margin: 4px 0 14px; font-variant-numeric: tabular-nums; }
+.teacher-evo-table th, .teacher-evo-table td { padding: 4px 8px; border-bottom: 1px solid rgba(30, 18, 64, .12); text-align: right; }
+.teacher-evo-table th:first-child, .teacher-evo-table td:first-child { text-align: left; }
+.teacher-evo-table tr.is-zero td { color: var(--ink-soft); }
+.teacher-facts span.is-low { background: #FFE1E4; }
+
+/* selo de conexão (api.js): sem internet ou resultados esperando para enviar */
+.net-status {
+  position: fixed;
+  left: 50%;
+  bottom: 12px;
+  z-index: 300;
+  transform: translateX(-50%);
+  max-width: calc(100vw - 32px);
+  padding: 6px 14px;
+  background: var(--yellow);
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  box-shadow: 0 3px 0 var(--ink);
+  font-weight: 800;
+  font-size: .9rem;
+  text-align: center;
+  cursor: pointer;
+}
+.net-status[hidden] { display: none; }
+.net-status.is-offline { background: #FFE1E4; }

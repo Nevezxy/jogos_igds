@@ -104,7 +104,9 @@ function mergeProgress(old, r) {
     stars: Math.max(prev.stars || 0, r.stars),
     bestHits: Math.max(prev.bestHits || 0, Math.round((r.hits / r.count) * 100)),
     bestAccuracy: Math.max(prev.bestAccuracy || 0, r.accuracy),
-    bestScore: Math.max(prev.bestScore || 0, r.points),
+    // recorde separado: sem cronômetro (bestScore) e com cronômetro (bestScoreTimer)
+    bestScore: r.timer ? prev.bestScore || 0 : Math.max(prev.bestScore || 0, r.points),
+    bestScoreTimer: r.timer ? Math.max(prev.bestScoreTimer || 0, r.points) : prev.bestScoreTimer || 0,
     bestStreak: Math.max(prev.bestStreak || 0, r.bestStreak),
     plays: (prev.plays || 0) + 1,
     lastPlayedAt: Date.now(),
@@ -165,6 +167,7 @@ function mergeAccounts(a, b) {
       bestHits: Math.max(la.bestHits || 0, lb.bestHits || 0),
       bestAccuracy: Math.max(la.bestAccuracy || 0, lb.bestAccuracy || 0),
       bestScore: Math.max(la.bestScore || 0, lb.bestScore || 0),
+      bestScoreTimer: Math.max(la.bestScoreTimer || 0, lb.bestScoreTimer || 0),
       bestStreak: Math.max(la.bestStreak || 0, lb.bestStreak || 0),
       plays: (la.plays || 0) + (lb.plays || 0),
       lastPlayedAt: Math.max(la.lastPlayedAt || 0, lb.lastPlayedAt || 0),

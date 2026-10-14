@@ -133,6 +133,28 @@
       ],
     },
     {
+      // ✍️ conta armada: a conta aparece em pé, casa embaixo de casa, e o
+      // resultado é digitado da direita para a esquerda (unidades primeiro),
+      // como no caderno. As caixinhas do vai-um são ajuda (não contam ponto).
+      id: 'ca', icon: '✍️', name: 'Conta armada', color: 'sky', target: 20, armada: true,
+      intro: 'Agora a conta vem armada, como no caderno: uma casa embaixo da outra. Comece pelas unidades, à direita, e vá para a esquerda. Se passar de 9, marque o vai-um na caixinha de cima!',
+      levels: [
+        { id: 'ca1', section: 'Somar armando', title: 'Dezena + dezena', gen: { t: 'add', a: [10, 88], b: [10, 88], carry: 'no', max: 99 }, target: 12, tip: 'Unidade com unidade, dezena com dezena. Comece pela direita.' },
+        { id: 'ca2', title: 'Dezena + dezena com vai-um', gen: g.add2, target: 15, tip: 'Deu 10 ou mais nas unidades? Escreva só a unidade e marque o 1 em cima da dezena.' },
+        { id: 'ca3', title: 'Centena + centena', gen: { t: 'add', a: [100, 888], b: [100, 888], carry: 'no', max: 999 }, target: 15, tip: 'Três casas: unidades, dezenas e centenas, sempre da direita para a esquerda.' },
+        { id: 'ca4', title: 'Centena com vai-um', gen: g.add3, target: 20, tip: 'Pode ter vai-um mais de uma vez. Marque cada um na caixinha de cima.' },
+        { id: 'ca5', title: 'Somar no milhar', gen: { t: 'add', a: [1000, 8999], b: [100, 8999], carry: 'yes', max: 9999 }, target: 25, tip: 'Quatro casas, com vai-um. Calma: uma casa de cada vez.' },
+        { id: 'ca6', section: 'Tirar armando', title: 'Dezena − dezena', gen: { t: 'sub', a: [20, 99], b: [10, 89], borrow: 'no' }, target: 12, tip: 'Tire as unidades e depois as dezenas. O número de cima é o maior.' },
+        { id: 'ca7', title: 'Dezena − dezena com empréstimo', gen: g.sub2, target: 16, tip: 'Não dá para tirar nas unidades? Peça 1 dezena emprestada: ela vira 10 unidades. Marque na caixinha.' },
+        { id: 'ca8', title: 'Centena − centena', gen: { t: 'sub', a: [200, 999], b: [100, 899], borrow: 'no' }, target: 15, tip: 'Três casas, da direita para a esquerda.' },
+        { id: 'ca9', title: 'Centena com empréstimo', gen: g.sub3, target: 22, tip: 'Pode precisar pedir emprestado mais de uma vez. Marque cada um.' },
+        { id: 'ca10', title: 'Tirar no milhar', gen: { t: 'sub', a: [2000, 9999], b: [1000, 8999], borrow: 'yes' }, target: 25, tip: 'Quatro casas, com empréstimo. Uma casa de cada vez.' },
+        { id: 'ca11', section: 'Multiplicar armando', title: 'Dezena × unidade', gen: { t: 'mul', a: [11, 44], b: [2, 9], carry: 'no', swap: true, max: 99 }, target: 12, tip: 'Multiplique a unidade de cima e depois a dezena, pelo número de baixo.' },
+        { id: 'ca12', title: 'Dezena × unidade com vai-um', gen: g.mul2, target: 16, tip: 'Deu 10 ou mais nas unidades? Escreva a unidade e marque o que vai para a dezena: depois de multiplicar a dezena, some esse número.' },
+        { id: 'ca13', section: 'Revisão', title: 'Revisão da conta armada', gen: { t: 'pick', of: [g.add2, g.add3, g.sub2, g.sub3, g.mul2] }, target: 18, tip: 'Somar, tirar e multiplicar armando. Olhe bem o sinal!' },
+      ],
+    },
+    {
       id: 'dv', maxAbs: SMALL, icon: '➗', name: 'Divisão', color: 'violet', target: 7,
       intro: 'Dividir é repartir em partes iguais. Quem sabe a tabuada já sabe dividir: é a tabuada ao contrário!',
       levels: [
@@ -146,6 +168,8 @@
         { id: 'dv13', title: 'Número que falta', gen: g.divMiss, target: 9, tip: 'Use a multiplicação: ela desfaz a divisão.' },
         { id: 'dv14', section: 'Números maiores', title: 'Dezena ÷ unidade', gen: g.div2, target: 14, tip: 'Separe o número em partes fáceis: 48 ÷ 4 = 40 ÷ 4 + 8 ÷ 4.' },
         { id: 'dv16', title: 'Dezenas inteiras ÷ unidade', gen: { t: 'div', d: [2, 9], q: [10, 40, 10], amax: 90 }, target: 7, tip: '80 ÷ 4 é como 8 ÷ 4, com um zero no fim: 20.' },
+        { id: 'dv20', title: 'Dividir por 11 e por 12', gen: { t: 'div', d: { list: [11, 12] }, q: [1, 8], amax: 99 }, target: 10, tip: 'Conte de 11 em 11 (ou de 12 em 12) até chegar no número: 11, 22, 33...' },
+        { id: 'dv21', title: 'Dividir por 15, 20, 25 e 50', gen: { t: 'div', d: { list: [15, 20, 25, 50] }, q: [1, 6], amax: 99 }, target: 8, tip: 'Conte de 15 em 15, de 20 em 20, de 25 em 25 (como moedas) ou de 50 em 50 até chegar no número.' },
         { id: 'dv17', section: 'Divisão com resto', title: 'Divisão com resto', gen: { t: 'rem', d: [2, 5], q: [1, 9] }, target: 12, tip: 'Quando não dá certinho, sobra um resto. O resto é sempre menor que o divisor.' },
         { id: 'dv18', title: 'Resto com divisor maior', gen: { t: 'rem', d: [6, 9], q: [2, 10] }, target: 15, tip: 'Ache o maior número da tabuada que cabe e veja quanto sobra.' },
         { id: 'dv19', section: 'Revisão', title: 'Revisão da divisão', gen: { t: 'pick', of: [g.divTab, g.divMiss, g.div2, { t: 'rem', d: [2, 9], q: [1, 9] }] }, target: 12, tip: 'Um pouco de tudo do mundo da divisão.' },
@@ -160,6 +184,8 @@
         { id: 'mx4', title: 'Qual é o sinal? × ou ÷', gen: { t: 'sign', ops: ['*', '/'], n: [2, 10] }, target: 8, tip: 'O resultado cresceu muito (×) ou diminuiu (÷)?' },
         { id: 'mx5', title: 'Qual é o sinal? Todos', gen: { t: 'sign', ops: ALL, n: [2, 12] }, target: 9, tip: 'Teste os quatro sinais na cabeça.' },
         { id: 'mx6', title: 'Dobro e metade', gen: { t: 'pick', of: [{ t: 'mul', a: 2, b: [2, 50], swap: true }, { t: 'div', d: 2, q: [2, 50] }] }, target: 7, tip: 'Dobro é ×2. Metade é ÷2.' },
+        { id: 'mx13', title: 'Triplo e terça parte', gen: { t: 'pick', of: [{ t: 'mul', a: 3, b: [2, 33], swap: true, max: 99 }, { t: 'div', d: 3, q: [2, 33] }] }, target: 9, tip: 'Triplo é ×3 (o número três vezes). Terça parte é ÷3 (repartir em 3).' },
+        { id: 'mx14', title: 'Completar 100', gen: { t: 'add', a: [5, 95, 5], b: [5, 95, 5], min: 100, max: 100, hide: 'b' }, target: 8, tip: 'Quanto falta para 100? Complete a dezena primeiro: 35 + 5 = 40, e de 40 até 100 faltam 60.' },
         { id: 'mx7', title: 'Quatro operações: unidades', gen: { t: 'pick', of: [g.small, g.tab, g.divTab] }, target: 6, tip: 'As quatro operações com números pequenos.' },
         { id: 'mx9', title: 'Dez a mais, dez a menos', gen: { t: 'pick', of: [{ t: 'add', a: [0, 89], b: 10, swap: true }, { t: 'sub', a: [10, 99], b: 10 }, { t: 'mul', a: 10, b: [1, 10], swap: true }, { t: 'div', d: 10, q: [1, 10] }] }, target: 6, tip: '+10 e −10 mudam a dezena. ×10 põe um zero no fim; ÷10 tira.' },
         { id: 'mx8', title: 'Quatro operações: dezenas', gen: { t: 'pick', of: [g.add2s, g.sub2, g.mul2, g.div2] }, target: 12, tip: 'As quatro operações com dezenas.' },

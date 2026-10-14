@@ -176,8 +176,22 @@
 
   // ---------------- sessão ----------------
 
+  // A criança fica guardada junto com o token: se a internet cair, quem já
+  // estava neste aparelho continua entrando (o progresso vem do cache).
+  const STUDENT_CACHE_KEY = 'igds_student_cache_v1';
   function setStudent(value) {
     student = value;
+    try {
+      const t = readStoredToken();
+      if (value && t) localStorage.setItem(STUDENT_CACHE_KEY, JSON.stringify({ token: t, student: value }));
+      else if (!value) localStorage.removeItem(STUDENT_CACHE_KEY);
+    } catch (e) { /* ignore */ }
+  }
+  function cachedStudent(t) {
+    try {
+      const c = JSON.parse(localStorage.getItem(STUDENT_CACHE_KEY) || 'null');
+      return c && c.token === t ? c.student : null;
+    } catch (e) { return null; }
   }
 
   async function setAvatar(avatar) {
@@ -227,9 +241,16 @@
         const res = await api.get('/auth/me');
         setStudent(res.student);
       } catch (e) {
-        api.setToken(null);
-        if (e.code === 'SEM_CONEXAO') toast(FRIENDLY_ERRORS.SEM_CONEXAO, 'error', 4000);
-        else storeToken(null); // sessão expirada ou conta desativada
+        const offline = e.code === 'SEM_CONEXAO' ? cachedStudent(token) : null;
+        if (offline) {
+          // sem internet, mas a criança já estava aqui: segue jogando
+          student = offline;
+          toast('📶 Sem internet agora. Pode jogar: os resultados são enviados quando a conexão voltar.', 'info', 5000);
+        } else {
+          api.setToken(null);
+          if (e.code === 'SEM_CONEXAO') toast(FRIENDLY_ERRORS.SEM_CONEXAO, 'error', 4000);
+          else storeToken(null); // sessão expirada ou conta desativada
+        }
       }
     }
     resolveReady();
