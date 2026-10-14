@@ -88,7 +88,7 @@
           <h3>👫 Jogar com um amigo</h3>
           <p class="muted">Cada um no seu aparelho, pela internet da escola.</p>
           <div class="bgm-friend-row">
-            ${cfg.Levels.WORLDS.length > 1 ? `<label class="bgm-variant">Tabuleiro:
+            ${cfg.Levels.variants().length > 1 ? `<label class="bgm-variant">Tabuleiro:
               <select data-bgm-variant>${cfg.Levels.variants().map((v) => `<option value="${esc(v.id)}">${esc(v.label)}</option>`).join('')}</select></label>` : ''}
             <button type="button" class="btn btn-primary" data-bgm-queue>🎲 Procurar adversário</button>
             <button type="button" class="btn btn-violet" data-bgm-create>🔑 Criar sala com código</button>
@@ -259,7 +259,7 @@
     // ---------------- 🤖 contra o robô ----------------
     function startBot(level) {
       setupBoard(level.variant);
-      const mySeat = gamesStarted++ % 2; // quem começa alterna
+      const mySeat = level.seat != null ? level.seat : gamesStarted++ % 2; // quem começa alterna
       game = {
         mode: 'bot', level, mySeat, state: Rules.initial(level.variant), moves: [], undos: 0,
         startedAt: Date.now(), thinking: false, ended: false, token: Math.random(),
@@ -336,7 +336,8 @@
       g.ended = true;
       const w = g.state.result ? g.state.result.winner : 1 - g.mySeat;
       const outcome = resigned ? 'loss' : w === null ? 'draw' : w === g.mySeat ? 'win' : 'loss';
-      const stars = Levels.starsFor(g.level.id, outcome, g.undos);
+      const myMoves = g.moves.filter((_, i) => i % 2 === (g.mySeat === Rules.initial(g.level.variant).turn ? 0 : 1)).length;
+      const stars = Levels.starsFor(g.level.id, outcome, g.undos, myMoves);
       render();
       setTimeout(() => showResult({ outcome, stars, resigned }), g.state.result && g.state.result.line && g.state.result.line.length ? 900 : 300);
       try {
@@ -353,7 +354,7 @@
     // ---------------- 👫 contra um amigo (pela rede) ----------------
     const variantChosen = () => {
       const sel = $('[data-bgm-variant]');
-      return sel ? sel.value : Levels.WORLDS[0].variant;
+      return sel ? sel.value : Levels.variants()[0].id;
     };
     function friendError(e) {
       sound.play('bonk');
@@ -473,7 +474,7 @@
       else if (g.mode === 'bot') {
         if (resigned) msg = 'Desistir também faz parte. Tente de novo!';
         else if (stars === 3) msg = 'Sem desfazer nenhuma jogada. Que fera! 🎉';
-        else if (stars === 2) msg = 'Venceu! Para a 3ª estrela, vença sem desfazer.';
+        else if (stars === 2) msg = g.level.par && !g.undos ? `Venceu! Para a 3ª estrela, vença em até ${g.level.par} lance${g.level.par === 1 ? '' : 's'}.` : 'Venceu! Para a 3ª estrela, vença sem desfazer.';
         else if (stars === 1) msg = 'Empatar já vale 1 estrela. Para mais, é preciso vencer!';
         else msg = 'Olhe as jogadas do robô e tente outra estratégia.';
       } else msg = outcome === 'win' ? 'Mandou bem! 🎉' : outcome === 'draw' ? 'Ninguém ganhou desta vez.' : 'Peça uma revanche!';

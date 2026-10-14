@@ -4,9 +4,14 @@
 // O mesmo arquivo serve ao navegador (mapa) e ao servidor (estrelas).
 //
 // Fase: { id, title, tip, bot: { depth, random, noise, maxMs }, undo,
-//         drawIsWin }
+//         drawIsWin, variant?, seat?, par? }
 //   undo       pode desfazer (só nos níveis fáceis)
 //   drawIsWin  contra o robô perfeito não dá para ganhar: empatar já vale
+//   variant    a fase tem a própria posição inicial (ex.: "Fim de partida" do
+//              xadrez); senão vale a do mundo. Mundo com friend: false não
+//              aparece no "jogar com um amigo"
+//   seat       a criança joga sempre com essa cor (0 = quem começa)
+//   par        vencer em até par lances da criança; passando disso, no máximo ⭐⭐
 // Estrelas: ⭐⭐⭐ venceu sem desfazer, ⭐⭐ venceu desfazendo, ⭐ empatou.
 
 (function (root) {
@@ -16,7 +21,7 @@
       world.levels.forEach((level, i) => {
         Object.assign(level, {
           world: world.id,
-          variant: world.variant,
+          variant: level.variant || world.variant,
           worldIndex: w,
           indexInWorld: i,
           index: LEVELS.length,
@@ -30,17 +35,22 @@
     const getWorld = (id) => WORLDS.find((w) => w.id === id) || null;
     const OUTCOMES = ['win', 'draw', 'loss'];
 
-    function starsFor(levelId, outcome, undos = 0) {
+    function starsFor(levelId, outcome, undos = 0, myMoves = 0) {
       const level = getLevel(levelId);
       if (!level) return 0;
       const won = outcome === 'win' || (outcome === 'draw' && level.drawIsWin);
-      if (won) return undos ? 2 : 3;
+      if (won) return undos || (level.par && myMoves > level.par) ? 2 : 3;
       return outcome === 'draw' ? 1 : 0;
     }
     const starsOf = (progress, id) => (progress && progress.levels && progress.levels[id] ? progress.levels[id].stars || 0 : 0);
     const nextLevel = (progress) => LEVELS.find((l) => starsOf(progress, l.id) < 2) || null;
     const totalStars = (progress) => LEVELS.reduce((n, l) => n + starsOf(progress, l.id), 0);
-    const variants = () => WORLDS.map((w) => ({ id: w.variant, label: w.name }));
+    // as variantes para jogar com um amigo (sem repetir)
+    const variants = () => {
+      const seen = new Set();
+      return WORLDS.filter((w) => w.variant && w.friend !== false && !seen.has(w.variant) && seen.add(w.variant))
+        .map((w) => ({ id: w.variant, label: w.friendLabel || w.name }));
+    };
 
     return {
       WORLDS, LEVELS, OUTCOMES, MAX_STARS: LEVELS.length * 3,

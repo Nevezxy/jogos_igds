@@ -1,0 +1,41 @@
+/* ♟️ Xadrez: o tabuleiro, as peças, as casas possíveis e a escolha da promoção */
+.xd-board { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.xd-check { min-height: 1.3em; font-weight: 800; color: #FFE07A; text-shadow: 0 2px 0 var(--ink); }
+.xd-grid {
+  --sq: min(64px, calc((100vw - 40px) / 8), calc((100vh - 330px) / 8));
+  display: grid;
+  grid-template-columns: repeat(8, var(--sq));
+  grid-auto-rows: var(--sq);
+  border: var(--stroke) solid var(--ink);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 8px 0 var(--ink);
+}
+.xd-sq { position: relative; padding: 0; border: 0; display: grid; place-items: center; cursor: default; }
+.xd-sq.is-light { background: #F3E3C3; }
+.xd-sq.is-dark { background: #B58863; }
+.xd-sq.is-last.is-light { background: #F2E27A; }
+.xd-sq.is-last.is-dark { background: #CDB246; }
+.xd-sq.is-selected { box-shadow: inset 0 0 0 4px var(--violet); }
+.xd-sq.is-check { background: radial-gradient(circle, #FF5252 0%, #D32F2F 60%, transparent 90%) !important; }
+.xd-sq.is-threat { box-shadow: inset 0 0 0 4px #FF9800; }
+.xd-board.can-play .xd-sq.can-move, .xd-board.can-play .xd-sq.is-target { cursor: pointer; }
+.xd-sq.is-target::after { content: ""; position: absolute; width: 30%; height: 30%; border-radius: 50%; background: rgba(43, 29, 87, .45); }
+.xd-sq.is-capture::after { width: 86%; height: 86%; background: none; border: 5px solid rgba(43, 29, 87, .45); }
+.xd-sq:disabled { color: inherit; }
+.xd-piece { font-size: calc(var(--sq) * .78); line-height: 1; user-select: none; pointer-events: none; font-family: "Segoe UI Symbol", "DejaVu Sans", "Noto Sans Symbols 2", serif; }
+/* o contorno fica por fora da peça (sombras), para o branco não sumir nas peças pequenas */
+.xd-piece.is-white { color: #FFFFFF; text-shadow: 1px 0 #2B1D57, -1px 0 #2B1D57, 0 1px #2B1D57, 0 -1px #2B1D57, 1px 1px #2B1D57, -1px -1px #2B1D57, 1px -1px #2B1D57, -1px 1px #2B1D57, 0 3px 2px rgba(0, 0, 0, .35); }
+.xd-piece.is-black { color: #1E1440; text-shadow: 1px 0 rgba(255, 255, 255, .55), -1px 0 rgba(255, 255, 255, .55), 0 1px rgba(255, 255, 255, .55), 0 -1px rgba(255, 255, 255, .55), 0 3px 2px rgba(0, 0, 0, .35); }
+.xd-coord { position: absolute; font-size: .62rem; font-weight: 800; color: rgba(43, 29, 87, .6); pointer-events: none; }
+.xd-coord.is-rank { top: 2px; left: 3px; }
+.xd-coord.is-file { bottom: 1px; right: 3px; }
+.xd-promo { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); z-index: 5; padding: 12px 16px; background: var(--surface); border: var(--stroke) solid var(--ink); border-radius: var(--radius-lg); box-shadow: 0 8px 0 var(--ink); text-align: center; animation: bounceIn .3s var(--ease-bounce); }
+.xd-promo[hidden] { display: none; }
+.xd-promo p { margin: 0 0 8px; font-weight: 800; }
+.xd-promo div { display: flex; gap: 8px; }
+.xd-piece-btn { width: 58px; height: 58px; padding: 0; font-size: 44px; line-height: 1; background: #F3E3C3; border: 3px solid var(--ink); border-radius: 12px; cursor: pointer; font-family: "Segoe UI Symbol", "DejaVu Sans", serif; }
+.xd-piece-btn.is-white { color: #fff; text-shadow: 1px 0 #2B1D57, -1px 0 #2B1D57, 0 1px #2B1D57, 0 -1px #2B1D57; }
+.xd-piece-btn.is-black { color: #2B1D57; }
+.xd-piece-btn:hover { background: var(--yellow); }
+.xd-end { min-height: 1.4em; margin: 6px 0 0; max-width: 520px; text-align: center; font-weight: 800; color: #fff; text-shadow: 0 2px 0 var(--ink); }

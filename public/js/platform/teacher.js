@@ -176,6 +176,8 @@
     // jogos de tabuleiro: o robô mais forte vencido e o placar
     velha(d) { return boardCell(d); },
     ligue4(d) { return boardCell(d); },
+    dama(d) { return boardCell(d); },
+    xadrez(d) { return boardCell(d); },
     matematica(d) {
       if (!d || !d.problems) return '<span class="muted">—</span>';
       const facts = d.toughest.length

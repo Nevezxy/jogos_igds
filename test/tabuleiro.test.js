@@ -138,7 +138,7 @@ async function checkServer() {
     const row = r.students.find((s) => s.name === 'Davi Rocha').games.velha;
     assert(row && row.best && row.vsBot.wins >= 2 && row.totalLevels === VelhaLevels.LEVELS.length, 'área do professor: robô mais forte vencido e placar');
     const games = (await api('GET', '/api/games')).games;
-    assert(games.filter((g) => g.subject === 'tabuleiro').map((g) => g.id).join() === 'velha,ligue4', 'Velha e Ligue 4 na seção ♟️ Tabuleiro');
+    assert(games.filter((g) => g.subject === 'tabuleiro').map((g) => g.id).join() === 'velha,ligue4,dama,xadrez', 'Velha, Ligue 4, Dama e Xadrez na seção ♟️ Tabuleiro');
   } finally {
     await srv.stop();
   }

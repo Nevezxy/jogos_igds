@@ -9,6 +9,9 @@
 //   Rules.evaluate(state)     nota da posição para quem joga agora
 //                             (positivo = bom para ele), sem contar o fim
 //   Rules.order(state, moves) opcional: melhores lances primeiro (poda mais)
+//   Rules.captures(state)     opcional: só as capturas; no fim da busca o robô
+//                             continua olhando as trocas (busca de capturas),
+//                             para não deixar peça pendurada
 // Nível do robô (`level`):
 //   depth   quantos lances pensa à frente (0 = joga ao acaso)
 //   random  chance (0 a 1) de jogar um lance qualquer, para errar de propósito
@@ -52,10 +55,26 @@
     function negamax(s, depth, alpha, beta, ply) {
       if ((++nodes & 1023) === 0 && Date.now() > deadline) throw new Timeout();
       if (s.result) return terminalScore(s, ply);
-      if (depth === 0) return Rules.evaluate(s);
+      if (depth === 0) return Rules.captures && level.quiesce !== false ? quiesce(s, alpha, beta, ply, 0) : Rules.evaluate(s);
       let best = -Infinity;
       for (const m of ordered(s, Rules.moves(s))) {
         const v = -negamax(Rules.play(s, m), depth - 1, -beta, -alpha, ply + 1);
+        if (v > best) best = v;
+        if (v > alpha) alpha = v;
+        if (alpha >= beta) break;
+      }
+      return best;
+    }
+
+    function quiesce(s, alpha, beta, ply, q) {
+      if ((++nodes & 1023) === 0 && Date.now() > deadline) throw new Timeout();
+      if (s.result) return terminalScore(s, ply);
+      const stand = Rules.evaluate(s);
+      if (stand >= beta || q >= 6) return stand;
+      if (stand > alpha) alpha = stand;
+      let best = stand;
+      for (const m of Rules.captures(s)) {
+        const v = -quiesce(Rules.play(s, m), -beta, -alpha, ply + 1, q + 1);
         if (v > best) best = v;
         if (v > alpha) alpha = v;
         if (alpha >= beta) break;
@@ -70,8 +89,13 @@
     let root = shuffle(ordered(state, moves), rnd);
     for (let depth = 1; depth <= level.depth; depth++) {
       try {
+        // poda também na raiz: lance pior que (o melhor − margem) não precisa de nota exata
+        const margin = (level.noise || 0) + 1e-6;
+        let bestSoFar = -Infinity;
         const scored = root.map((m) => {
-          const v = -negamax(Rules.play(state, m), depth - 1, -Infinity, Infinity, 1);
+          const lo = bestSoFar - margin;
+          const v = -negamax(Rules.play(state, m), depth - 1, -Infinity, -lo, 1);
+          if (v > bestSoFar) bestSoFar = v;
           return { m, v: v + (level.noise ? (rnd() - 0.5) * level.noise : 0) };
         });
         const top = Math.max(...scored.map((x) => x.v));

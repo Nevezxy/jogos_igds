@@ -51,7 +51,11 @@ function createBoardServer({ Rules, Levels }) {
     if (durationMs < 0 || durationMs > 6 * 60 * 60 * 1000) throw invalid();
     if (state.result && durationMs < Math.ceil(moves.length / 2) * MIN_MS_PER_MOVE) throw invalid();
     const outcome = state.result ? outcomeFor(state, seat) : 'loss';
-    const stars = Levels.starsFor(level.id, outcome, undos);
+    // lances da criança (quem começa joga os lances pares)
+    const first = Rules.initial(level.variant).turn;
+    const myMoves = moves.filter((_, i) => (i % 2 === 0 ? first : 1 - first) === seat).length;
+    if (level.seat != null && seat !== level.seat) throw invalid();
+    const stars = Levels.starsFor(level.id, outcome, undos, myMoves);
     return {
       levelId: level.id,
       outcome,
