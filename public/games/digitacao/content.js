@@ -74,7 +74,7 @@
       'Lisboa', 'Rio', 'Goiás', 'Paraná', 'Amazonas', 'Nilo', 'Terra', 'Lua', 'Marte', 'Saturno'],
     crase: ['vou à escola', 'fui à feira', 'cheguei à praia', 'dei um presente à vovó', 'volto às seis',
       'fomos à festa', 'saí à tarde', 'mandei uma carta à professora', 'vou à praça', 'à noite tem lua'],
-    maiusculasAcento: ['É', 'Água', 'Árvore', 'Ônibus', 'Ótimo', 'Índio', 'Única', 'Âncora', 'Éramos',
+    maiusculasAcento: ['É', 'Água', 'Árvore', 'Ônibus', 'Ótimo', 'Ímpar', 'Única', 'Âncora', 'Éramos',
       'Época', 'Ímã', 'Óculos', 'Último', 'Àquela', 'Êxito'],
     simbolos1: ['@', '#', '$', '%', 'ana@escola', '#feliz', 'R$10', '50%', 'oi@turma', '#jogos', '100%', 'R$5', '#girassol'],
     simbolos2: ['&', '*', '+', '=', '2+2=4', '3*3=9', 'Ana & Pedro', '5+5=10', '1+1=2', 'gato & rato', '4*2=8', '10=10'],

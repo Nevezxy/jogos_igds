@@ -25,7 +25,7 @@
       id: 'bl2', icon: '↔️', name: 'Pesos nos dois pratos', color: 'violet',
       intro: 'Agora só os pesos da direita não bastam! Ponha também um peso do lado do objeto: ele "tira" do outro lado.',
       levels: [
-        { id: 'bl2a', title: 'Tirando pesos', mode: 'both', palette: [1, 2, 5, 10], range: [2, 15], count: 5, tip: 'Objeto de 7 com um peso de 10? Ponha 3 do lado do objeto: 7 + 3 = 10.' },
+        { id: 'bl2a', title: 'Tirando pesos', mode: 'both', palette: [1, 2, 5, 10], range: [2, 15], count: 5, tip: 'Objeto de 7 com um peso de 10? Ponha 1 + 2 do lado do objeto: 7 + 3 = 10.' },
         { id: 'bl2b', title: 'Tirando pesos maiores', mode: 'both', palette: [2, 5, 10, 20], range: [3, 35], count: 5, tip: 'Quanto falta (ou sobra) para os pesos da direita?' },
       ],
     },

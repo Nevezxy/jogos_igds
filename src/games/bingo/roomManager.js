@@ -148,6 +148,7 @@ function joinRoom(code, { student = null, playerToken = null } = {}) {
     connected: false,
     kicked: false,
     hasWon: false,
+    winRecorded: false, // a vitória desta partida já foi gravada (desfazer o sorteio não grava de novo)
     card: null,
     joinedAt: Date.now(),
   };
@@ -220,6 +221,7 @@ function startGame(code, token) {
     if (player.kicked) continue;
     player.card = generateCard(room.pool, room.config.gridSize, room.config.freeSpace);
     player.hasWon = false;
+    player.winRecorded = false;
     player.waitingNextMatch = false;
     db.upsertPlayer(player, room.code);
   }
@@ -252,6 +254,7 @@ function restartGame(code, token) {
   for (const player of room.players.values()) {
     player.card = null;
     player.hasWon = false;
+    player.winRecorded = false;
     player.waitingNextMatch = false;
   }
   db.clearDraws(room.code);
@@ -355,19 +358,26 @@ function markCell(code, playerToken, row, col) {
   cell.marked = true;
 
   let newWin = null;
+  let firstWin = false;
   if (!player.hasWon) {
     const patterns = getWinningPatterns(player.card, room.config.winPatterns);
     if (patterns.length) {
       player.hasWon = true;
       newWin = patterns;
-      db.insertWin(room.code, player.id, player.name, patterns.join(','), room.matchNumber);
+      // o professor desfez um sorteio depois do bingo e a criança completou de
+      // novo: anuncia de novo, mas não conta uma segunda vitória
+      firstWin = !player.winRecorded;
+      if (firstWin) {
+        player.winRecorded = true;
+        db.insertWin(room.code, player.id, player.name, patterns.join(','), room.matchNumber);
+      }
     }
   }
   db.upsertPlayer(player, room.code);
 
   if (newWin && room.config.autoPauseOnWin) room.status = 'paused';
 
-  return { room, player, cell, changed: true, newWin };
+  return { room, player, cell, changed: true, newWin, firstWin };
 }
 
 // ---------- Views (o que cada tipo de usuário pode enxergar) ----------

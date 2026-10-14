@@ -36,7 +36,7 @@
   }
 
   function initial(v = '3x3') {
-    const cfg = VARIANTS[v];
+    const cfg = Object.prototype.hasOwnProperty.call(VARIANTS, v) ? VARIANTS[v] : null;
     if (!cfg) throw new Error('variante desconhecida');
     return { v, n: cfg.n, k: cfg.k, board: Array(cfg.n * cfg.n).fill(null), turn: 0, ply: 0, last: null, result: null };
   }

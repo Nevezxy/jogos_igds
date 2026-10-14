@@ -207,7 +207,7 @@
         { id: 'ng7', title: '+ e − até 20', gen: { t: 'int', ops: ['+', '-'], a: [-20, 20], b: [-20, 20] }, target: 9, tip: 'Somas e subtrações com negativos, até o 20.' },
         { id: 'ng8', title: '+ e − até 100', gen: { t: 'int', ops: ['+', '-'], a: [-99, 99], b: [-99, 99] }, target: 12, tip: 'Os mesmos truques com números maiores.' },
         { id: 'ng9', title: 'Vezes com sinais diferentes', gen: { t: 'int', op: '*', a: [-10, 10], b: [-10, 10], need: 'one-neg' }, target: 8, tip: 'Sinais diferentes: o resultado é negativo.' },
-        { id: 'ng10', title: 'Menos vezes menos', gen: { t: 'int', op: '*', a: [-10, -1], b: [-10, -1] }, target: 8, tip: 'Sinais iguais: o resultado é positivo! −3 × −4 = 12.' },
+        { id: 'ng10', title: 'Menos vezes menos', gen: { t: 'int', op: '*', a: [-10, -1], b: [-10, -1] }, target: 8, tip: 'Sinais iguais: o resultado é positivo! −3 × (−4) = 12.' },
         { id: 'ng11', title: 'Dividir com sinais', gen: { t: 'int', op: '/', b: [-10, 10], q: [-10, 10] }, target: 9, tip: 'Na divisão vale a mesma regra: sinais iguais +, diferentes −.' },
         { id: 'ng12', title: 'Vezes e dividir com sinais', gen: { t: 'int', ops: ['*', '/'], a: [-12, 12], b: [-12, 12], q: [-12, 12] }, target: 9, tip: 'Primeiro o sinal, depois a conta.' },
         { id: 'ng13', title: 'Número que falta', gen: { t: 'int', ops: ['+', '-'], a: [-20, 20], b: [-20, 20], hide: 'any' }, target: 12, tip: 'Use a operação inversa, com cuidado nos sinais.' },

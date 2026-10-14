@@ -74,7 +74,7 @@
         let pieces = [];
         for (let guard = 0; guard < 100; guard++) {
           pieces = Array.from({ length: r.int(2, level.pieces || 5) }, () => r.pick(allowed)).sort((a, b) => b - a);
-          if (sum(pieces) <= level.range[1]) break;
+          if (sum(pieces) >= level.range[0] && sum(pieces) <= level.range[1]) break;
         }
         const total = sum(pieces);
         // alternativas: a certa e outras perto (uma nota/moeda a mais ou a menos)

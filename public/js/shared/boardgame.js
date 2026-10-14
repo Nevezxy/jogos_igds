@@ -248,7 +248,8 @@
       else status = `Vez de ${other.firstName || 'seu amigo'}...`;
       $('[data-bgm-status]').textContent = status;
       $('[data-bgm-undo]').hidden = !(g.mode === 'bot' && g.level.undo);
-      $('[data-bgm-undo]').disabled = !myTurn || !g.moves.length;
+      // desfazer volta para a jogada anterior da criança: precisa de 2 lances (o dela e o do robô)
+      $('[data-bgm-undo]').disabled = !myTurn || g.moves.length < 2;
       $('[data-bgm-draw]').hidden = g.mode !== 'friend';
       $('[data-bgm-draw]').disabled = g.ended || g.drawOffer === g.mySeat;
       $('[data-bgm-resign]').disabled = g.ended;
@@ -339,7 +340,7 @@
       const myMoves = g.moves.filter((_, i) => i % 2 === (g.mySeat === Rules.initial(g.level.variant).turn ? 0 : 1)).length;
       const stars = Levels.starsFor(g.level.id, outcome, g.undos, myMoves);
       render();
-      setTimeout(() => showResult({ outcome, stars, resigned }), g.state.result && g.state.result.line && g.state.result.line.length ? 900 : 300);
+      setTimeout(() => { if (game === g) showResult({ outcome, stars, resigned }); }, g.state.result && g.state.result.line && g.state.result.line.length ? 900 : 300);
       try {
         const res = await ctx.api.post(`/progress/${cfg.id}/results`, {
           levelId: g.level.id, seat: g.mySeat, moves: g.moves, undos: g.undos, durationMs: Date.now() - g.startedAt, resigned,
@@ -428,7 +429,8 @@
         const w = view.result.winner;
         const outcome = w === null ? 'draw' : w === view.you ? 'win' : 'loss';
         render();
-        setTimeout(() => showResult({ outcome, stars: null, reason: view.result.reason }), 700);
+        const g = game;
+        setTimeout(() => { if (game === g) showResult({ outcome, stars: null, reason: view.result.reason }); }, 700);
         ctx.api.get(`/progress/${cfg.id}`).then((r) => { progress = r.progress || progress; }).catch(() => {});
         return;
       }

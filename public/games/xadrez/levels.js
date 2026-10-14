@@ -34,7 +34,7 @@
         { id: 'xp3', title: 'Robô Atento', tip: 'Ele confere as trocas de peças. Não deixe nada pendurado!', bot: { depth: 2, noise: 30, maxMs: 1500 } },
         { id: 'xp4', title: 'Robô Pensador', tip: 'Ele pensa 3 lances à frente. Faça o roque para proteger o rei.', bot: { depth: 3, noise: 15, maxMs: 1500 } },
         { id: 'xp5', title: 'Robô Estrategista', tip: 'Ocupe o centro e ataque com várias peças juntas.', bot: { depth: 3, maxMs: 1800 } },
-        { id: 'xp6', title: 'Robô Mestre', tip: 'O mais forte: pensa 4 lances à frente e confere todas as trocas. Boa sorte!', bot: { depth: 4, maxMs: 1800 } },
+        { id: 'xp6', title: 'Robô Mestre', tip: 'O mais forte: pensa até 4 lances à frente e confere todas as trocas. Boa sorte!', bot: { depth: 4, maxMs: 1800 } },
       ],
     },
   ];

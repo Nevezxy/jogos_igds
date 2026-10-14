@@ -15,7 +15,7 @@
         { id: 'l4c', title: 'Robô Atento', tip: 'Ele bloqueia. Jogue no meio: dá mais chances de ligar 4.', bot: { depth: 3, noise: 30 } },
         { id: 'l4d', title: 'Robô Pensador', tip: 'Ele pensa 4 jogadas à frente. Prepare duas ameaças de uma vez!', bot: { depth: 4, noise: 10 } },
         { id: 'l4e', title: 'Robô Estrategista', tip: 'Cuidado com a peça que você deixa por baixo de uma linha dele.', bot: { depth: 6, maxMs: 1500 } },
-        { id: 'l4f', title: 'Robô Mestre', tip: 'O mais forte: pensa 8 jogadas à frente. Boa sorte!', bot: { depth: 8, maxMs: 2000 } },
+        { id: 'l4f', title: 'Robô Mestre', tip: 'O mais forte: pensa até 8 jogadas à frente. Boa sorte!', bot: { depth: 8, maxMs: 2000 } },
       ],
     },
     {

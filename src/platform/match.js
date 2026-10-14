@@ -47,7 +47,8 @@ function createMatchManager(registry, { now = () => Date.now(), reconnectMs = RE
   };
   const checkVariant = (game, variant) => {
     const v = String(variant || '');
-    if (!game.server.Rules.VARIANTS[v]) throw new MatchError('VARIANTE_INVALIDA', 'Essa variante não existe.');
+    // só as variantes do próprio jogo (nada de "constructor", "toString"...)
+    if (!Object.prototype.hasOwnProperty.call(game.server.Rules.VARIANTS, v)) throw new MatchError('VARIANTE_INVALIDA', 'Essa variante não existe.');
     return v;
   };
   const studentOf = (token) => accounts.authenticate(token);
@@ -88,11 +89,17 @@ function createMatchManager(registry, { now = () => Date.now(), reconnectMs = RE
   });
 
   function start(m, second) {
+    // o estado inicial primeiro: se der erro, a partida não fica pela metade
+    let state;
+    try { state = boardGame(m.game).server.Rules.initial(m.variant); } catch (e) {
+      matches.delete(m.id);
+      if (m.code) byCode.delete(m.code);
+      throw new MatchError('VARIANTE_INVALIDA', 'Essa variante não existe.');
+    }
     // quem começa é sorteado
     if (crypto.randomInt(2)) m.players = [second, m.players[0]];
     else m.players[1] = second;
-    const game = boardGame(m.game);
-    m.state = game.server.Rules.initial(m.variant);
+    m.state = state;
     m.status = 'playing';
     m.startedAt = now();
     if (m.code) byCode.delete(m.code);
@@ -294,7 +301,9 @@ function createMatchManager(registry, { now = () => Date.now(), reconnectMs = RE
           broadcast(m);
           // não voltou a tempo: o outro vence por abandono
           m.timers[seat] = setTimeout(() => {
-            if (m.status === 'playing' && !m.players[seat].connected) finish(m, 1 - seat, 'abandono');
+            if (m.status !== 'playing' || m.players[seat].connected) return;
+            // os dois caíram: ninguém vence por abandono
+            finish(m, m.players[1 - seat].connected ? 1 - seat : null, 'abandono');
           }, reconnectMs);
           if (m.timers[seat].unref) m.timers[seat].unref();
         });
@@ -334,7 +343,11 @@ function createMatchManager(registry, { now = () => Date.now(), reconnectMs = RE
       socket.on('disconnect', () => actions.disconnect(socket));
     });
     // fila: quem espera há um tempo é juntado com qualquer um; e a limpeza
-    setInterval(() => { pairQueue(); cleanup(); }, 2000).unref();
+    // um erro aqui não pode derrubar o servidor (o setInterval não tem quem o pegue)
+    setInterval(() => {
+      try { pairQueue(); } catch (e) { console.error('[partida] erro no pareamento', e); }
+      try { cleanup(); } catch (e) { console.error('[partida] erro na limpeza', e); }
+    }, 2000).unref();
   }
 
   return { register, actions, matches, queue, pairQueue, MatchError };
