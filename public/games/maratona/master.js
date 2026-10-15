@@ -139,9 +139,38 @@
     }
   }
 
+  // ---------------- maratonas anteriores (o resultado fica salvo) ----------------
+  async function teacherGet(route) {
+    const res = await fetch(`/api${route}`, { headers: { 'X-Teacher-Token': teacherToken() || '' } });
+    const data = await res.json().catch(() => ({ ok: false }));
+    if (!res.ok || data.ok === false) throw new Error(data.message || 'Não consegui carregar.');
+    return data;
+  }
+  async function loadArchive() {
+    try {
+      const { marathons } = await teacherGet('/teacher/maratona/historico');
+      const done = marathons.filter((m) => m.status === 'encerrada' && m.startedAt);
+      $('mt-archive-card').hidden = !done.length;
+      const when = (t) => new Date(t).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+      $('mt-archive-list').innerHTML = done.slice(0, 20).map((m) => `<li>
+        <span><strong>${esc(m.name)}</strong> <small class="muted">${esc(m.code)} · ${when(m.endedAt || m.createdAt)} · ${esc(C.FORMATOS[m.formato] || '')} · ${m.games.map((g) => esc(C.gameOf(g).icon)).join(' ')}</small></span>
+        <button type="button" class="btn-mini" data-archive="${esc(m.code)}">🏆 Ver o resultado</button></li>`).join('');
+      $('mt-archive-list').querySelectorAll('[data-archive]').forEach((b) => b.addEventListener('click', () => openArchive(b.dataset.archive)));
+    } catch (e) { $('mt-archive-card').hidden = true; }
+  }
+  async function openArchive(code) {
+    try {
+      const { state: s } = await teacherGet(`/maratona/${encodeURIComponent(code)}`);
+      $('mt-archive-code').textContent = s.code;
+      showScreen('mt-archive');
+      window.MaratonaFinale.render($('mt-archive-root'), s, { replay: true });
+    } catch (e) { toast(e.message || 'Não consegui abrir essa maratona.', 'error'); }
+  }
+
   function showCreate() {
     stopTimers();
     state = null;
+    loadArchive();
     const saved = loadSession();
     $('mt-resume').hidden = !saved;
     if (saved) $('mt-resume-code').textContent = saved.code;
@@ -177,7 +206,11 @@
     renderRoundPanel();
     renderPeople();
     const started = s.status !== 'sala_de_espera';
-    $('mt-m-standings-card').hidden = !started;
+    // o fim: a festa também no painel do professor
+    const finalBox = $('mt-m-final');
+    finalBox.hidden = s.status !== 'encerrada';
+    if (s.status === 'encerrada' && window.MaratonaFinale) window.MaratonaFinale.render(finalBox, s, {});
+    $('mt-m-standings-card').hidden = !started || s.status === 'encerrada';
     if (started) C.renderStandings($('mt-m-standings'), s.status === 'encerrada' && s.final ? { ...s, standings: s.final.standings } : s);
     $('mt-m-history-card').hidden = !s.history.length;
     $('mt-m-history').innerHTML = s.history.map((h) => `<li><strong>${h.number}. ${esc(h.title || '')}</strong><ul>${h.matches.map((x) => `<li>${x.sideB ? `${C.teamLabel(s, x.sideA)} × ${C.teamLabel(s, x.sideB)}: ${C.outcomeText(s, x)}` : C.outcomeText(s, x)}</li>`).join('')}</ul></li>`).join('');
@@ -349,6 +382,7 @@
   $('mt-create-back').addEventListener('click', () => window.PlataformaRouter.go('/professor'));
   $('mt-master-back').addEventListener('click', () => window.PlataformaRouter.go('/professor'));
   $('mt-m-telao').addEventListener('click', openTelao);
+  $('mt-archive-back').addEventListener('click', () => { window.MaratonaFinale.cancel($('mt-archive-root')); showScreen('mt-create'); });
   $('mt-resume-go').addEventListener('click', async () => { session = loadSession(); if (session) await reconnect(); });
   $('mt-resume-forget').addEventListener('click', () => { clearSession(); $('mt-resume').hidden = true; });
 

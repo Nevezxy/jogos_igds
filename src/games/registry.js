@@ -409,9 +409,9 @@ const games = [
     // em src/marathon/ (ligado no server.js) e abre os outros jogos dentro dela
     client: {
       persistent: true,
-      styles: ['maratona.css'],
+      styles: ['maratona.css', 'finale.css'],
       view: 'view.html',
-      scripts: ['common.js', 'player.js', 'master.js', 'screen.js', 'session.js'],
+      scripts: ['common.js', 'finale.js', 'player.js', 'master.js', 'screen.js', 'session.js'],
     },
     teacherTool: {
       icon: '🏃',

@@ -751,6 +751,14 @@ As dependências reais pedem a pontuação global e a classificação de dificul
     - histórico das rodadas e "Nova maratona". A chave de dono fica no navegador;
   - **telão** (`/telao/maratona?sala=`): sala de espera com o QR Code, votação, contagem e rodada ao vivo, resultado entre rodadas e o fim;
   - **conferido no navegador** com 1 criança de verdade, 3 crianças simuladas, o professor e o telão. Foram 2 rodadas: votação, Carrinhos jogado com arrastar e Hanói jogado pelo teclado. No meio, o **servidor foi reiniciado** e todo mundo voltou sozinho. As telas de criar, do painel e do resultado cabem em 375 px.
+- **Fase 7, ranking final animado: ✅ feita.** Inclui:
+  - **`finale.js` e `finale.css`**: o título cai, quem ficou fora do pódio aparece de trás para frente (com os pontos contando), vem o rufar e o pódio sobe (3º, 2º e, depois de uma pausa, o 1º no meio, com coroa, luz girando, fanfarra e duas levas de confete);
+  - **depois da festa**: os destaques (⭐ mais estrelas, ⚡ mais rápido, 🎯 mais preciso), a linha do tempo das rodadas e o botão "🔁 Ver a festa de novo";
+  - **onde aparece**: na criança (com a equipe dela marcada), no telão (tudo maior) e no painel do professor. Uma atualização do servidor não recomeça a festa;
+  - **desempenho e acessibilidade**: só `transform` e `opacity`; com "movimento reduzido" mostra tudo de uma vez. Cabe em 375 px;
+  - **área do professor**: "📜 Maratonas anteriores" na tela de criar, que reabre a festa de qualquer maratona encerrada a partir do banco.
+
+  **Não feito:** o destaque "📈 quem mais pontuou acima da própria força", que fica para quando houver o índice de maratona (Elo).
 
 ### 13.2 Riscos
 

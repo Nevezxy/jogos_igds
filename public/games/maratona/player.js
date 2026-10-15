@@ -287,7 +287,8 @@
       $('mt-final-root').innerHTML = `<h2 class="title-game mt-title">🏆 ${esc(state.name)}</h2><ol class="mt-standings" id="mt-final-standings"></ol>`;
       C.renderStandings($('mt-final-standings'), { ...state, standings: (state.final && state.final.standings) || state.standings }, { highlight: state.me && state.me.teamId });
     }
-    if (lastScreen !== 'mt-final') { play('fanfare'); window.BingoFx.confetti({ amount: 160 }); }
+    // (a festa, com som e confete, é da MaratonaFinale)
+    if (lastScreen !== 'mt-final' && !window.MaratonaFinale) { play('fanfare'); window.BingoFx.confetti({ amount: 160 }); }
     go('mt-final');
   }
 

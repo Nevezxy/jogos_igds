@@ -105,6 +105,10 @@
         <button type="button" class="btn btn-ghost" id="mt-resume-forget">Esquecer</button>
       </div>
     </div>
+    <section class="card-block mt-archive-list" id="mt-archive-card" hidden>
+      <h3 class="mt-h3">📜 Maratonas anteriores</h3>
+      <ul class="mt-archive" id="mt-archive-list"></ul>
+    </section>
     <form class="card-block mt-form" id="mt-form" novalidate>
       <label class="mt-field"><span>Nome da maratona</span><input type="text" id="mt-f-name" maxlength="60" placeholder="Maratona da turma" /></label>
 
@@ -172,6 +176,7 @@
     <div class="mt-m-grid">
       <div class="mt-m-main">
         <section class="card-block mt-m-actions" id="mt-m-actions"></section>
+        <section class="mt-m-final" id="mt-m-final" hidden></section>
         <section class="card-block" id="mt-m-round" hidden></section>
         <section class="card-block">
           <h3 class="mt-h3" id="mt-m-teams-title">👥 Participantes</h3>
@@ -201,6 +206,17 @@
         </section>
       </aside>
     </div>
+  </div>
+</section>
+
+<!-- ======================= PROFESSOR: rever uma maratona antiga ======================= -->
+<section id="mt-archive" class="screen screen-top">
+  <div class="mt-wrap mt-wide">
+    <header class="mt-head">
+      <button class="btn-back mt-back" id="mt-archive-back" type="button">← Maratonas</button>
+      <span class="mt-pill" id="mt-archive-code">----</span>
+    </header>
+    <div id="mt-archive-root"></div>
   </div>
 </section>
 
