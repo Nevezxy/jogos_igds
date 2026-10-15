@@ -759,6 +759,28 @@ As dependências reais pedem a pontuação global e a classificação de dificul
   - **área do professor**: "📜 Maratonas anteriores" na tela de criar, que reabre a festa de qualquer maratona encerrada a partir do banco.
 
   **Não feito:** o destaque "📈 quem mais pontuou acima da própria força", que fica para quando houver o índice de maratona (Elo).
+- **Fase 8, testes: ✅ feita** (a parte automática). Inclui:
+  - **`test/maratona-regras.test.js`**: os formatos que faltavam (Duas Equipes com 7, Trio e Quarteto com 9) até o pódio; rotação por ordem e escolha do professor; a tolerância do prazo; e, com servidor de verdade, a concorrência (o mesmo resultado duas vezes ao mesmo tempo grava uma vez; dois "próxima rodada" abrem uma rodada só; o professor resolvendo junto com um resultado chegando) e as permissões (votar e mandar resultado só na maratona em que entrou, o telão não comanda, configuração travada);
+  - **`test/maratona-carga.test.js`** (`npm run test:carga:maratona`), com 40 crianças no Solo e 20 confrontos na mesma rodada, todas mandando juntas: 40/40 aceitos, mediana de cerca de 40 ms, p95 de cerca de 50 ms por resposta, e o estado novo em todos em cerca de 80 ms;
+  - **README** atualizado (Maratona, pontos e ranking, rotas, API e testes);
+  - no total são 22 conjuntos no `npm test`.
+
+## 14. Teste com uma turma de verdade (roteiro)
+
+1. **Antes da aula:**
+   - configurar o `PROFESSOR_PIN`;
+   - abrir `/professor/maratona` no computador do projetor;
+   - criar uma maratona curta: 2 ou 3 jogos que a turma já conhece, nível 1 ou 2, Duplas, 3 rodadas, rotação por votação.
+2. **Entrada:** as crianças entram pelo QR Code. Confira se o endereço do QR funciona nos aparelhos da escola (é o da rede, não "localhost").
+3. **Telão:** abra pelo botão 📺 e deixe no projetor.
+4. **O que observar:**
+   - se as crianças entendem a contagem e a faixa de cima (tempo, quem terminou);
+   - se o tempo da rodada é bom (aumente ou diminua em "Tempo máximo");
+   - se a votação empolga ou atrasa;
+   - quem fica para trás nas equipes;
+   - se a festa do fim funciona no projetor e no som da sala.
+5. **Se algo der errado:** o painel do professor tem "resolver o confronto" (com motivo), "dispensar" quem saiu e "encerrar". Se o servidor cair, ele volta de onde parou.
+6. **Depois:** a maratona fica em "📜 Maratonas anteriores", e as estrelas das crianças entram no progresso e no ranking.
 
 ### 13.2 Riscos
 
