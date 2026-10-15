@@ -5,6 +5,7 @@
 
 const Levels = require('../../../public/games/hanoi/levels.js');
 const H = require('../../../public/games/hanoi/hanoi.js');
+const { hintsAllowed } = require('../../../public/js/shared/puzzlelevels.js');
 const { createPuzzleServer, invalid, seedOf } = require('../puzzle');
 
 const MIN_MS_PER_MOVE = 150;
@@ -18,6 +19,8 @@ module.exports = createPuzzleServer({
     const r = H.replay(game, body.moves);
     if (!r.ok || !r.done || durationMs < r.moves * MIN_MS_PER_MOVE) throw invalid();
     const hints = Math.max(0, Math.floor(Number(body.hints) || 0));
+    // até 3 dicas e depois uma a cada 2 minutos: mais que isso não dá
+    if (hints > hintsAllowed(level, durationMs)) throw invalid();
     const stars = Levels.starsFor(level, { moves: r.moves, min: game.min, hints });
     return { stars, record: r.moves, accuracy: Math.round((game.min / r.moves) * 100), details: { moves: r.moves, min: game.min, hints } };
   },

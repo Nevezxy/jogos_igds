@@ -11,6 +11,9 @@
 //     mapExtra?(el, progress)                                        algo a mais no mapa (ex.: galeria)
 //   })
 // api (para o jogo): stats(html) mostra os números no cabeçalho;
+//   hintButton(botão, darDica) controla o botão 💡 Dica: até 3 dicas por
+//   fase e, depois, uma a cada 2 minutos (darDica devolve false quando não
+//   deu dica nenhuma);
 //   finish({ body, stars, stats: [{ value, label }], msg, record }) termina a
 //   fase (body vai para POST /progress/<id>/results); seed: semente da rodada.
 
@@ -157,7 +160,46 @@
         stats(html) { if (run === r) $('[data-pz-stats]').innerHTML = html; },
         finish(res) { if (run === r && !r.ended) finish(r, res); },
         elapsed: () => Date.now() - r.startedAt,
+        hintButton: (btn, give) => hintButton(r, btn, give),
       }) || {};
+    }
+
+    // 💡 o botão de dica da fase: mostra quantas sobram e, passado o limite,
+    // a contagem até a próxima (regra em puzzlelevels.js, conferida no servidor)
+    function hintButton(r, btn, give) {
+      if (!btn) return;
+      const P = window.PuzzleLevels;
+      const limit = P.hintLimit(r.level);
+      const label = btn.textContent;
+      let used = 0;
+      let lastAt = 0;
+      let timer = null;
+      const wait = () => (used < limit ? 0 : Math.max(0, lastAt + P.HINTS.cooldownMs - Date.now()));
+      function paint() {
+        const w = wait();
+        if (run !== r || w <= 0) { clearInterval(timer); timer = null; }
+        btn.disabled = w > 0;
+        if (w > 0) {
+          const s = Math.ceil(w / 1000);
+          btn.textContent = `⏳ Dica em ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+          btn.title = `Você já usou as ${limit} dicas desta fase. Depois delas, vem uma nova a cada 2 minutos.`;
+        } else {
+          btn.textContent = used < limit ? `${label} (${limit - used})` : label;
+          btn.title = used < limit ? `Restam ${limit - used} dica${limit - used === 1 ? '' : 's'} nesta fase.` : 'Nova dica liberada!';
+        }
+      }
+      btn.addEventListener('click', () => {
+        if (run !== r || r.ended || wait() > 0) return;
+        if (give() === false) return;
+        used++;
+        lastAt = Date.now();
+        if (wait() > 0 && !timer) {
+          timer = setInterval(paint, 1000);
+          ui.toast(used === limit ? `Essa foi a última das ${limit} dicas desta fase. A próxima vem em 2 minutos ⏳` : 'A próxima dica vem em 2 minutos ⏳', 'info', 4000);
+        }
+        paint();
+      });
+      paint();
     }
 
     function stop() {

@@ -124,10 +124,10 @@
     carsEl.addEventListener('pointerup', endDrag);
     carsEl.addEventListener('pointercancel', endDrag);
 
-    area.querySelector('[data-hint]').addEventListener('click', () => {
-      if (ended) return;
+    api.hintButton(area.querySelector('[data-hint]'), () => {
+      if (ended) return false;
       const path = T.solve(puzzle, state);
-      if (!path || !path.length) return;
+      if (!path || !path.length) return false;
       const [i, p] = path[0];
       hints++;
       selected = null;
@@ -175,6 +175,7 @@
           '🚗 Leve o carro vermelho ★ até a SAÍDA, à direita.',
           '⌨️ No teclado: toque num carro e use as setas (Tab troca de carro).',
           `🎯 Dá para fazer em ${level.min} jogadas. 💡 A dica ajuda, mas deixa no máximo 2 estrelas.`,
+          window.PuzzleLevels.hintRule(level),
         ],
         play,
       });

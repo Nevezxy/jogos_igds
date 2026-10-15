@@ -158,6 +158,8 @@ async function checkServer() {
     assert(r.ok && r.result.stars === 3 && r.progress.levels.hn1a.best === 7, 'hanói: no mínimo = 3 estrelas');
     r = await api('POST', '/api/progress/hanoi/results', { levelId: hl.id, seed: 5, moves, hints: 2, durationMs: 20000 }, kid);
     assert(r.ok && r.result.stars === 2, 'hanói: usou dica = no máximo 2 estrelas');
+    r = await api('POST', '/api/progress/hanoi/results', { levelId: hl.id, seed: 5, moves, hints: 5, durationMs: 200000 }, kid);
+    assert(r.code === 'RESULTADO_INVALIDO', 'hanói: 5 dicas em 3 min e 20 s é recusado (cabem 3 + 1)');
     r = await api('POST', '/api/progress/hanoi/results', { levelId: hl.id, seed: 5, moves: moves.slice(0, 6), durationMs: 20000 }, kid);
     assert(r.code === 'RESULTADO_INVALIDO', 'hanói: torre incompleta é recusada');
     // labirinto

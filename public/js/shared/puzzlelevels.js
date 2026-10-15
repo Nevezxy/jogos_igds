@@ -33,7 +33,19 @@
     return 1;
   }
 
-  const api = { build, starsByRatio };
+  // 💡 Dicas: até `limit` por fase (ou `level.hintLimit`); depois, uma nova a
+  // cada 2 minutos. O servidor confere: numa fase que durou t, cabem no
+  // máximo limit + t / 2 min dicas.
+  const HINTS = { limit: 3, cooldownMs: 2 * 60 * 1000 };
+  const hintLimit = (level) => (level && level.hintLimit != null ? level.hintLimit : HINTS.limit);
+  const hintsAllowed = (level, durationMs) => hintLimit(level) + Math.floor(Math.max(0, durationMs) / HINTS.cooldownMs);
+
+  const hintRule = (level) => {
+    const n = hintLimit(level);
+    return `⏳ Até ${n} dica${n === 1 ? '' : 's'} por fase. Depois, uma nova dica a cada 2 minutos.`;
+  };
+
+  const api = { build, starsByRatio, HINTS, hintLimit, hintsAllowed, hintRule };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.PuzzleLevels = api;
 })(typeof window !== 'undefined' ? window : globalThis);

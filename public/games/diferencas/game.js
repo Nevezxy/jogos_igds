@@ -109,10 +109,10 @@
     }
 
     svgs.forEach((svg) => svg.addEventListener('pointerdown', (ev) => { ev.preventDefault(); tap(svg, ev); }));
-    area.querySelector('[data-hint]').addEventListener('click', () => {
-      if (ended) return;
+    api.hintButton(area.querySelector('[data-hint]'), () => {
+      if (ended) return false;
       const i = found.findIndex((f) => !f);
-      if (i < 0) return;
+      if (i < 0) return false;
       hints++;
       svgs.forEach((s) => s.querySelectorAll('.df-hint').forEach((h) => h.remove()));
       const [cx, cy, r] = scene.diffs[i].circles[0];
@@ -141,6 +141,7 @@
           '👆 Toque onde estiver diferente, em qualquer uma das cenas.',
           level.kinds.includes('flip') ? '🔄 Pode ter: figura que sumiu ou apareceu, cor trocada, tamanho, lugar e figura virada.' : level.kinds.includes('size') ? '📏 Pode ter: figura que sumiu ou apareceu, cor trocada, tamanho e lugar.' : '👀 Pode ter: figura que sumiu, figura a mais e cor trocada.',
           '⭐ 3 estrelas com no máximo 1 toque errado e sem dica.',
+          window.PuzzleLevels.hintRule(level),
         ],
         play,
       });

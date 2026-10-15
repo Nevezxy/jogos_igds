@@ -116,10 +116,10 @@
       else tapPeg(p);
       dragFrom = null;
     });
-    area.querySelector('[data-hint]').addEventListener('click', () => {
-      if (ended) return;
+    api.hintButton(area.querySelector('[data-hint]'), () => {
+      if (ended) return false;
       const h = H.hint(pos, game.goal, game.pegs);
-      if (!h) return;
+      if (!h) return false;
       hints++;
       selected = null;
       msg.textContent = `💡 Mova o disco de cima do pino ${h[0] + 1} para o pino ${h[1] + 1}.`;
@@ -153,6 +153,7 @@
           '✋ Disco grande nunca vai em cima de disco pequeno.',
           level.mode === 'copy' ? '🖼️ Deixe os discos igualzinho ao modelo.' : `🏁 Monte a torre inteira no pino ${level.pegs}.`,
           '🎯 3 estrelas no mínimo de movimentos. 💡 A dica ajuda, mas deixa no máximo 2 estrelas.',
+          window.PuzzleLevels.hintRule(level),
         ],
         play,
       });

@@ -144,6 +144,10 @@ async function checkServer() {
     assert(r.ok && r.result.stars === 3 && r.progress.levels.cr2c.best === cl.min, 'carrinhos: no mínimo de jogadas = 3 estrelas e recorde');
     r = await api('POST', '/api/progress/carrinhos/results', { levelId: cl.id, seed: 1, moves: sol, hints: 2, durationMs: 60000 }, kid);
     assert(r.ok && r.result.stars === 2, 'carrinhos: com dica, no máximo 2 estrelas');
+    r = await api('POST', '/api/progress/carrinhos/results', { levelId: cl.id, seed: 1, moves: sol, hints: 4, durationMs: 60000 }, kid);
+    assert(r.code === 'RESULTADO_INVALIDO', 'carrinhos: 4 dicas em 1 minuto é recusado (3 por fase, depois 1 a cada 2 min)');
+    r = await api('POST', '/api/progress/carrinhos/results', { levelId: cl.id, seed: 1, moves: sol, hints: 4, durationMs: 125000 }, kid);
+    assert(r.ok && r.result.stars === 2, 'carrinhos: a 4ª dica depois de 2 minutos vale');
     r = await api('POST', '/api/progress/carrinhos/results', { levelId: cl.id, seed: 1, moves: sol.slice(0, -1), durationMs: 60000 }, kid);
     assert(r.code === 'RESULTADO_INVALIDO', 'carrinhos: sem tirar o carro vermelho é recusado');
     r = await api('POST', '/api/progress/carrinhos/results', { levelId: cl.id, seed: 1, moves: [[0, 4]], durationMs: 60000 }, kid);
@@ -168,6 +172,8 @@ async function checkServer() {
     r = await api('POST', '/api/progress/diferencas/results', { levelId: dl.id, seed: 4242, clicks: tapAll(scene), hints: 0, durationMs: 60000 }, kid);
     assert(r.ok && r.result.stars === 3, 'diferenças: achou todas sem errar = 3 estrelas');
     r = await api('POST', '/api/progress/diferencas/results', { levelId: dl.id, seed: 4242, clicks: [[1, 1], [2, 2], [3, 3], ...tapAll(scene)], hints: 1, durationMs: 60000 }, kid);
+    const rx = await api('POST', '/api/progress/diferencas/results', { levelId: dl.id, seed: 4242, clicks: tapAll(scene), hints: 9, durationMs: 60000 }, kid);
+    assert(rx.code === 'RESULTADO_INVALIDO', 'diferenças: mais dicas que o limite é recusado');
     assert(r.ok && r.result.stars === 2, 'diferenças: 3 toques errados e 1 dica = 2 estrelas');
     r = await api('POST', '/api/progress/diferencas/results', { levelId: dl.id, seed: 4243, clicks: tapAll(scene), durationMs: 60000 }, kid);
     assert(r.code === 'RESULTADO_INVALIDO', 'diferenças: toques de outra cena são recusados');
