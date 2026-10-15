@@ -9,10 +9,12 @@
   const H = window.HanoiRules;
   const COLORS = ['#FF6B6B', '#FF9F43', '#FECA57', '#1DD1A1', '#48DBFB', '#5F27CD', '#FF6BCB'];
 
-  function towerHtml(pos, n, pegs, cls = '') {
+  // goalPeg: o pino onde a torre tem que ficar (marcado com 🏁)
+  function towerHtml(pos, n, pegs, cls = '', goalPeg = -1) {
     let html = `<div class="hn-pegs ${cls}" style="--pegs:${pegs};--n:${n}">`;
     for (let p = 0; p < pegs; p++) {
-      html += `<div class="hn-peg" data-peg="${p}"><span class="hn-rod"></span><span class="hn-stack">`;
+      const goal = p === goalPeg;
+      html += `<div class="hn-peg${goal ? ' is-goal' : ''}" data-peg="${p}"${goal ? ' aria-label="Pino de chegada: monte a torre aqui"' : ''}>${goal ? '<span class="hn-goal">🏁<span class="hn-goal-text"> Monte aqui</span></span>' : ''}<span class="hn-rod"></span><span class="hn-stack">`;
       // a pilha é desenhada de cima para baixo: do menor (em cima) para o maior
       for (let d = 0; d < n; d++) {
         if (pos[d] === p) html += `<span class="hn-disc" data-d="${d}" style="--w:${30 + (70 * (d + 1)) / n}%;--c:${COLORS[d % COLORS.length]}"></span>`;
@@ -39,10 +41,12 @@
         <span class="hn-msg" aria-live="polite"></span>
       </div>`;
     const boardEl = area.querySelector('.hn-board');
+    // torre inteira num pino só (clássica e bagunçada): esse é o pino de chegada
+    const goalPeg = game.goal.every((g) => g === game.goal[0]) ? game.goal[0] : -1;
     const msg = area.querySelector('.hn-msg');
 
     function render(flash) {
-      boardEl.innerHTML = towerHtml(pos, game.n, game.pegs);
+      boardEl.innerHTML = towerHtml(pos, game.n, game.pegs, '', goalPeg);
       boardEl.querySelectorAll('.hn-peg').forEach((el) => {
         const p = Number(el.dataset.peg);
         el.classList.toggle('is-selected', p === selected);

@@ -27,6 +27,12 @@
 .hn-peg.can-drop { background: rgba(31, 175, 96, .12); }
 .hn-peg.is-hint { animation: hnHint .8s ease-in-out 3 alternate; }
 @keyframes hnHint { to { background: rgba(255, 217, 61, .5); } }
+/* o pino de chegada: contorno tracejado verde, bandeira em cima e base verde */
+.hn-peg.is-goal { background: rgba(31, 175, 96, .1); }
+.hn-peg.is-goal.is-selected { background: rgba(255, 217, 61, .22); }
+.hn-peg.is-goal::before { content: ""; position: absolute; inset: 0; border: 3px dashed #1FAF60; border-radius: var(--radius-md); pointer-events: none; }
+.hn-goal { position: absolute; top: 4px; left: 50%; transform: translateX(-50%); z-index: 1; padding: 2px 10px; white-space: nowrap; background: #1FAF60; border: 2px solid var(--ink); border-radius: 999px; color: #fff; font-family: var(--font-display); font-weight: 800; font-size: .85rem; pointer-events: none; }
+.hn-peg.is-goal .hn-base { background: #1FAF60; }
 .hn-rod { position: absolute; bottom: 30px; width: 12px; height: calc(28px * var(--n) + 40px); background: #A6744B; border: 2px solid var(--ink); border-radius: 6px 6px 0 0; }
 .hn-stack { position: relative; display: flex; flex-direction: column; align-items: center; width: 100%; margin-bottom: 30px; }
 .hn-disc {
@@ -52,6 +58,8 @@
 .hn-msg { font-weight: 800; color: #fff; text-shadow: 0 2px 0 var(--ink); }
 @media (max-width: 560px) {
   .hn-pegs { gap: 4px; padding: 12px 6px 8px; }
+  .hn-goal { font-size: .8rem; padding: 1px 6px; }
+  .hn-pegs[style*="--pegs:4"] .hn-goal-text { display: none; } /* 4 pinos no celular: só a bandeira */
   .hn-disc { height: 20px; }
   .hn-peg { height: calc(22px * var(--n) + 80px); }
   .hn-rod { height: calc(22px * var(--n) + 34px); width: 9px; }
