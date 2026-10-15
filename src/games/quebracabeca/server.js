@@ -23,3 +23,13 @@ module.exports = createPuzzleServer({
     return { stars, record: seconds, details: { seconds, pieces: level.pieces, turns: Math.max(0, Math.floor(Number(body.turns) || 0)) } };
   },
 });
+
+// 🏃 Modo Maratona (src/marathon/catalog.js): quanto tempo a fase leva
+// (estMs), o que fica de fora, a qualidade do resultado já validado (0 a 1,
+// desempata entre quem tem as mesmas estrelas) e a força da validação.
+module.exports.marathon = {
+  trust: 'fraca', // o servidor só confere as peças e o tempo
+  off: true, // desligado por padrão na Maratona (decisão D4)
+  estMs: (level) => Levels.parSeconds(level) * 1000 * 1.3,
+  quality: (r, level) => Math.min(1, Levels.parSeconds(level) / Math.max(1, r.details.seconds)),
+};

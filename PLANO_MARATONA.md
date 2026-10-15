@@ -133,7 +133,7 @@ O problema: as escalas de cada jogo são diferentes (jogadas, erros, toques, pal
 
 ```
 perf = { concluiu: bool, estrelas: 0..3, qualidade: 0..1, tempoMs }
-nota = concluiu ? 100 + 100·estrelas + round(99·qualidade) : 0     (0 a 399)
+nota = concluiu ? 100 + 100·estrelas + round(99·qualidade) : 0     (0 a 499)
 ```
 
 - **Estrelas:** a regra de estrelas do próprio jogo, que o professor e as crianças já entendem.
@@ -696,6 +696,21 @@ As dependências reais pedem a pontuação global e a classificação de dificul
   - selo de pontos no painel.
 
   A dificuldade das fases (`tier`) usa a regra padrão (posição da fase no jogo). A Fase 2 ajusta Matemática, Memória e Xadrez e aumenta `POINTS_VERSION`, e os pontos são refeitos sozinhos.
+- **Fase 2, dificuldade e catálogo: ✅ feita.** Inclui:
+  - **dificuldade própria** em Matemática (pelo conteúdo: figurinhas e até 20 = 1; dezena, tabuadas e divisão da tabuada = 2; centena, milhar, conta armada e números maiores = 3; negativos, potências, raízes e expressões = 4), Números Cadentes (por mundo), Memória (tipo de par e número de cartas) e tabuleiros (força do robô; Fim de partida: mate em 1 = 2, mate em 2 = 3, finais = 4). Os outros jogos seguem a regra padrão. `POINTS_VERSION = 2`;
+  - **um adaptador `marathon` em cada um dos 18 jogos**, com o tempo estimado, o que fica de fora, a qualidade e a força da validação; nos tabuleiros, também os duelos;
+  - **`src/marathon/catalog.js`**: o catálogo montado a partir do registro, as fases que podem cair (nível, assuntos e tempo da rodada), a situação de cada jogo (com o motivo quando não tem fase) e a nota de desempenho (`perf`);
+  - **API do professor**: `/api/teacher/maratona/catalogo` e `/api/teacher/maratona/catalogo/:jogo`;
+  - **teste**: `test/maratona-catalogo.test.js`.
+
+  **Fases que podem cair, com rodada de 5 min:**
+
+  | Nível | Fases |
+  |---|---|
+  | 1 | Ligue 4, Dama e Xadrez ficam desabilitados ("não tem fases no nível 1") |
+  | 2 | Velha 3 × 3 e 4 × 4, Ligue 4 e o Xadrez mate em 1 entram |
+  | 3 | Velha só 4 × 4, Ligue 4 e Ligue 5, Xadrez mate em 1 e em 2 |
+  | 4 | tudo; Dama e a partida completa de xadrez só aqui |
 
 ### 13.2 Riscos
 

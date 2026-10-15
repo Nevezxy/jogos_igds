@@ -152,3 +152,17 @@ function mergeAccounts(a, b) {
 }
 
 module.exports = { validateResult, mergeProgress, summary, teacherSummary, setUnlockedAll, mergeAccounts };
+
+// 🏃 Modo Maratona (src/marathon/catalog.js): quanto tempo a fase leva
+// (estMs), o que fica de fora, a qualidade do resultado já validado (0 a 1,
+// desempata entre quem tem as mesmas estrelas) e a força da validação.
+const Content = require('../../../public/games/digitacao/content.js');
+module.exports.marathon = {
+  trust: 'fraca', // hoje o navegador informa a precisão (ver PLANO_MARATONA.md, fase 3)
+  // uma criança digita perto de 100 caracteres por minuto: 600 ms por caractere
+  estMs: (level) => [...Content.generate(level)].length * 600 + 10000,
+  quality: (r, level) => {
+    const min = Math.max(10, (Levels.getWorld(level.world) || {}).minWpm || 0);
+    return (r.accuracy / 100) * Math.min(1, r.wpm / min);
+  },
+};

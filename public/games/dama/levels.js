@@ -20,6 +20,9 @@
   ];
 
   const api = Board.build(WORLDS);
+  // Dificuldade de cada fase (1 a 4) para os pontos globais e o Modo Maratona: a força do robô (a dama já é um jogo difícil).
+  const TIERS = { dm1: 2, dm2: 2, dm3: 3, dm4: 4, dm5: 4 };
+  api.LEVELS.forEach((l) => { l.tier = TIERS[l.id] || l.tier; });
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.DamaLevels = api;
 })(typeof window !== 'undefined' ? window : globalThis);

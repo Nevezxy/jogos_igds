@@ -40,6 +40,9 @@
   ];
 
   const api = Board.build(WORLDS);
+  // Dificuldade de cada fase (1 a 4) para os pontos globais e o Modo Maratona: mate em 1 = 2, mate em 2 = 3, finais e robôs fortes = 4.
+  const TIERS = { xf1: 2, xf2: 2, xf3: 2, xf4: 2, xf5: 3, xf6: 3, xf7: 3, xf8: 4, xf9: 4, xp1: 2, xp2: 2, xp3: 3, xp4: 3, xp5: 4, xp6: 4 };
+  api.LEVELS.forEach((l) => { l.tier = TIERS[l.id] || l.tier; });
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.XadrezLevels = api;
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -12,6 +12,7 @@
 //   { t: 'diceMix', of }    sorteia entre 'd1', 'd2', 'd3' (dados) e 'domino'
 //   { t: 'calc', gen }      contas do gerador do Conta Comigo (problems.js);
 //                           só contas de uma resposta, com a resposta no fim
+// `tier` do mundo: a dificuldade (1 a 4) dos pontos globais e da Maratona.
 // `maxAbs` do mundo: nenhum número da conta passa disso (centena e milhar só
 // nos mundos de adição e subtração, como no Conta Comigo).
 
@@ -41,7 +42,7 @@
   // de lugar (assim ninguém perde as estrelas).
   const WORLDS = [
     {
-      id: 'n1', icon: '🎲', name: 'Dados e dominós', color: 'pink', pace: 'dado',
+      id: 'n1', tier: 1, icon: '🎲', name: 'Dados e dominós', color: 'pink', pace: 'dado',
       intro: 'Dados e dominós caem do céu. Conte os pontinhos e digite o número antes que cheguem ao chão!',
       contents: [
         { title: 'Um dado', gen: { t: 'dice', n: 1 }, tip: 'Conte os pontinhos do dado: de 1 a 6.' },
@@ -50,7 +51,7 @@
       ],
     },
     {
-      id: 'n2', icon: '➕', name: 'Somar e tirar: unidades', color: 'green', pace: 'conta',
+      id: 'n2', tier: 1, icon: '➕', name: 'Somar e tirar: unidades', color: 'green', pace: 'conta',
       intro: 'Contas de mais e de menos com números pequenos. Digite o resultado: a conta estoura sozinha!',
       contents: [
         { title: 'Somas até 10', gen: calc({ t: 'add', a: [0, 10], b: [0, 10], max: 10 }), tip: 'Conte nos dedos a partir do maior número.' },
@@ -60,7 +61,7 @@
       ],
     },
     {
-      id: 'n3', icon: '🧮', name: 'Somar e tirar: dezenas e centenas', color: 'sky', pace: 'conta',
+      id: 'n3', tier: 2, icon: '🧮', name: 'Somar e tirar: dezenas e centenas', color: 'sky', pace: 'conta',
       intro: 'Contas de mais e de menos com dezenas e centenas. Resolva de cabeça!',
       contents: [
         { title: 'Dezenas inteiras', gen: calc({ t: 'pick', of: [{ t: 'add', a: [10, 90, 10], b: [10, 90, 10], max: 100 }, { t: 'sub', a: [20, 100, 10], b: [10, 90, 10] }] }), tip: '30 + 40 é como 3 + 4, com um zero no fim.' },
@@ -70,7 +71,7 @@
       ],
     },
     {
-      id: 'n4', icon: '✖️', name: 'Tabuadas', color: 'orange', pace: 'conta', maxAbs: SMALL,
+      id: 'n4', tier: 2, icon: '✖️', name: 'Tabuadas', color: 'orange', pace: 'conta', maxAbs: SMALL,
       intro: 'As tabuadas caindo do céu! Quanto mais você souber de cabeça, mais rápido estoura.',
       contents: [
         { title: '×2', gen: table([2]), tip: 'Vezes 2 é o dobro.' },
@@ -84,7 +85,7 @@
       ],
     },
     {
-      id: 'n5', icon: '➗', name: 'Divisão', color: 'violet', pace: 'conta', maxAbs: SMALL,
+      id: 'n5', tier: 3, icon: '➗', name: 'Divisão', color: 'violet', pace: 'conta', maxAbs: SMALL,
       intro: 'Divisões caindo! Pense na tabuada ao contrário.',
       contents: [
         { title: '÷2', gen: divBy([2]), tip: 'Dividir por 2 é achar a metade.' },
@@ -95,7 +96,7 @@
       ],
     },
     {
-      id: 'n6', icon: '🎯', name: 'Misturadas', color: 'pink', pace: 'conta', maxAbs: SMALL,
+      id: 'n6', tier: 3, icon: '🎯', name: 'Misturadas', color: 'pink', pace: 'conta', maxAbs: SMALL,
       intro: 'As quatro operações misturadas. Olhe bem o sinal!',
       contents: [
         { title: 'Mais e menos', gen: calc({ t: 'pick', of: [{ t: 'add', a: [5, 60], b: [5, 39], max: 99 }, { t: 'sub', a: [20, 99], b: [5, 60] }] }), tip: 'Somar ou tirar? Olhe o sinal!' },
@@ -104,7 +105,7 @@
       ],
     },
     {
-      id: 'n7', icon: '🌡️', name: 'Números negativos', color: 'sky', pace: 'conta', maxAbs: SMALL, minus: true,
+      id: 'n7', tier: 4, icon: '🌡️', name: 'Números negativos', color: 'sky', pace: 'conta', maxAbs: SMALL, minus: true,
       intro: 'Abaixo do zero também tem números! Para digitar um negativo, aperte − e depois o número.',
       contents: [
         { title: 'Subindo do negativo', gen: calc({ t: 'int', op: '+', a: [-9, -1], b: [1, 9] }), tip: '−5 + 3 = −2: suba a partir de baixo do zero.' },
@@ -114,7 +115,7 @@
       ],
     },
     {
-      id: 'n8', icon: '🚀', name: 'Potências e raízes', color: 'red', pace: 'conta', maxAbs: SMALL,
+      id: 'n8', tier: 4, icon: '🚀', name: 'Potências e raízes', color: 'red', pace: 'conta', maxAbs: SMALL,
       intro: 'Potências e raízes caindo! 7² = 49, e √49 = 7.',
       contents: [
         { title: 'Quadrados', gen: calc({ t: 'pow', base: [0, 10], exp: 2 }), tip: 'O número vezes ele mesmo: 7² = 49.' },
