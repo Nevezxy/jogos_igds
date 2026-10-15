@@ -95,7 +95,20 @@
     return sent;
   }
 
+  // Identificação da rodada: criada antes do primeiro envio e guardada junto
+  // na caixa de saída, para o servidor reconhecer um reenvio e não gravar o
+  // mesmo resultado duas vezes.
+  function newAttemptId() {
+    try { if (crypto.randomUUID) return crypto.randomUUID(); } catch (e) { /* ignore */ }
+    let s = '';
+    try { crypto.getRandomValues(new Uint8Array(16)).forEach((b) => { s += b.toString(16).padStart(2, '0'); }); } catch (e) { s = `${Date.now().toString(36)}${Math.random().toString(36).slice(2)}`; }
+    return s;
+  }
+
   async function request(method, route, body) {
+    if (method === 'POST' && QUEUEABLE.test(route) && body && typeof body === 'object' && !body.attemptId) {
+      body = { ...body, attemptId: newAttemptId() };
+    }
     try {
       return await send(method, route, body, token);
     } catch (e) {
