@@ -29,3 +29,13 @@ module.exports = createPuzzleServer({
     };
   },
 });
+
+// 🏃 Modo Maratona (src/marathon/catalog.js): quanto tempo a fase leva
+// (estMs), o que fica de fora, a qualidade do resultado já validado (0 a 1,
+// desempata entre quem tem as mesmas estrelas) e a força da validação.
+module.exports.marathon = {
+  trust: 'forte',
+  estMs: (level) => level.pairs * 2 * 2500 + 10000,
+  exclude: (level) => (level.robot ? 'contra o robô' : null),
+  quality: (r) => r.accuracy / 100, // pares ÷ tentativas
+};

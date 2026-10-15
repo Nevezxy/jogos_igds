@@ -7,6 +7,7 @@ const express = require('express');
 const accounts = require('./accounts');
 const progress = require('./progress');
 const points = require('./points');
+const marathonCatalog = require('../marathon/catalog');
 const teacher = require('./teacher');
 
 function readToken(req) {
@@ -172,6 +173,28 @@ function createPlatformRouter(registry) {
     const student = accounts.requireStudentRow(req.params.id);
     const game = req.query.game ? findGame(String(req.query.game)).id : null;
     return { history: progress.history(student.id, game, req.query.limit || 200), points: points.byStudent(student.id) };
+  }));
+  // 🏃 Maratona: jogos e fases que podem cair (nível 1 a 4, tempo da rodada
+  // em minutos e, opcional, os assuntos escolhidos: assuntos={"matematica":["mu","dv"]})
+  const marathonFilter = (req) => {
+    const nivel = Math.max(1, Math.min(4, Math.floor(Number(req.query.nivel) || 1)));
+    const { min, max, default: def } = marathonCatalog.ROUND_MS;
+    const roundMs = req.query.tempo ? Math.max(min, Math.min(max, Number(req.query.tempo) * 60000 || def)) : def;
+    let topics = {};
+    try { topics = req.query.assuntos ? JSON.parse(String(req.query.assuntos)) : {}; } catch (e) { topics = {}; }
+    if (!topics || typeof topics !== 'object' || Array.isArray(topics)) topics = {};
+    return { nivel, roundMs, topics };
+  };
+  router.get('/teacher/maratona/catalogo', asTeacher((req) => {
+    const f = marathonFilter(req);
+    return { nivel: f.nivel, roundMs: f.roundMs, niveis: marathonCatalog.NIVEIS, games: marathonCatalog.status(registry, f) };
+  }));
+  router.get('/teacher/maratona/catalogo/:gameId', asTeacher((req) => {
+    const info = marathonCatalog.describe(findGame(req.params.gameId));
+    if (!info) throw new progress.GameError('FORA_DA_MARATONA', 'Esse jogo não entra na Maratona.', 404);
+    const f = marathonFilter(req);
+    const list = marathonCatalog.eligible(info, { ...f, topics: f.topics[info.id] });
+    return { game: { id: info.id, name: info.name, icon: info.icon, topics: info.topics }, fases: list };
   }));
   // refaz os pontos de todos a partir do progresso (conferência)
   router.post('/teacher/points/recompute', asTeacher(() => {

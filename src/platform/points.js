@@ -16,7 +16,8 @@ const fs = require('fs');
 const path = require('path');
 const { db } = require('./db');
 
-const POINTS_VERSION = 1;
+// 2: dificuldade própria na Matemática, Números, Memória e tabuleiros
+const POINTS_VERSION = 2;
 const PER_STAR = 10;
 const GAMES_DIR = path.join(__dirname, '..', '..', 'public', 'games');
 

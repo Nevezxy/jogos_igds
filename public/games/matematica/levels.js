@@ -274,9 +274,29 @@
   // tentativa vale ½. 3 ⭐ também pede o tempo médio dentro do alvo.
   const STAR_RULES = [{ stars: 3, score: 9 }, { stars: 2, score: 8 }, { stars: 1, score: 6 }];
 
+  // Dificuldade de cada fase (`tier`, de 1 a 4), para os pontos globais e o
+  // Modo Maratona. Os mundos daqui são assuntos, não níveis: a dificuldade
+  // vem do conteúdo (seção do mundo; `*` = o resto do mundo; id = a fase).
+  const TIERS = {
+    fg: { '*': 1 },
+    as: { 'Unidade: até 10': 1, 'Unidade: até 20': 1, Dezena: 2, Centena: 3, Milhar: 3, '*': 2 },
+    mu: { Tabuadas: 2, 'Números maiores': 3, Revisão: 3, '*': 2 },
+    ca: { '*': 3 },
+    dv: { 'Tabuada ao contrário': 2, 'Números maiores': 3, 'Divisão com resto': 3, Revisão: 3, '*': 2 },
+    mx: { '*': 2, mx4: 3, mx5: 3, mx13: 3, mx8: 3, mx10: 3, mx11: 3, mx12: 3 },
+    ng: { '*': 4 },
+    pw: { '*': 4 },
+    rz: { '*': 4 },
+    ex: { '*': 4 },
+  };
+
   const LEVELS = [];
   WORLDS.forEach((world, w) => {
+    let section = null;
     world.levels.forEach((level, l) => {
+      if (level.section) section = level.section;
+      const t = TIERS[world.id] || {};
+      level.tier = level.tier || t[level.id] || t[section] || t['*'] || 2;
       level.world = world.id;
       level.worldIndex = w;
       level.indexInWorld = l;
