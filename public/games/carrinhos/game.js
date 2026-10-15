@@ -99,7 +99,7 @@
       const v = puzzle.vehicles[i];
       const [lo, hi] = T.range(puzzle, state, i);
       drag = { i, v, lo, hi, x0: ev.clientX, y0: ev.clientY, cell: cellPx() + 4, moved: false, pos: state[i] };
-      el.setPointerCapture(ev.pointerId);
+      try { el.setPointerCapture(ev.pointerId); } catch (e) { /* ponteiro que já acabou */ }
       el.classList.add('is-dragging');
     });
     carsEl.addEventListener('pointermove', (ev) => {
