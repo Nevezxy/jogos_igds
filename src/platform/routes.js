@@ -196,6 +196,27 @@ function createPlatformRouter(registry) {
     const list = marathonCatalog.eligible(info, { ...f, topics: f.topics[info.id] });
     return { game: { id: info.id, name: info.name, icon: info.icon, topics: info.topics }, fases: list };
   }));
+  // 🏃 maratonas anteriores (o resultado fica salvo) e o estado de uma
+  // maratona (o mesmo que o telão vê: sem tokens)
+  const marathons = (req) => {
+    const mgr = req.app.locals.marathon;
+    if (!mgr) throw new progress.GameError('SEM_MARATONA', 'O Modo Maratona não está ligado.', 503);
+    return mgr;
+  };
+  router.get('/teacher/maratona/historico', asTeacher((req) => ({
+    marathons: marathons(req).history(100).map((h) => ({
+      code: h.code, name: h.name, status: h.status, createdAt: h.createdAt, startedAt: h.startedAt, endedAt: h.endedAt,
+      games: (h.config && h.config.games) || [], formato: h.config && h.config.formato,
+      winner: h.state && h.state.final && h.state.final.standings[0] ? h.state.final.standings[0].id : null,
+    })),
+  })));
+  router.get('/maratona/:code', handle((req) => {
+    viewer(req);
+    const mgr = marathons(req);
+    let m;
+    try { m = mgr.get(req.params.code); } catch (e) { throw new progress.GameError('MARATONA_NAO_ENCONTRADA', 'Não achei essa maratona.', 404); }
+    return { state: mgr.view(m, { role: 'telao' }) };
+  }));
   // refaz os pontos de todos a partir do progresso (conferência)
   router.post('/teacher/points/recompute', asTeacher(() => {
     points.recomputeAll();

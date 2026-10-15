@@ -136,6 +136,10 @@ function createMarathonManager(registry, { matchManager = null, now = () => Date
     if (version != null && Number(version) !== m.version) fail('ESTADO_MUDOU', 'A maratona mudou enquanto você clicava. Confira e tente de novo.');
     return m;
   }
+  // é o dono? (sem lançar erro; para o professor voltar para a sala)
+  function isMaster(code, token) {
+    try { master(code, token); return true; } catch (e) { return false; }
+  }
   const rngFor = (m, salt) => seededRng((m.seed ^ Math.imul(salt + 1, 0x9E3779B1)) >>> 0);
   const currentRound = (m) => m.rounds.find((r) => r.number === m.currentRound) || null;
   const teamOf = (m, id) => m.teams.find((t) => t.id === id);
@@ -815,7 +819,7 @@ function createMarathonManager(registry, { matchManager = null, now = () => Date
   const load = (code) => { const id = store.idByCode(code); return id ? store.load(id) : null; };
 
   return {
-    create, updateConfig, join, leave, teams, moveStudent, start, nextRound, vote, endVote, seen, submit,
+    create, isMaster, updateConfig, join, leave, teams, moveStudent, start, nextRound, vote, endVote, seen, submit,
     resolveMatch, excuse, readmit, pause, resume, end, view, viewOf, get, checkTimers, startClock, restore,
     history, load, standingsOf, MarathonError, live,
   };
