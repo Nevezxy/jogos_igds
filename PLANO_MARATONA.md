@@ -124,7 +124,7 @@ Cada item é marcado assim:
 - **Corrida de fase:** os dois lados jogam **a mesma fase, com a mesma semente**, ao mesmo tempo. Vence quem tiver o melhor desempenho normalizado (3.4). Vale para 14 jogos: os 9 do PuzzleShell, Letras, Números, Matemática, Click e Teclado Mágico.
 - **Duelo:** os lados jogam **um contra o outro** pela rede (`match.js`). Vale para Velha, Ligue 4, Dama e Xadrez, nas variantes de partida, não nas fases contra o robô.
   - Em **equipes**, cada integrante joga uma partida contra um integrante da outra equipe, como num match de xadrez por equipes. Vence a equipe com mais vitórias; o empate em vitórias decide pelos empates de partida, depois pelo tempo total, e no fim fica empate.
-  - Se as equipes tiverem tamanhos diferentes, o integrante a mais joga contra o adversário de menor nota, e essa partida conta para os dois lados.
+  - Se as equipes tiverem tamanhos diferentes, quem sobra **descansa naquela rodada**. (Mudou na implementação: jogar contra alguém que já está num tabuleiro não dá, porque as partidas são ao mesmo tempo.)
   - O Xadrez "Fim de partida" (mate em 1 ou 2) entra como **corrida**: as duas crianças resolvem a mesma posição.
 
 ### 3.4 Desempenho normalizado (corrida de fase)
@@ -720,6 +720,18 @@ As dependências reais pedem a pontuação global e a classificação de dificul
   - **duelos**: `match.js` ganhou `createDuel` (partida entre dois educandos escolhidos, que entram com `bg:rejoin`), `timeUp` (prazo: Velha e Ligue 4 empatam; Dama e Xadrez pelo material, com `adjudicate` no adaptador) e `onEnd`. O progresso é gravado com `source = 'maratona'`;
   - **`src/marathon/competitive.js`**: confere a corrida com a fase e a semente **impostas pelo servidor**, pelo mesmo `validateResult` do modo livre, e devolve a nota;
   - **teste**: `test/maratona-competicao.test.js` cobre os 15 jogos de corrida (cada um aceito com a semente da rodada e sem nota cheia com outra), o texto do Teclado e os duelos com prazo.
+- **Fase 4, núcleo da maratona no servidor: ✅ feita.** Inclui:
+  - **`src/marathon/balance.js`**: força pelo percentil dos pontos (quem jogou menos de 5 fases fica na mediana), serpentina mais trocas, sorteio, e para quem chega depois a equipe com menos gente;
+  - **`pairing.js`**: todos contra todos até 8 lados, suíço acima disso (sem revanche enquanto der, com limite de tentativas), descanso rotativo, e A × B nas Duas Equipes;
+  - **`rotation.js`**: ordem, sequencial, aleatório (saco), votação (3 opções, maioria, empate e sem votos = sorteio) e escolha do professor; a fase sai de um saco das que podem cair;
+  - **`scoring.js`**: decisão da corrida (margem de 4 na nota, 10% no tempo), dos duelos por equipe, pontos (3/1/0, descanso 1, W.O. 3, bônus opcional) e classificação com todos os desempates;
+  - **`store.js`**: 6 tabelas `mt_*` (os votos ficam no JSON da rodada) e o histórico de eventos;
+  - **`manager.js`**: a máquina de estados (criar, entrar, equipes, começar, rodadas, votação, resultado validado, duelos via `match.js`, prazo, ausente ou tempo esgotado, ações do professor, pausa, encerrar e anular, final com pódio e destaques salvos), os relógios (`checkTimers`) e a retomada do banco (`restore`, com 1 min de tolerância);
+  - **teste**: `test/maratona-nucleo.test.js`.
+
+  **Adiado:** o índice de maratona (Elo) do balanceamento, que fica para quando houver histórico de maratonas.
+
+  **Ligação com o progresso:** a corrida da maratona vai para o progresso normal com `attempt_id = mt:<entrada>`; essa é a ligação entre `game_results` e `mt_entries`.
 
 ### 13.2 Riscos
 
