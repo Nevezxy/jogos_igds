@@ -26,6 +26,14 @@ function cleanErrors(raw) {
   return out;
 }
 
+// Mantém só as `max` teclas com mais erros (o progresso não cresce sem fim).
+const MAX_KEYS = 80;
+function trim(map, max = MAX_KEYS) {
+  const entries = Object.entries(map);
+  if (entries.length <= max) return map;
+  return Object.fromEntries(entries.sort((a, b) => b[1] - a[1]).slice(0, max));
+}
+
 function validateResult(body, progress) {
   const level = Levels.getLevel(String(body.levelId || ''));
   if (!level) throw new GameError('FASE_INVALIDA', 'Essa fase não existe.');
@@ -72,6 +80,7 @@ function mergeProgress(old, r) {
   };
   p.keyErrors = { ...p.keyErrors };
   for (const [char, n] of Object.entries(r.errorsByChar)) p.keyErrors[char] = (p.keyErrors[char] || 0) + n;
+  p.keyErrors = trim(p.keyErrors);
   p.totalChars += r.chars;
   p.totalTimeMs += r.durationMs;
   p.plays += 1;
@@ -134,7 +143,7 @@ function mergeAccounts(a, b) {
   return {
     ...a,
     levels,
-    keyErrors,
+    keyErrors: trim(keyErrors),
     totalChars: (a.totalChars || 0) + (b.totalChars || 0),
     totalTimeMs: (a.totalTimeMs || 0) + (b.totalTimeMs || 0),
     plays: (a.plays || 0) + (b.plays || 0),

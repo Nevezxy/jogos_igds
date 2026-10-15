@@ -307,11 +307,11 @@ function registerSocketHandlers(io) {
 
     socket.on('mark_cell', ({ roomCode, playerToken, row, col } = {}, cb) => {
       try {
-        const { room, player, newWin } = rm.markCell(roomCode, playerToken, Number(row), Number(col));
+        const { room, player, newWin, firstWin } = rm.markCell(roomCode, playerToken, Number(row), Number(col));
         cb && cb({ ok: true, card: player.card });
         if (newWin) {
           announceWin(io, room, player, newWin);
-          recordWin(player, newWin);
+          if (firstWin) recordWin(player, newWin);
           if (room.status !== 'playing') clearAutoDraw(room); // pausa automática na vitória
         }
         broadcastRoomState(io, room);

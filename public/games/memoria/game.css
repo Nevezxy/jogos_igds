@@ -1,0 +1,53 @@
+/* 🃏 Jogo da Memória: a mesa e as cartas (viram em 3D) */
+.mc-score { display: flex; gap: 12px; margin-bottom: 10px; }
+.mc-who { padding: 6px 14px; background: var(--surface); border: 3px solid var(--ink); border-radius: 999px; font-weight: 800; opacity: .7; transition: transform .2s, box-shadow .2s, opacity .2s; }
+.mc-who.is-turn { opacity: 1; transform: scale(1.06); box-shadow: 0 0 0 5px var(--yellow); }
+.mc-table {
+  --card: min(120px, calc((100vw - 48px) / var(--cols) - 10px), calc((100vh - 260px) / 4.4));
+  display: grid;
+  grid-template-columns: repeat(var(--cols), var(--card));
+  gap: 10px;
+}
+.mc-card {
+  width: var(--card);
+  height: calc(var(--card) * 1.18);
+  padding: 0;
+  background: none;
+  border: 0;
+  perspective: 700px;
+  cursor: pointer;
+}
+.mc-inner { position: relative; display: block; width: 100%; height: 100%; transition: transform .4s ease; transform-style: preserve-3d; }
+.mc-card.is-open .mc-inner, .mc-card.is-matched .mc-inner { transform: rotateY(180deg); }
+.mc-back, .mc-front {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border: var(--stroke) solid var(--ink);
+  border-radius: 14px;
+  box-shadow: 0 4px 0 var(--ink);
+  backface-visibility: hidden;
+}
+.mc-back {
+  background: repeating-linear-gradient(45deg, var(--violet) 0 10px, #8A4FE0 10px 20px);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: calc(var(--card) * .42);
+  text-shadow: 0 3px 0 var(--ink);
+}
+.mc-card:hover .mc-back { filter: brightness(1.1); }
+.mc-front { background: #FFFEF7; transform: rotateY(180deg); }
+.mc-card.is-matched .mc-front { background: #DDF8E4; border-color: var(--green-dark); }
+.mc-card.is-matched { cursor: default; animation: mcMatch .5s var(--ease-bounce); }
+@keyframes mcMatch { 50% { transform: scale(1.08); } }
+.mc-emoji { font-size: calc(var(--card) * .55); line-height: 1; }
+.mc-text { font-family: var(--font-display); font-weight: 800; font-size: calc(var(--card) * .42); color: var(--ink); }
+.mc-text.is-small { font-size: calc(var(--card) * .2); }
+/* quantidade em fileiras de 5 (como o material de contagem): fácil de contar */
+.mc-count { display: grid; grid-template-columns: repeat(5, 1fr); justify-items: center; align-content: center; gap: 3px 1px; width: 92%; font-size: calc(var(--card) * .16); line-height: 1; }
+.mc-count[data-n="1"] { grid-template-columns: 1fr; font-size: calc(var(--card) * .36); }
+.mc-count[data-n="2"] { grid-template-columns: repeat(2, 1fr); font-size: calc(var(--card) * .3); }
+.mc-count[data-n="3"] { grid-template-columns: repeat(3, 1fr); font-size: calc(var(--card) * .24); }
+.mc-count[data-n="4"] { grid-template-columns: repeat(2, 1fr); font-size: calc(var(--card) * .24); }
+@media (prefers-reduced-motion: reduce) { .mc-inner { transition: none; } }

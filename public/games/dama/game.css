@@ -1,0 +1,35 @@
+/* ⚫⚪ Dama: o tabuleiro, as pedras e damas, e a captura passo a passo */
+.dm-board { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.dm-must { min-height: 1.3em; margin: 0; font-weight: 800; color: #FFE07A; text-shadow: 0 2px 0 var(--ink); text-align: center; }
+.dm-grid {
+  --sq: min(64px, calc((100vw - 40px) / 8), calc((100vh - 330px) / 8));
+  display: grid;
+  grid-template-columns: repeat(8, var(--sq));
+  grid-auto-rows: var(--sq);
+  border: var(--stroke) solid var(--ink);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 8px 0 var(--ink);
+}
+.dm-sq { position: relative; padding: 0; border: 0; display: grid; place-items: center; }
+.dm-sq.is-light { background: #F6E7C8; }
+.dm-sq.is-dark { background: #4E8B4A; }
+.dm-sq.is-last.is-dark { background: #6FAA5A; }
+.dm-sq:disabled { color: inherit; }
+.dm-board.can-play .dm-sq.can-move, .dm-board.can-play .dm-sq.is-target, .dm-board.can-play .dm-sq.is-selected { cursor: pointer; }
+.dm-piece { width: 78%; height: 78%; border-radius: 50%; display: grid; place-items: center; font-size: calc(var(--sq) * .42); line-height: 1; pointer-events: none; }
+.dm-piece:not(.is-white):not(.is-black) { display: none; }
+.dm-piece.is-white { background: radial-gradient(circle at 35% 30%, #fff, #E9E2D0 60%, #C9BFA6); border: 3px solid #2B1D57; box-shadow: 0 3px 0 #2B1D57, inset 0 0 0 5px rgba(43, 29, 87, .12); color: #C8A100; }
+.dm-piece.is-black { background: radial-gradient(circle at 35% 30%, #6A5A8E, #2B1D57 60%, #160E30); border: 3px solid #000; box-shadow: 0 3px 0 #000, inset 0 0 0 5px rgba(255, 255, 255, .12); color: #FFD54F; }
+.dm-piece.is-king { text-shadow: 0 1px 0 rgba(0, 0, 0, .4); }
+.dm-sq.can-move .dm-piece { box-shadow: 0 3px 0 #2B1D57, 0 0 0 4px #FFE07A; }
+.dm-sq.must-capture .dm-piece { animation: dmPulse 1s ease-in-out infinite; }
+@keyframes dmPulse { 50% { box-shadow: 0 3px 0 #2B1D57, 0 0 0 7px #FF9800; } }
+.dm-sq.is-selected { box-shadow: inset 0 0 0 4px #FFE07A; }
+.dm-sq.is-target::after { content: ""; position: absolute; width: 34%; height: 34%; border-radius: 50%; background: rgba(255, 224, 122, .85); border: 2px solid #2B1D57; }
+.dm-sq.is-taken .dm-piece { opacity: .45; }
+.dm-sq.is-taken::after { content: "✕"; position: absolute; color: #FF5252; font-weight: 900; font-size: calc(var(--sq) * .6); text-shadow: 0 0 3px #fff; }
+.dm-sq.was-captured::after { content: ""; position: absolute; width: 60%; height: 60%; border-radius: 50%; border: 3px dashed rgba(255, 255, 255, .6); animation: dmGone 1.2s ease-out forwards; }
+@keyframes dmGone { to { opacity: 0; transform: scale(1.4); } }
+.dm-end { min-height: 1.4em; margin: 6px 0 0; max-width: 520px; text-align: center; font-weight: 800; color: #fff; text-shadow: 0 2px 0 var(--ink); }
+@media (prefers-reduced-motion: reduce) { .dm-sq.must-capture .dm-piece, .dm-sq.was-captured::after { animation: none; } }

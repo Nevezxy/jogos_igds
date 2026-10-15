@@ -14,7 +14,20 @@ Jogos de hoje:
 | 🔤 **Letras Cadentes** | sozinho(a) | Letras, números, sílabas e palavras caem do céu e a criança digita cada uma antes que chegue ao chão. 31 fases que aceleram durante a rodada, combo, peças especiais (⭐ 🧊 💥), recorde, opção "apenas maiúsculas" e o céu ocupando a tela toda. |
 | 🔢 **Conta Comigo** | sozinho(a) | Matemática: mundo das figurinhas, adição e subtração da unidade ao milhar, multiplicação e divisão até a dezena, depois números negativos, potências, raízes e expressões. 143 fases, sequência 🔥 e teclado numérico na tela (funciona no tablet). |
 | ☄️ **Números Cadentes** | sozinho(a) | Contas, dados e dominós caem do céu e a criança digita o resultado antes que cheguem ao chão (sem Enter). 42 fases que aceleram, combo, peças especiais, recorde e teclado numérico na tela. |
+| 💰 **Dinheiro e Troco** | sozinho(a) | Moedas e cédulas do Real: contar, pagar o valor exato, pagar com menos notas, dar o troco e a lojinha. 16 fases, de reais inteiros a centavos. |
+| ⚖️ **Equilibre a Balança** | sozinho(a) | Pôr pesos até a balança ficar reta: somar pesos, pesos nos dois pratos (subtração), gramas e quilos e "quanto pesa?". 10 fases. |
 | 🖱️ **Click** | sozinho(a) | Treino do mouse (e do dedo no tablet): passar por cima, clicar, clicar duas vezes, segurar e arrastar. 30 fases que aceleram, figura escondida revelada a cada acerto, combo, peças especiais e recorde. |
+| 🃏 **Jogo da Memória** | sozinho(a) ou contra o robô | Pares de figura igual, número e quantidade, maiúscula e minúscula, palavra e figura, conta e resultado. 19 fases, de 6 a 24 cartas, e 3 robôs que também esquecem cartas. |
+| 🗼 **Torre de Hanói** | sozinho(a) | De 3 a 7 discos, torre bagunçada, "copie o modelo" e 4 pinos. 13 fases, estrelas pelo mínimo de movimentos e dica. |
+| 🌀 **Labirinto** | sozinho(a) | Labirintos sorteados a cada rodada: do pequeno ao grande, com chaves e portas, invisível, no escuro e "virar e andar". 17 fases. |
+| 🚗 **Carrinhos** | sozinho(a) | Tirar o carro vermelho do estacionamento arrastando os outros carros e caminhões. 40 estacionamentos, de 2 a 34 jogadas no mínimo, com dica. |
+| 🎨 **Pixel Art** | sozinho(a) | Pintura por número: cada quadradinho tem o número da cor. 30 desenhos, de 8 × 8 com 2 cores a 24 × 24 com 10 cores, balde, "pinte com contas" e galeria. |
+| 🔍 **Encontre a Diferença** | sozinho(a) | Duas cenas desenhadas pelo jogo (parque, fundo do mar, espaço), uma nova a cada rodada. 20 fases, de 3 diferenças fáceis a 10 sutis. |
+| 🧩 **Quebra-cabeça** | sozinho(a) | Fotos de bichos com peças de encaixe de verdade: de 4 a 48 peças, com a foto clarinha no fundo, sem ela e com peças viradas. 18 fases e galeria. |
+| ❌ **Jogo da Velha** | sozinho(a) ou com um amigo pela rede | 3 × 3 e 4 × 4 contra 7 robôs, um mais esperto que o outro (o último nunca perde), ou contra um amigo em outro aparelho (código de sala ou pareamento automático). |
+| 🔴 **Ligue 4** | sozinho(a) ou com um amigo pela rede | Ligue 4 (7 × 6) e Ligue 5 (9 × 7) contra 10 robôs, ou contra um amigo pela rede. Ajuda opcional que mostra as ameaças. |
+| ⚫ **Dama** | sozinho(a) ou com um amigo pela rede | Dama brasileira oficial (captura obrigatória com lei da maioria, dama voadora) contra 5 robôs, ou contra um amigo pela rede. A captura de várias peças é feita passo a passo. |
+| ♟️ **Xadrez** | sozinho(a) ou com um amigo pela rede | "Fim de partida" (mate em 1, mate em 2, rei e dama ou torre contra rei) e partidas inteiras contra 6 robôs, ou contra um amigo pela rede. Regras completas. |
 | 🏁 **Desafio de Digitação** | com a turma | Corrida de digitação ao vivo: o professor escolhe o texto (uma fase do Teclado Mágico ou um texto dele) e o modo, a turma digita junta e o telão mostra a pista com os bichinhos e o pódio. |
 | 🎯 **Bingo** | com a turma | Bingo em tempo real conduzido pelo professor, com ~20 crianças em celulares, tablets ou computadores, e um telão opcional para o projetor. |
 
@@ -323,6 +336,192 @@ CMD ["node", "server.js"]
   cada ação; na área do professor aparece a **% de acerto de cada ação**
   (por exemplo ✌️ 45%) e qual ação treinar.
 
+### 💰 Dinheiro e Troco (matemática)
+- **Moedas e cédulas desenhadas no estilo do Real** (cor certa e o bicho
+  de cada nota: tartaruga no de 2, garça no de 5, arara no de 10, mico-leão
+  no de 20, onça no de 50, garoupa no de 100), sem copiar a arte oficial.
+  Tudo em centavos por dentro (`money.js`), para não ter erro de vírgula.
+- **5 mundos, 16 fases:** quanto tem aqui? (contar, 4 alternativas) →
+  pague o valor exato (até R$ 10, até R$ 50, com centavos, sem ver o
+  total) → com menos notas e moedas → dê o troco (em reais, com centavos,
+  troco grande) → lojinha (somar 2 ou 3 preços, compra e troco).
+- Toque numa nota ou moeda para pôr no balcão; toque no balcão para tirar.
+  Errou: dica ("passou", "ainda falta", "dá para usar menos notas") e mais
+  uma tentativa; no 2º erro, mostra um jeito certo. De primeira vale 1, na
+  segunda ½.
+- O servidor refaz as tarefas pela semente e confere cada resposta (todo
+  valor é pagável com o dinheiro da fase; qualquer jeito certo de pagar
+  vale).
+
+### ⚖️ Equilibre a Balança (matemática)
+- Balança de dois pratos que **inclina para o lado mais pesado** (os
+  pratos ficam retos). O objeto fica à esquerda; a criança põe pesos até
+  ficar reta.
+- **4 mundos, 10 fases:** equilibrar com pesos (até 10, 20, 50) → pesos
+  nos dois pratos (só dá pondo peso do lado do objeto: é uma subtração) →
+  gramas e quilos (1 kg = 1.000 g, 1,5 kg) → "quanto pesa?" (o peso do
+  objeto é "?": equilibre e escolha quanto ele pesa).
+- O gerador (`scale.js`) garante que sempre dá para equilibrar e calcula o
+  menor número de pesos; as estrelas são pelas trocas de peso a mais (e
+  respostas erradas no "quanto pesa?"). O servidor confere que cada balança
+  ficou reta.
+
+### 🧩 Jogos de raciocínio (Memória, Torre de Hanói, Labirinto)
+- **As mesmas telas para todos** (`js/shared/puzzleshell.js`): mapa de
+  fases, antes da fase (com "como jogar" e o recorde), jogando (com
+  "Recomeçar") e resultado (estrelas, recorde, números). Cada jogo só monta
+  a área de jogo. O servidor de todos é o mesmo (`src/games/puzzle.js`):
+  estrelas e recorde por fase, resumo do painel e do professor, juntar
+  contas; cada jogo traz o seu `check`, que refaz a fase pela semente
+  (`js/shared/rng.js`) e confere tudo.
+- **🃏 Jogo da Memória** (19 fases):
+  - os pares vêm em 5 mundos: figura igual, **número e quantidade** (3 ↔
+    🍎🍎🍎, em fileiras de 5 para contar fácil), **maiúscula e minúscula**,
+    **palavra e figura** e **conta e resultado** (somas, somar e tirar,
+    tabuada; cada resultado aparece uma vez só). As fases crescem de 6 a 24
+    cartas;
+  - **🤖 contra o robô** (mundo 6): cada um vira duas cartas; quem acha o
+    par joga de novo. O robô lembra de cada carta que vê com a chance do
+    nível (25%, 55%, 85%), inclusive as que a criança vira;
+  - estrelas sozinho: tentativas perto do número de pares (até 1,6× = 3,
+    até 2,4× = 2); contra o robô: vencer 3, empatar 2. O servidor refaz a
+    partida pelas cartas viradas.
+- **🗼 Torre de Hanói** (13 fases):
+  - torre clássica de 3 a 7 discos, **torre bagunçada** (começa misturada,
+    sempre pedindo um bom número de movimentos), **copie o modelo** (chegar
+    na arrumação desenhada) e **4 pinos** (5 a 7 discos);
+  - tocar num pino pega o disco de cima e tocar em outro solta; também dá
+    para arrastar ou usar as teclas 1 a 4;
+  - o mínimo de movimentos vem de uma busca em largura (`hanoi.js`), que
+    também dá a **💡 dica** do próximo movimento (com dica, no máximo 2
+    estrelas). 3 estrelas no mínimo, 2 até 1,5×.
+- **🌀 Labirinto** (17 fases, um labirinto novo a cada rodada):
+  - do 5 × 5 ao 13 × 13; **chaves e portas** (cada porta tem a chave da
+    sua cor, escondida antes dela; sempre há saída); **invisível** (as
+    paredes aparecem quando você bate); **no escuro** (só a lanterna em
+    volta); **virar e andar** (↶ ⬆ ↷, para treinar a esquerda e a direita
+    de quem está dentro);
+  - setas do teclado (ou W A S D), botões da tela (segurar repete) ou
+    deslizar o dedo. Rastro de por onde já passou;
+  - estrelas pelos passos comparados com o caminho mais curto (calculado
+    pegando as chaves que precisar). O servidor refaz o caminho comando a
+    comando.
+
+### 🚗 🎨 🔍 🧩 Jogos visuais (Carrinhos, Pixel Art, Diferenças, Quebra-cabeça)
+Usam as mesmas telas e o mesmo servidor dos jogos de raciocínio. Os dois
+com galeria (Pixel Art e Quebra-cabeça) mostram, no mapa, o que a criança
+já fez.
+- **🚗 Carrinhos** (40 fases, 5 mundos):
+  - estacionamento 6 × 6; carros (2 casas) e caminhões (3 casas) só andam
+    para a frente e para trás. Arrastar no trilho, ou tocar e usar as setas;
+  - as fases vêm de um banco gerado por `scripts/carrinhos-banco.js`: sorteia
+    estacionamentos, vai mexendo neles ficando com os mais difíceis e mede,
+    por busca em largura, o **mínimo exato** de jogadas (de 2 a 34). O banco
+    fica em `bank.js`;
+  - **💡 dica:** a próxima jogada certa (busca na hora, em milissegundos),
+    com tracejado no lugar; com dica, no máximo 2 estrelas. 3 estrelas até
+    1,25× o mínimo, 2 até 2×. O servidor refaz as jogadas uma a uma.
+- **🎨 Pixel Art** (30 desenhos, 5 mundos):
+  - os desenhos são gerados por `scripts/pixel-desenhos.js` (os pequenos
+    linha a linha, os grandes com formas), que também grava uma folha PNG
+    para conferir: coração, maçã, gato, foguete, bandeira do Brasil,
+    pinguim, coruja, arco-íris, girassol, robô, peixe-palhaço, casa...;
+  - escolher a cor na paleta (os quadradinhos dela piscam), tocar ou
+    segurar e arrastar. Arrastando, a cor errada só passa por cima; tocando
+    na cor errada, conta um erro e o quadradinho fica marcado para corrigir.
+    A paleta mostra quantos faltam de cada cor;
+  - **🪣 balde** (do mundo 2 em diante): pinta de uma vez a região grudada do
+    mesmo número. **🔍 lupa** nos quadros grandes;
+  - **🧮 pinte com contas** (mundo 5): no lugar do número, uma conta (+, −,
+    ×, ÷) cujo resultado é a cor;
+  - estrelas pelos erros, conforme o tamanho do desenho. O servidor refaz a
+    pintura (pincel e balde) e confere que ficou tudo certo.
+- **🔍 Encontre a Diferença** (20 fases, 5 mundos):
+  - cenas em SVG geradas pela semente (`scene.js`): 26 figuras desenhadas no
+    jogo, em 3 cenários. As diferenças: figura que sumiu, figura a mais, cor
+    trocada, cor de um detalhe, tamanho, lugar e figura virada; nas fases
+    "sutis", cores parecidas, mudanças pequenas e cenas cheias;
+  - tocar em qualquer uma das duas cenas marca a diferença nas duas; toque
+    errado mostra um ✕. **💡 dica** circula uma diferença;
+  - estrelas pelos toques errados e dicas. O servidor refaz a cena e os
+    toques.
+- **🧩 Quebra-cabeça** (18 fases, 5 mundos):
+  - as 18 fotos CC0 do Click recortadas em peças com encaixes de verdade
+    (`jigsaw.js`, caminhos SVG); de 2 × 2 a 8 × 6;
+  - arrastar até a moldura: perto do lugar certo (e na posição certa) a peça
+    gruda. Primeiro com a **sombra** da foto, depois sem (dá para segurar
+    👁️ e espiar), depois com **peças viradas** (tocar gira). "🧺 Arrumar
+    peças" junta as soltas;
+  - estrelas pelo tempo (uns segundos por peça); o recorde é o menor tempo.
+
+### ♟️ Jogos de tabuleiro (Jogo da Velha, Ligue 4, Dama e Xadrez)
+- **A mesma base para todos** (`js/shared/boardgame.js`, e depois Dama e
+  Xadrez): mapa de robôs, "contra um amigo", partida, resultado. Cada jogo
+  só traz as regras (`rules.js`, usadas também pelo servidor), as fases
+  (`levels.js`) e o desenho do tabuleiro (`game.js`).
+- **🤖 Contra o computador:** cada fase é um robô (`js/shared/bot.js`,
+  minimax com poda alfa-beta, com limite de profundidade e de tempo). Ele
+  pensa num Web Worker (`bot-worker.js`), sem travar a tela, e erra de
+  propósito nos níveis baixos. Quem começa alterna a cada partida.
+  Desfazer só nos níveis fáceis.
+  - Estrelas: ⭐⭐⭐ venceu sem desfazer, ⭐⭐ venceu desfazendo, ⭐ empatou.
+    Contra o robô imbatível da Velha, empatar já vale as 3.
+  - O servidor refaz a partida lance a lance (`src/games/boardgame.js`),
+    recusa lance inválido, partida que não acabou e tempo impossível.
+- **👫 Contra um amigo, pela rede** (`src/platform/match.js`, eventos
+  `bg:*` do Socket.IO). Cada um joga no seu aparelho:
+  - **🔑 código de sala:** 4 letras e QR Code (`/jogos/velha?sala=ABCD`
+    entra direto);
+  - **🎲 pareamento automático:** "Procurar adversário" junta quem está na
+    fila do mesmo jogo, primeiro da mesma turma e, depois de 8 s, qualquer
+    um;
+  - o **servidor é o juiz** de cada lance, com o mesmo `rules.js`;
+  - propor e aceitar empate, desistir. Quem cair tem 1 minuto para voltar
+    (a partida continua até depois de recarregar a página); senão, o outro
+    vence por abandono;
+  - conta no placar (vitórias, empates e derrotas contra amigos), mas não
+    dá estrela.
+- **❌ Jogo da Velha:** 3 × 3 (Robô Bobinho, Espertinho, Atento e
+  Imbatível) e 4 × 4 com 4 em linha (3 robôs).
+- **🔴 Ligue 4:** Ligue 4 (7 × 6, 6 robôs, até 8 jogadas à frente) e Ligue 5
+  (9 × 7, 4 robôs). A peça cai na coluna, com uma "fantasma" mostrando onde
+  vai parar. "⚠️ Mostrar ameaças" marca as colunas onde o adversário
+  ganharia na próxima jogada.
+- **⚫ Dama brasileira** (5 robôs, até 8 lances à frente):
+  - regras oficiais (`dama/rules.js`): a pedra anda para a frente e captura
+    para a frente e para trás; a **dama voadora** anda e captura de longe;
+    **captura obrigatória com a lei da maioria**; as peças capturadas só
+    saem no fim e não são puladas duas vezes; a pedra que só passa pela
+    última fileira no meio da captura não vira dama; empate com 20 lances
+    de cada lado só com damas; perde quem fica sem lance;
+  - as peças que podem jogar ficam destacadas (piscando quando a captura é
+    obrigatória). Numa captura de várias peças, a criança toca em cada casa
+    onde a peça pousa, e as peças puladas ficam marcadas com ✕.
+- **♟️ Xadrez:**
+  - regras completas (`xadrez/rules.js`): roque, en passant, promoção com
+    escolha da peça, xeque, mate, afogamento, material insuficiente, 3
+    repetições e 50 lances. O gerador de lances confere com os números de
+    referência (perft) em 5 posições;
+  - **🏁 Fim de partida** (9 fases, como o *End of chess game* do GCompris):
+    mate em 1 (4), mate em 2 (3), rei e dama contra rei, rei e torre contra
+    rei. A criança joga com as brancas; 3 estrelas dando o mate em até o
+    número de lances da fase. Essas posições não aparecem no "jogar com um
+    amigo";
+  - **partidas** contra 6 robôs: do Comilão (só pensa em capturar) ao Mestre
+    (4 lances à frente e, no fim da busca, todas as trocas de peças, em
+    menos de 2 s). O robô ganhou uma busca de capturas (`bot.js`), usada
+    quando o jogo oferece `Rules.captures`;
+  - toque na peça para ver as casas possíveis; "⚠️ Mostrar peças atacadas"
+    marca as suas peças em perigo. O tabuleiro vira para quem joga de
+    pretas.
+- **Fases com posição própria:** no `boardlevels.js`, uma fase pode ter a
+  própria posição inicial (`variant`), a cor fixa da criança (`seat`) e um
+  número de lances para a 3ª estrela (`par`); o servidor confere tudo.
+- **Na área do professor:** o robô mais forte que já venceu, as estrelas e
+  o placar contra o robô e contra amigos.
+- Painel com as seções 🧩 Raciocínio e ♟️ Tabuleiro. Cada seção recolhe
+  com um toque, e o painel lembra no navegador.
+
 ### 🏁 Desafio de Digitação
 - O professor cria a sala na área do professor (**Desafio de Digitação**), a
   turma entra pelo QR Code ou pelo código, com a conta (nome e bichinho
@@ -450,6 +649,10 @@ jogos_igds/
 │       │   ├── levels.js     # Mundos, conteúdos × velocidades e estrelas (também no servidor)
 │       │   ├── items.js      # O que cai em cada fase, com semente (também no servidor)
 │       │   └── game.js, view.html, game.css
+│       ├── dinheiro/, balanca/  # 💰 ⚖️ matemática do dia a dia: gerador (também no servidor), levels.js, game.js
+│       ├── memoria/, hanoi/, labirinto/  # 🧩 raciocínio: regras/gerador (também no servidor), levels.js, game.js
+│       ├── carrinhos/, pixel/, diferencas/, quebracabeca/  # 🚗 🎨 🔍 🧩 visuais: regras/gerador, bancos gerados, levels.js, game.js
+│       ├── velha/, ligue4/, dama/, xadrez/  # ❌ 🔴 ⚫ ♟️ tabuleiros: rules.js (também no servidor e no robô), levels.js, game.js
 │       ├── click/            # 🖱️ Click
 │       │   ├── levels.js     # Mundos, ações, ritmo e estrelas (também no servidor)
 │       │   ├── targets.js    # Os alvos de cada rodada, com semente (também no servidor)
@@ -483,6 +686,7 @@ jogos_igds/
 │       │   └── hands.js      # Mãos em SVG
 │       └── bingo/            # 🎯 Bingo (carregado sob demanda, modo persistente): view.html com as telas,
 │                             #    master, player, join, screen (telão), overlays, packs, session e css
+├── scripts/                  # carrinhos-banco.js e pixel-desenhos.js: geram os bancos de fases
 ├── test/                     # Ver seção 6
 └── data/bingo.sqlite         # Criado automaticamente (contas, progresso e histórico do bingo)
 ```
@@ -620,6 +824,11 @@ npm test
 | `test/matematica.test.js` | Conta Comigo: regras do gerador em todas as fases (vai-um/empréstimo onde deve, divisão exata, negativos só nos mundos certos, "qual é o sinal?" com uma resposta só), mesma semente = mesmas contas, servidor conferindo respostas, estrelas, revisão e área do professor. |
 | `test/platform.test.js` | Contas (nome e sobrenome, maiúsculas/acentos/espaços, conta repetida, sessão, bichinho, sair) e progresso pela API (estrelas do servidor, fase bloqueada, velocidade impossível, resumos). |
 | `test/teacher.test.js` | Área do professor com PIN: cadastro em lote, autocadastro, renomear, juntar contas, liberar fases, desativar, sala de bingo só pelo professor, turmas e a evolução semana a semana. |
+| `test/dama-xadrez.test.js` | Dama brasileira (captura obrigatória, lei da maioria, captura para trás, dama voadora, peça capturada não é pulada de novo, coroação só no fim, empate só com damas) e Xadrez (perft em 5 posições, roque, en passant, promoção, mate, afogamento, material insuficiente, 3 repetições, 50 lances; o Fim de partida é mesmo mate em 1 e em 2); o robô acha mates e capturas; o servidor conferindo e dando as estrelas. |
+| `test/tabuleiro.test.js` | Jogo da Velha e Ligue 4: regras (vitória em todas as direções, velha, coluna cheia, Ligue 5); o robô (o imbatível nunca perde, completa a linha, bloqueia, respeita o tempo); o servidor conferindo as partidas contra o robô e as estrelas; a partida pela rede (código, pareamento por turma, vez, lance inválido, empate, desistência, queda e volta, abandono). |
+| `test/raciocinio.test.js` | Memória (cartas de todas as fases, faces sem repetir, refazer a partida, contra o robô), Torre de Hanói (mínimos, fases bagunçadas não triviais, a dica sempre leva ao objetivo, 4 pinos) e Labirinto (todo labirinto tem saída, chaves pegáveis, porta trancada, modo relativo); o servidor conferindo e dando as estrelas. |
+| `test/visuais.test.js` | Carrinhos (o mínimo de cada fase confere com a busca, em ordem de dificuldade), Pixel Art (desenhos certos, as contas dão a cor, pincel e balde), Diferenças (toda cena tem as diferenças pedidas, separadas, e a mesma semente dá a mesma cena) e Quebra-cabeça (encaixes vizinhos se completam, as fotos existem); o servidor conferindo e dando as estrelas. |
+| `test/dia-a-dia.test.js` | Dinheiro e Troco (todo valor é pagável com o dinheiro da fase, troco possível, alternativas, "menos notas", qualquer jeito certo vale) e Balança (sempre equilibra, mínimo certo, nos dois pratos precisa tirar, 1,5 kg); o servidor conferindo e dando as estrelas. |
 | `test/offline.test.js` | Modo offline: o `/sw.js` sai com a versão e a lista de arquivos (sem as fotos grandes do Click), é JavaScript válido e vem com os cabeçalhos certos. |
 | `test/desafio.test.js` | Desafio de digitação: sala com PIN, mesmo texto para todos, teclas conferidas no servidor, teto de velocidade, fim automático, pódio, relógio contra o mascote, progresso, telão sem tokens. |
 | `test/integration.test.js` | Partida completa de bingo: entrada só com conta, mesma conta em dois aparelhos, sorteio, marcação, vitória, expulsão, nova partida, reconexão, encerramento. |

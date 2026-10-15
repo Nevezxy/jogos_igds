@@ -83,6 +83,21 @@
     const da = digits(a); const db = digits(b);
     return db.some((d, i) => (da[i] || 0) < d);
   }
+  // a primeira casa (da direita) que tem vai-um ou que pede emprestado:
+  // { i (0 = unidades), x, y } ou null. Antes dela não houve vai-um nem
+  // empréstimo, então a conta dessa casa é só x + y (ou x − y).
+  function firstCarry(a, b) {
+    const da = digits(a); const db = digits(b);
+    for (let i = 0; i < Math.max(da.length, db.length); i++) if ((da[i] || 0) + (db[i] || 0) >= 10) return { i, x: da[i] || 0, y: db[i] || 0 };
+    return null;
+  }
+  function firstBorrow(a, b) {
+    const da = digits(a); const db = digits(b);
+    for (let i = 0; i < db.length; i++) if ((da[i] || 0) < db[i]) return { i, x: da[i] || 0, y: db[i] };
+    return null;
+  }
+  const PLACE = ['unidades', 'dezenas', 'centenas', 'unidades de milhar', 'dezenas de milhar'];
+
   // multiplicação por um algarismo com vai-um?
   function hasMulCarry(a, b) {
     const [big, small] = Math.abs(a) >= Math.abs(b) ? [a, b] : [b, a];
@@ -530,7 +545,7 @@
       switch (tk.t) {
         case 'n': out.push(say(tk.v)); break;
         case 'o': out.push(tk.unary ? 'menos' : WORD[{ '+': '+', '−': '-', '×': '*', '÷': '/' }[tk.v]] || tk.v); break;
-        case 'p': if (tk.v === '(' || tk.v === '[') out.push('abre parênteses'); else out.push('fecha parênteses'); break;
+        case 'p': out.push({ '(': 'abre parênteses', ')': 'fecha parênteses', '[': 'abre colchetes', ']': 'fecha colchetes' }[tk.v]); break;
         case 'eq': out.push('é igual a'); break;
         case 'hole': out.push(tk.op ? 'qual sinal' : 'quanto'); break;
         case 'sup': out.push(tk.v === '2' ? 'ao quadrado' : tk.v === '3' ? 'ao cubo' : `elevado a ${tk.v === '?' ? 'quanto' : tk.v}`); break;
@@ -569,20 +584,28 @@
       return `${fmt(a)}${b === 2 ? '²' : b === 3 ? '³' : `^${b}`} é multiplicar o ${fmt(a)} por ele mesmo ${b} vezes: ${Array(Math.min(b, 6)).fill(fmt(a)).join(' × ')}.`;
     }
     if (neg && (op === '*' || op === '/')) return 'Sinais iguais dão resultado positivo (+). Sinais diferentes dão resultado negativo (−).';
+    // número que falta com negativos: a dica não pode mostrar o número escondido
+    const par = (n) => (n < 0 ? `(${fmt(n)})` : fmt(n));
+    if (neg && hide === 'b') return `Use a operação inversa: ? = ${op === '+' ? `${fmt(c)} − ${par(a)}` : `${fmt(a)} − ${par(c)}`}.`;
+    if (neg && hide === 'a') return `Faça ao contrário, num termômetro: comece no ${fmt(c)} e ande ${Math.abs(b)} para ${(op === '-') === (b >= 0) ? 'cima' : 'baixo'}.`;
     if (neg && op === '-' && b < 0) return `Menos com menos vira mais: ${fmt(a)} − (${fmt(b)}) é o mesmo que ${fmt(a)} + ${fmt(-b)}.`;
-    if (neg) return `Pense num termômetro: comece no ${fmt(hide === 'a' ? c : a)} e ande ${Math.abs(b)} para ${(op === '+') === (b >= 0) ? 'cima' : 'baixo'}.`;
+    if (neg) return `Pense num termômetro: comece no ${fmt(a)} e ande ${Math.abs(b)} para ${(op === '+') === (b >= 0) ? 'cima' : 'baixo'}.`;
     if (op === '+') {
       if (hide === 'a' || hide === 'b') return `Quanto falta de ${fmt(hide === 'a' ? b : a)} para chegar em ${fmt(c)}? Conte a partir do ${fmt(hide === 'a' ? b : a)}.`;
       if (c <= 10) return `Comece no ${a} e conte mais ${b} nos dedos.`;
       if (a < 10 && b < 10) return `Complete o 10 primeiro: ${Math.max(a, b)} + ${10 - Math.max(a, b)} = 10, e ainda sobram ${Math.min(a, b) - (10 - Math.max(a, b))}.`;
-      if (hasCarry(a, b)) return `Some as unidades: ${u(a)} + ${u(b)} = ${u(a) + u(b)}. Escreva ${(u(a) + u(b)) % 10} e vai 1 para a próxima casa.`;
+      const fc = firstCarry(a, b);
+      if (fc && fc.i === 0) return `Some as unidades: ${u(a)} + ${u(b)} = ${u(a) + u(b)}. Escreva ${(u(a) + u(b)) % 10} e vai 1 para a próxima casa.`;
+      if (fc) return `Nas unidades não passa de 9: ${u(a)} + ${u(b)} = ${u(a) + u(b)}. O vai-um aparece nas ${PLACE[fc.i]}: ${fc.x} + ${fc.y} = ${fc.x + fc.y}. Escreva ${(fc.x + fc.y) % 10} e vai 1 para as ${PLACE[fc.i + 1]}.`;
       return `Some as unidades (${u(a)} + ${u(b)}) e depois as dezenas, cada casa no seu lugar.`;
     }
     if (op === '-') {
       if (hide === 'a') return `Faça ao contrário: ${fmt(c)} + ${fmt(b)} = ?`;
       if (hide === 'b') return `Quanto falta de ${fmt(c)} para chegar em ${fmt(a)}?`;
       if (a <= 10) return `Comece no ${a} e volte ${b} nos dedos.`;
-      if (hasBorrow(a, b)) return `${u(a)} é menor que ${u(b)}: peça 1 dezena emprestada. ${u(a) + 10} − ${u(b)} = ${u(a) + 10 - u(b)}.`;
+      const fb = firstBorrow(a, b);
+      if (fb && fb.i === 0) return `${u(a)} é menor que ${u(b)}: peça 1 dezena emprestada. ${u(a) + 10} − ${u(b)} = ${u(a) + 10 - u(b)}.`;
+      if (fb) return `Nas unidades dá para tirar: ${u(a)} − ${u(b)} = ${u(a) - u(b)}. Nas ${PLACE[fb.i]}, ${fb.x} é menor que ${fb.y}: peça 1 emprestado das ${PLACE[fb.i + 1]}. ${fb.x + 10} − ${fb.y} = ${fb.x + 10 - fb.y}.`;
       return `Tire as unidades (${u(a)} − ${u(b)}) e depois as dezenas, cada casa no seu lugar.`;
     }
     if (op === '*') {

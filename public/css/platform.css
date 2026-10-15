@@ -773,3 +773,10 @@
 }
 .net-status[hidden] { display: none; }
 .net-status.is-offline { background: #FFE1E4; }
+
+/* painel: seções que recolhem */
+.game-section-toggle { display: flex; align-items: center; gap: 10px; width: 100%; padding: 0; background: none; border: 0; font: inherit; color: inherit; cursor: pointer; text-align: left; }
+.game-section-toggle small { font-family: var(--font-body); font-size: .8rem; font-weight: 800; opacity: .75; }
+.game-section-toggle i { margin-left: auto; font-style: normal; transition: transform .2s; }
+.game-section-toggle[aria-expanded="false"] i { transform: rotate(-90deg); }
+.game-card[hidden] { display: none !important; }

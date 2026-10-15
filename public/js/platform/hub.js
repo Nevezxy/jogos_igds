@@ -16,6 +16,8 @@
     { id: 'digitacao', label: '⌨️ Digitação' },
     { id: 'matematica', label: '🔢 Matemática' },
     { id: 'mouse', label: '🖱️ Mouse' },
+    { id: 'raciocinio', label: '🧩 Raciocínio' },
+    { id: 'tabuleiro', label: '♟️ Tabuleiro' },
     { id: 'turma', label: '👥 Com a turma' },
     { id: 'outros', label: '🎲 Outros' },
   ];
@@ -92,6 +94,10 @@
     return card;
   }
 
+  const COLLAPSED_KEY = 'hub_secoes_fechadas_v1';
+  let collapsed = new Set();
+  try { collapsed = new Set(JSON.parse(localStorage.getItem(COLLAPSED_KEY) || '[]')); } catch (e) { /* ignore */ }
+
   async function renderGames() {
     let games;
     try {
@@ -109,11 +115,30 @@
     for (const subject of SUBJECTS) {
       const list = games.filter((g) => (SUBJECTS.some((s) => s.id === g.subject) ? g.subject : 'outros') === subject.id);
       if (!list.length) continue;
+      // cada seção recolhe e abre (lembra no navegador)
       const head = document.createElement('h2');
       head.className = 'game-section';
-      head.textContent = subject.label;
+      const toggle = document.createElement('button');
+      toggle.type = 'button';
+      toggle.className = 'game-section-toggle';
+      const closed = collapsed.has(subject.id);
+      toggle.setAttribute('aria-expanded', String(!closed));
+      toggle.innerHTML = `<span>${subject.label}</span><small>${list.length} ${list.length === 1 ? 'jogo' : 'jogos'}</small><i aria-hidden="true">▾</i>`;
+      head.appendChild(toggle);
       grid.appendChild(head);
-      list.forEach((game) => grid.appendChild(cardFor(game, i++)));
+      const cards = list.map((game) => {
+        const card = cardFor(game, i++);
+        card.hidden = closed;
+        grid.appendChild(card);
+        return card;
+      });
+      toggle.addEventListener('click', () => {
+        const nowClosed = !collapsed.has(subject.id);
+        if (nowClosed) collapsed.add(subject.id); else collapsed.delete(subject.id);
+        try { localStorage.setItem(COLLAPSED_KEY, JSON.stringify([...collapsed])); } catch (e) { /* ignore */ }
+        toggle.setAttribute('aria-expanded', String(!nowClosed));
+        cards.forEach((c) => { c.hidden = nowClosed; });
+      });
     }
     renderSummaries();
   }

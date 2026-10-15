@@ -163,6 +163,21 @@
       return `<div class="teacher-game"><strong>${escapeHtml(d.current)}</strong>
         <span>⭐ ${d.stars}/${d.maxStars} · ${d.levelsDone}/${d.totalLevels} fases · acerta ${d.hitPct}%${d.toughest ? ` · treinar: ${escapeHtml(d.toughest)}` : ''}</span>${kinds}</div>`;
     },
+    // jogos de raciocínio: fase atual, estrelas e quanto jogou
+    memoria(d) { return puzzleCell(d); },
+    hanoi(d) { return puzzleCell(d); },
+    carrinhos(d) { return puzzleCell(d); },
+    labirinto(d) { return puzzleCell(d); },
+    pixel(d) { return puzzleCell(d); },
+    diferencas(d) { return puzzleCell(d); },
+    quebracabeca(d) { return puzzleCell(d); },
+    dinheiro(d) { return puzzleCell(d); },
+    balanca(d) { return puzzleCell(d); },
+    // jogos de tabuleiro: o robô mais forte vencido e o placar
+    velha(d) { return boardCell(d); },
+    ligue4(d) { return boardCell(d); },
+    dama(d) { return boardCell(d); },
+    xadrez(d) { return boardCell(d); },
     matematica(d) {
       if (!d || !d.problems) return '<span class="muted">—</span>';
       const facts = d.toughest.length
@@ -177,6 +192,21 @@
         <span>melhor ${d.bestWpm} PPM · média ${d.avgWpm} PPM</span></div>`;
     },
   };
+  function puzzleCell(d) {
+    if (!d || !d.plays) return '<span class="muted">—</span>';
+    return `<div class="teacher-game"><strong>${escapeHtml(d.current)}</strong>
+      <span>⭐ ${d.stars}/${d.maxStars} · ${d.levelsDone}/${d.totalLevels} fases · ${d.minutes} min</span></div>`;
+  }
+
+  function boardCell(d) {
+    if (!d || !d.plays) return '<span class="muted">—</span>';
+    const b = d.vsBot;
+    const f = d.friend;
+    const friend = f.wins + f.draws + f.losses ? ` · 👫 ${f.wins}V ${f.draws}E ${f.losses}D` : '';
+    return `<div class="teacher-game"><strong>${d.best ? `venceu: ${escapeHtml(d.best)}` : 'ainda sem vitória'}</strong>
+      <span>⭐ ${d.stars}/${d.maxStars} · 🤖 ${b.wins}V ${b.draws}E ${b.losses}D${friend}</span></div>`;
+  }
+
   function genericCell(d) {
     if (!d || typeof d !== 'object') return '<span class="muted">—</span>';
     return `<div class="teacher-game">${Object.entries(d)

@@ -1,0 +1,89 @@
+/* ⚖️ Equilibre a Balança: a balança (o braço inclina; os pratos ficam retos), pesos e opções */
+.bl { width: min(760px, 100%); display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.bl-dots { display: flex; gap: 6px; }
+.bl-dot { width: 18px; height: 18px; border: 2px solid var(--ink); border-radius: 50%; background: var(--surface); }
+.bl-dot.is-current { box-shadow: 0 0 0 3px var(--yellow); }
+.bl-dot.is-right { background: var(--green); }
+.bl-dot.is-second { background: var(--yellow); }
+.bl-dot.is-slow { background: var(--orange); }
+
+.bl-scale {
+  position: relative;
+  width: 100%;
+  height: 300px;
+  background: var(--surface);
+  border: var(--stroke) solid var(--ink);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 0 var(--ink);
+  overflow: hidden;
+}
+.bl-scale.is-balanced { box-shadow: 0 8px 0 var(--ink), inset 0 0 0 6px var(--green); }
+.bl-beam {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  top: 140px;
+  height: 12px;
+  background: #8A5A35;
+  border: 3px solid var(--ink);
+  border-radius: 8px;
+  transform: rotate(var(--tilt));
+  transition: transform .5s cubic-bezier(.34, 1.4, .64, 1);
+  z-index: 2;
+}
+.bl-pan { position: absolute; top: 6px; width: 40%; }
+.bl-pan.is-left { left: -6%; }
+.bl-pan.is-right { right: -6%; }
+/* o prato fica reto: gira ao contrário do braço */
+.bl-pan-inner { position: absolute; left: 0; right: 0; bottom: 0; transform: rotate(calc(var(--tilt) * -1)); transform-origin: 50% 100%; transition: transform .5s cubic-bezier(.34, 1.4, .64, 1); }
+.bl-pan-items { display: flex; flex-wrap: wrap-reverse; justify-content: center; align-items: flex-end; gap: 4px; min-height: 30px; padding: 0 6px 4px; }
+.bl-plate { height: 14px; background: #C9CED6; border: 3px solid var(--ink); border-radius: 0 0 40px 40px; }
+.bl-post { position: absolute; left: calc(50% - 8px); top: 146px; width: 16px; height: 112px; background: #8A5A35; border: 3px solid var(--ink); border-radius: 6px; z-index: 1; }
+.bl-foot { position: absolute; left: calc(50% - 70px); bottom: 26px; width: 140px; height: 20px; background: #6B4428; border: 3px solid var(--ink); border-radius: 10px 10px 4px 4px; }
+.bl-status { position: absolute; left: 0; right: 0; bottom: 2px; text-align: center; font-weight: 800; color: var(--ink-soft); }
+.bl-status.is-ok { color: var(--green-dark); font-size: 1.2rem; }
+.bl-object { display: flex; flex-direction: column; align-items: center; }
+.bl-object-emoji { font-size: 3rem; line-height: 1; }
+.bl-object-tag { padding: 0 8px; background: var(--yellow); border: 2px solid var(--ink); border-radius: 999px; font-family: var(--font-display); }
+
+.bl-weight {
+  --size: 1;
+  min-width: calc(54px * var(--size));
+  height: calc(46px * var(--size));
+  padding: 0 6px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(180deg, #8C96A3, #5C6672);
+  border: 3px solid var(--ink);
+  border-radius: 10px 10px 6px 6px;
+  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .25);
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: calc(.95rem * var(--size));
+  text-shadow: 0 2px 0 rgba(0, 0, 0, .35);
+  cursor: pointer;
+  position: relative;
+}
+.bl-weight::before { content: ""; position: absolute; top: -9px; left: 30%; right: 30%; height: 9px; border: 3px solid var(--ink); border-bottom: 0; border-radius: 8px 8px 0 0; }
+.bl-weight:hover { filter: brightness(1.15); }
+.bl-tray { display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-end; gap: 14px 10px; min-height: 64px; padding: 16px 12px 10px; width: 100%; background: rgba(255, 255, 255, .3); border-radius: var(--radius-lg); }
+.bl-empty { color: #fff; font-weight: 800; text-shadow: 0 2px 0 var(--ink); }
+.bl-side { display: flex; gap: 8px; }
+.bl-side button { padding: 8px 14px; background: var(--surface); border: 3px solid var(--ink); border-radius: 999px; font-weight: 800; cursor: pointer; }
+.bl-side button[aria-checked="true"] { background: var(--yellow); box-shadow: 0 3px 0 var(--ink); }
+.bl-ask { padding: 12px 16px; background: var(--surface); border: var(--stroke) solid var(--ink); border-radius: var(--radius-lg); box-shadow: 0 6px 0 var(--ink); text-align: center; animation: bounceIn .4s var(--ease-bounce); }
+.bl-ask[hidden] { display: none; }
+.bl-ask p { margin: 0 0 8px; font-weight: 800; }
+.bl-options { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.bl-option { padding: 10px 18px; background: var(--surface); border: 3px solid var(--ink); border-radius: var(--radius-md); box-shadow: 0 4px 0 var(--ink); font-family: var(--font-display); font-weight: 800; font-size: 1.3rem; cursor: pointer; }
+.bl-option:disabled { opacity: .35; }
+.bl-feedback { min-height: 1.4em; margin: 0; font-weight: 800; color: #fff; text-shadow: 0 2px 0 var(--ink); text-align: center; }
+@media (max-width: 560px) {
+  .bl-scale { height: 260px; }
+  .bl-beam { top: 118px; }
+  .bl-post { top: 124px; height: 96px; }
+  .bl-object-emoji { font-size: 2.2rem; }
+  .bl-weight { min-width: calc(44px * var(--size)); height: calc(38px * var(--size)); font-size: calc(.8rem * var(--size)); }
+}
+@media (prefers-reduced-motion: reduce) { .bl-beam, .bl-pan-inner { transition: none; } }
