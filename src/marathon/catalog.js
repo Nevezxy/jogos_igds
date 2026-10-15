@@ -104,11 +104,14 @@ function status(registry, { nivel, topics = {}, roundMs = ROUND_MS.default } = {
     }
     const byTopic = {};
     for (const e of list) if (e.topic) byTopic[e.topic] = (byTopic[e.topic] || 0) + 1;
+    // fases de cada assunto neste nível, sem o filtro de assuntos (para o professor escolher)
+    const byTopicAll = {};
+    for (const e of eligible(info, { nivel, roundMs })) if (e.topic) byTopicAll[e.topic] = (byTopicAll[e.topic] || 0) + 1;
     return {
       id: info.id, name: info.name, icon: info.icon, requiresKeyboard: info.requiresKeyboard,
       trust: info.trust, off: info.off, topics: info.topics,
       count: list.length, corridas: list.filter((e) => e.kind === 'corrida').length, duelos: list.filter((e) => e.kind === 'duelo').length,
-      byTopic, reason,
+      byTopic, byTopicAll, reason,
     };
   });
 }

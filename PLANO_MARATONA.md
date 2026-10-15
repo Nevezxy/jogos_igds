@@ -740,6 +740,17 @@ As dependências reais pedem a pontuação global e a classificação de dificul
   - **HTTP**: `GET /api/maratona/:codigo` (o resultado continua disponível depois do fim) e `GET /api/teacher/maratona/historico`. Quem entra numa maratona encerrada só vê o resultado;
   - **teste**: `test/maratona-tempo-real.test.js`, com servidor de verdade e sockets, incluindo reiniciar o servidor no mesmo banco no meio da maratona. O ajudante de testes ganhou `dbFile` e `stop({ keepDb })`;
   - **correção de teste**: o teste do teto de velocidade do Desafio era sensível à lentidão da máquina e agora manda as duas mensagens em seguida.
+- **Fase 6, telas: ✅ feita.** Inclui:
+  - **`public/games/maratona/`** (`view.html`, `maratona.css`, `common.js`, `player.js`, `master.js`, `screen.js`, `session.js`) e a entrada `maratona` no registro, com `teacherTool`;
+  - **criança** (`/jogos/maratona?sala=`): entrar com o código, sala de espera com a equipe, votação, contagem antes da rodada, o jogo da rodada aberto dentro da maratona (com a faixa de rodada, confronto, "x de y terminaram" e relógio), o resultado da rodada com as próprias estrelas e a classificação, e o fim. Volta sozinha se a página recarrega ou a conexão cai;
+  - **professor** (`/professor/maratona`):
+    - criar a maratona com o catálogo da Fase 2: fases por nível, os assuntos que têm fase naquele nível, avisos de teclado e de conferência fraca, ordem das rodadas e opções;
+    - sala de espera com QR Code no endereço da rede;
+    - equipes: equilibrar, sortear e trocar alguém de equipe;
+    - comando ao vivo: votação com barras, rodada com o status de cada criança, resolver um confronto com motivo, dispensar e readmitir, próxima rodada, pausar e encerrar;
+    - histórico das rodadas e "Nova maratona". A chave de dono fica no navegador;
+  - **telão** (`/telao/maratona?sala=`): sala de espera com o QR Code, votação, contagem e rodada ao vivo, resultado entre rodadas e o fim;
+  - **conferido no navegador** com 1 criança de verdade, 3 crianças simuladas, o professor e o telão. Foram 2 rodadas: votação, Carrinhos jogado com arrastar e Hanói jogado pelo teclado. No meio, o **servidor foi reiniciado** e todo mundo voltou sozinho. As telas de criar, do painel e do resultado cabem em 375 px.
 
 ### 13.2 Riscos
 

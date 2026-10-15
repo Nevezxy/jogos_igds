@@ -378,7 +378,7 @@ function createMarathonManager(registry, { matchManager = null, now = () => Date
     const entry = rotation.nextLevel(eligible, used, r);
     Object.assign(round, {
       gameId, entryKey: entry.key, levelId: entry.levelId || null, variant: entry.variant || null, kind: entry.kind,
-      title: `${info.icon} ${info.name} · ${entry.title}`, seed: r.int(1, 0xFFFFFFF0), chosenBy, status: 'preparando',
+      title: `${info.name} · ${entry.title}`, seed: r.int(1, 0xFFFFFFF0), chosenBy, status: 'preparando',
     });
     const roundMs = entry.kind === 'duelo' && entry.capped ? roundMsMax : Math.max(120000, Math.min(roundMsMax, Math.round((entry.estMs || roundMsMax) * 1.5)));
     round.startsAt = now() + PREP_MS;

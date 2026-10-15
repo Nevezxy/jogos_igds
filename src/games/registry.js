@@ -396,6 +396,30 @@ const games = [
     server: require('./desafio/server'),
   },
   {
+    id: 'maratona',
+    name: 'Maratona',
+    icon: '🏃',
+    tagline: 'Competição da turma com vários jogos, equipes, rodadas e pódio!',
+    mode: 'turma',
+    subject: 'turma',
+    status: 'active',
+    color: 'green',
+    isNew: true,
+    // telas da criança, do professor e do telão; o servidor da maratona fica
+    // em src/marathon/ (ligado no server.js) e abre os outros jogos dentro dela
+    client: {
+      persistent: true,
+      styles: ['maratona.css'],
+      view: 'view.html',
+      scripts: ['common.js', 'player.js', 'master.js', 'screen.js', 'session.js'],
+    },
+    teacherTool: {
+      icon: '🏃',
+      name: 'Maratona',
+      description: 'Competição com vários jogos, em equipes ou sozinho: rodadas, votação, pódio e telão.',
+    },
+  },
+  {
     id: 'bingo',
     name: 'Bingo',
     icon: '🎯',
