@@ -30,6 +30,11 @@ Jogos de hoje:
 | ♟️ **Xadrez** | sozinho(a) ou com um amigo pela rede | "Fim de partida" (mate em 1, mate em 2, rei e dama ou torre contra rei) e partidas inteiras contra 6 robôs, ou contra um amigo pela rede. Regras completas. |
 | 🏁 **Desafio de Digitação** | com a turma | Corrida de digitação ao vivo: o professor escolhe o texto (uma fase do Teclado Mágico ou um texto dele) e o modo, a turma digita junta e o telão mostra a pista com os bichinhos e o pódio. |
 | 🎯 **Bingo** | com a turma | Bingo em tempo real conduzido pelo professor, com ~20 crianças em celulares, tablets ou computadores, e um telão opcional para o projetor. |
+| 🏃 **Maratona** | com a turma | Competição com vários jogos: o professor escolhe os jogos (e os assuntos), o nível de 1 a 4, o formato (solo, duplas, trios, quartetos ou duas equipes) e como sai o jogo de cada rodada (sorteio, sequência, votação, ordem ou ele escolhe). Equipes equilibradas pelos pontos, rodadas ao vivo com a mesma fase para todos (ou duelo pela rede nos jogos de tabuleiro), telão e um pódio animado no fim. |
+
+E em todos os jogos: **🏅 pontos e ranking**. Cada fase com estrela vale
+pontos (estrelas × 10 × dificuldade de 1 a 4), e o ranking por turma e por
+jogo é aberto a quem está logado.
 
 A plataforma foi feita para receber **novos jogos** sem mexer no núcleo
 (veja a seção 5).
@@ -567,6 +572,46 @@ já fez.
   "← Voltar" (canto superior direito, discreto no projetor) fecha a aba do
   telão ou, se ela foi aberta pelo link, leva ao painel da sala.
 
+### 🏅 Pontos e ranking
+- Cada fase com estrela vale **estrelas × 10 × dificuldade** (1 a 4). Jogar
+  de novo só soma se melhorar as estrelas: dá para treinar à vontade sem
+  inflar o ranking (`src/platform/points.js`).
+- A dificuldade de cada fase (`tier`) vem do `levels.js` de cada jogo: pelo
+  conteúdo onde os mundos são assuntos (Matemática, Números, Memória,
+  tabuleiros) e pela ordem das fases nos outros.
+- **Tela 🏅 Ranking** (`/ranking`): o cartão da criança (pontos, posição
+  geral e na turma, os jogos que mais deram pontos) e a lista com medalhas,
+  filtrando por turma e por jogo. Selo de pontos no painel; o professor
+  abre pelo botão 🏅 da área dele.
+- **Sem duplicar:** cada rodada leva uma identificação (`attemptId`) criada
+  antes do primeiro envio; o mesmo resultado reenviado (internet lenta,
+  caixa de saída, duplo clique) é reconhecido e não grava de novo.
+- Juntar contas refaz os pontos; o professor pode recalcular tudo.
+
+### 🏃 Maratona
+- **Professor** (`/professor/maratona`): escolhe os jogos (o catálogo diz
+  quantas fases cada um tem no nível; jogo sem fase aparece desabilitado com
+  o motivo), os **assuntos** de cada jogo, o **nível** (1 fácil a 4 tudo), o
+  **formato**, a **rotação** dos jogos, as rodadas, o tempo máximo da rodada
+  e as opções (equipes equilibradas, passagem automática, bônus de perfeição).
+  Sala de espera com QR Code; equipes equilibradas pelos pontos, sorteadas
+  ou trocadas à mão; comando ao vivo (votação, rodada com o status de cada
+  criança, resolver um confronto com motivo, dispensar quem faltou, pausar,
+  encerrar) e **📜 Maratonas anteriores**.
+- **Criança** (`/jogos/maratona?sala=CODE`): sala de espera com a equipe,
+  votação, contagem, o próprio jogo aberto direto na fase da rodada (a mesma
+  fase e a mesma semente para todos), o resultado de cada rodada e o pódio.
+  Volta sozinha se a página recarrega ou a internet cai.
+- **Telão** (`/telao/maratona?sala=CODE`): QR Code, votação, rodada ao vivo,
+  classificação entre as rodadas e o pódio animado.
+- **Regras:** corrida = a mesma fase para todos, vence a maior nota
+  (estrelas e qualidade do resultado, conferidos pelo próprio jogo) e, quase
+  empatados, o menor tempo; nos tabuleiros, duelo pela rede. Vitória 3,
+  empate 1, derrota 0, descanso 1. Pareamento todos contra todos (até 8
+  lados) ou suíço. Detalhes em `PLANO_MARATONA.md`.
+- Tudo fica no banco (`mt_*`): se o servidor reiniciar, a maratona continua
+  de onde parou, e o resultado fica salvo para rever.
+
 ### 🧑‍🏫 Área do professor
 - Protegida pelo `PROFESSOR_PIN`. Com PIN, só o professor cria salas de bingo.
 - **Turma:** bichinho, último acesso, mundo/fase atual no Teclado Mágico,
@@ -701,7 +746,8 @@ jogos_igds/
 | `/professor` | Área do professor: turma e ferramentas dos jogos |
 | `/professor/<id>` | Ferramenta de um jogo (ex.: `/professor/bingo`) |
 | `/telao?sala=CODE` | Telão do bingo, sem login |
-| `/telao/<id>?sala=CODE` | Telão de outro jogo (ex.: `/telao/desafio`), sem login |
+| `/telao/<id>?sala=CODE` | Telão de outro jogo (ex.: `/telao/desafio`, `/telao/maratona`), sem login |
+| `/ranking` | 🏅 Ranking de pontos (educando logado ou professor) |
 
 O QR Code do bingo usa o link curto `/?sala=CODE`, mais fácil de digitar;
 o roteador leva para `/jogos/bingo?sala=CODE`, pedindo login antes, se for
@@ -715,7 +761,10 @@ preciso.
 | `GET /api/games` | Jogos do registro (painel e carregador) |
 | `GET /api/progress` | Resumos de progresso para os cartões do painel |
 | `GET /api/progress/<jogo>` · `POST /api/progress/<jogo>/results` | Progresso de um jogo e gravação de uma rodada (validada pelo jogo) |
-| `/api/teacher/...` | Área do professor (token no cabeçalho `X-Teacher-Token`) |
+| `GET /api/ranking` · `/api/me/points` · `/api/me/history` | 🏅 Ranking (turma e jogo), meus pontos e meu histórico |
+| `GET /api/maratona/<código>` | Estado (ou resultado final) de uma maratona |
+| `/api/teacher/...` | Área do professor (token no cabeçalho `X-Teacher-Token`), incluindo o catálogo e o histórico da Maratona |
+| Socket.IO `mt:*` | A Maratona ao vivo (`src/marathon/socketHandlers.js`) |
 
 ### Por que essa arquitetura
 
@@ -832,6 +881,13 @@ npm test
 | `test/offline.test.js` | Modo offline: o `/sw.js` sai com a versão e a lista de arquivos (sem as fotos grandes do Click), é JavaScript válido e vem com os cabeçalhos certos. |
 | `test/desafio.test.js` | Desafio de digitação: sala com PIN, mesmo texto para todos, teclas conferidas no servidor, teto de velocidade, fim automático, pódio, relógio contra o mascote, progresso, telão sem tokens. |
 | `test/integration.test.js` | Partida completa de bingo: entrada só com conta, mesma conta em dois aparelhos, sorteio, marcação, vitória, expulsão, nova partida, reconexão, encerramento. |
+| `test/correcoes.test.js` | As correções da revisão dos jogos (`RELATORIO_REVISAO_JOGOS.md`): variante inválida, dicas de matemática, Memória, Dinheiro, en passant, abandono, bingo. |
+| `test/pontos.test.js` | 🏅 Pontos e ranking: estrelas × 10 × dificuldade, repetir sem melhorar não soma, reenvio não duplica, ranking por turma e jogo, juntar contas, recálculo. |
+| `test/maratona-catalogo.test.js` | Maratona: dificuldade de toda fase, fases por nível, assuntos, tempo da rodada, duelos só no nível certo, nota de desempenho. |
+| `test/maratona-competicao.test.js` | Maratona: os 15 jogos de corrida aceitos com a fase e a semente do servidor (e não com outra), texto do Teclado pela semente, duelos com prazo. |
+| `test/maratona-nucleo.test.js` | Maratona sem rede: equipes, pareamentos, rotação, votação, pontuação, desempates, rodadas, prazos, ausentes, professor, pausa, fim e retomada do banco. |
+| `test/maratona-tempo-real.test.js` | Maratona com servidor e sockets: entrar, presença, telão sem tokens, permissões, resultados ao vivo e servidor reiniciado no meio. |
+| `test/maratona-regras.test.js` | Maratona: Duas Equipes, Trio, Quarteto, ordem e escolha do professor, tolerância do prazo, concorrência (resultado duplo, "próxima rodada" duplo, professor resolvendo junto). |
 | `test/features.test.js` | Bingo: nome e bichinho da conta, sair da sala, casa travada, "quase lá", sorteio automático, telão sem tokens, QR Code, bingo contando no progresso. |
 
 Teste de carga do bingo (40 crianças marcando ao mesmo tempo; mede o tempo
@@ -839,6 +895,13 @@ de cada sorteio até a última criança — em rede local, na casa de 50 ms):
 
 ```bash
 npm run test:carga
+```
+
+Teste de carga da Maratona (40 crianças no Solo, 20 confrontos na mesma
+rodada mandando o resultado juntas; em rede local, cerca de 50 ms por resposta):
+
+```bash
+npm run test:carga:maratona
 ```
 
 ---
