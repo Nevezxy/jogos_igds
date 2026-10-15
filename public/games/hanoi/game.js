@@ -31,7 +31,6 @@
     let selected = null;
     let hints = 0;
     let ended = false;
-    let dragFrom = null;
 
     area.innerHTML = `
       ${level.mode === 'copy' ? `<div class="hn-model"><span>🖼️ Modelo:</span>${towerHtml(game.goal, game.n, game.pegs, 'is-model')}</div>` : ''}
@@ -106,19 +105,81 @@
       });
     }
 
-    // tocar ou arrastar
+    // tocar (pega num pino e solta em outro) ou arrastar o disco de cima:
+    // o disco segue o dedo/mouse e cai no pino onde for solto
+    const DRAG_PX = 8; // menos que isso é um toque
+    let drag = null; // { id, from, x0, y0, ghost, dx, dy, over }
+    const pegAt = (x, y) => {
+      const el = document.elementFromPoint(x, y);
+      const peg = el && el.closest('.hn-peg');
+      return peg && boardEl.contains(peg) ? peg : null;
+    };
+    function startDrag(ev) {
+      selected = drag.from;
+      render();
+      const d = H.top(pos, drag.from);
+      const disc = boardEl.querySelector(`.hn-peg[data-peg="${drag.from}"] .hn-disc[data-d="${d}"]`);
+      if (!disc) { drag = null; return; }
+      const box = disc.getBoundingClientRect();
+      const ghost = disc.cloneNode(true);
+      ghost.classList.remove('is-lifted');
+      ghost.classList.add('is-ghost');
+      ghost.style.width = `${box.width}px`;
+      ghost.style.height = `${box.height}px`;
+      document.body.appendChild(ghost);
+      disc.style.visibility = 'hidden';
+      Object.assign(drag, { ghost, dx: box.width / 2, dy: box.height / 2 });
+      api.sound.play('click');
+      moveGhost(ev);
+    }
+    function moveGhost(ev) {
+      drag.ghost.style.transform = `translate(${ev.clientX - drag.dx}px, ${ev.clientY - drag.dy}px)`;
+      const peg = pegAt(ev.clientX, ev.clientY);
+      if (peg !== drag.over) {
+        if (drag.over) drag.over.classList.remove('is-over');
+        drag.over = peg;
+        if (peg) peg.classList.add('is-over');
+      }
+    }
+    function endDrag() {
+      if (drag && drag.ghost) drag.ghost.remove();
+      if (drag && drag.over) drag.over.classList.remove('is-over');
+      drag = null;
+    }
     boardEl.addEventListener('pointerdown', (ev) => {
+      if (ended || ev.button > 0) return;
       const peg = ev.target.closest('.hn-peg');
       if (!peg) return;
-      dragFrom = Number(peg.dataset.peg);
+      drag = { id: ev.pointerId, from: Number(peg.dataset.peg), x0: ev.clientX, y0: ev.clientY, ghost: null, over: null };
+      try { boardEl.setPointerCapture(ev.pointerId); } catch (e) { /* ignore */ }
+    });
+    boardEl.addEventListener('pointermove', (ev) => {
+      if (!drag || ev.pointerId !== drag.id) return;
+      if (!drag.ghost) {
+        if (Math.hypot(ev.clientX - drag.x0, ev.clientY - drag.y0) < DRAG_PX) return;
+        // só arrasta de um pino com disco, e se não tinha um disco já pego
+        if (selected !== null || H.top(pos, drag.from) < 0) return;
+        startDrag(ev);
+        if (!drag) return;
+      }
+      moveGhost(ev);
     });
     boardEl.addEventListener('pointerup', (ev) => {
-      const peg = document.elementFromPoint(ev.clientX, ev.clientY)?.closest('.hn-peg');
-      if (!peg || !boardEl.contains(peg)) { dragFrom = null; return; }
-      const p = Number(peg.dataset.peg);
-      if (dragFrom !== null && dragFrom !== p && selected === null && H.top(pos, dragFrom) >= 0) move([dragFrom, p]);
-      else tapPeg(p);
-      dragFrom = null;
+      if (!drag || ev.pointerId !== drag.id) return;
+      const { from, ghost } = drag;
+      const peg = pegAt(ev.clientX, ev.clientY);
+      endDrag();
+      if (ghost) {
+        const p = peg ? Number(peg.dataset.peg) : -1;
+        if (p >= 0 && p !== from) move([from, p]);
+        else { selected = null; render(); }
+      } else if (peg) tapPeg(Number(peg.dataset.peg));
+    });
+    boardEl.addEventListener('pointercancel', () => {
+      if (!drag) return;
+      const dragged = Boolean(drag.ghost);
+      endDrag();
+      if (dragged) { selected = null; render(); }
     });
     api.hintButton(area.querySelector('[data-hint]'), () => {
       if (ended) return false;
@@ -138,7 +199,7 @@
         if (n >= 1 && n <= game.pegs) { ev.preventDefault(); tapPeg(n - 1); }
         if (ev.key === 'Escape') { selected = null; render(); }
       },
-      destroy() { ended = true; },
+      destroy() { ended = true; endDrag(); },
     };
   }
 
@@ -153,7 +214,7 @@
         Levels,
         record: { key: 'best', label: 'movimentos', lower: true },
         rules: (level) => [
-          '👆 Toque num pino para pegar o disco de cima e toque em outro para soltar (ou arraste). No teclado: 1, 2, 3' + (level.pegs > 3 ? ' e 4.' : '.'),
+          '👆 Arraste o disco de cima até outro pino, ou toque num pino e depois em outro. No teclado: 1, 2, 3' + (level.pegs > 3 ? ' e 4.' : '.'),
           '✋ Disco grande nunca vai em cima de disco pequeno.',
           level.mode === 'copy' ? '🖼️ Deixe os discos igualzinho ao modelo.' : `🏁 Monte a torre inteira no pino ${level.pegs}.`,
           '🎯 3 estrelas no mínimo de movimentos. 💡 A dica ajuda, mas deixa no máximo 2 estrelas.',

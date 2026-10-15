@@ -45,6 +45,10 @@
   box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .18);
   transition: transform .15s ease;
 }
+/* o disco que está sendo arrastado: segue o dedo, por cima de tudo */
+.hn-disc.is-ghost { position: fixed; left: 0; top: 0; z-index: 1000; margin: 0; pointer-events: none; transition: none; box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .18), 0 12px 18px rgba(30, 18, 64, .35); }
+.hn-peg.is-over { background: rgba(255, 217, 61, .3); }
+.hn-peg.can-drop.is-over { background: rgba(31, 175, 96, .3); }
 .hn-disc.is-lifted { transform: translateY(-34px); box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .18), 0 10px 0 rgba(30, 18, 64, .2); }
 .hn-base { position: absolute; bottom: 0; left: 4%; right: 4%; height: 30px; display: grid; place-items: center; background: #7A5233; border: 2px solid var(--ink); border-radius: 8px; color: #fff; font-family: var(--font-display); font-weight: 800; }
 .hn-model { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-weight: 800; color: #fff; text-shadow: 0 2px 0 var(--ink); }
