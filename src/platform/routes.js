@@ -6,6 +6,7 @@
 const express = require('express');
 const accounts = require('./accounts');
 const progress = require('./progress');
+const points = require('./points');
 const teacher = require('./teacher');
 
 function readToken(req) {
@@ -82,10 +83,46 @@ function createPlatformRouter(registry) {
     if (!game.server || typeof game.server.validateResult !== 'function') {
       throw new progress.GameError('SEM_RESULTADOS', 'Esse jogo não guarda resultados por aqui.');
     }
+    // a mesma rodada de novo (reenvio da caixa de saída, duplo clique): não grava outra vez
+    const attemptId = progress.attemptIdOf(body(req));
+    const seen = progress.findAttempt(student.id, game.id, attemptId);
+    if (seen) {
+      return { progress: progress.getProgress(student.id, game.id), result: { levelId: seen.levelId, stars: seen.stars, score: seen.score, points: 0 }, duplicate: true };
+    }
     const old = progress.getProgress(student.id, game.id);
     const result = game.server.validateResult(body(req), old);
-    const updated = progress.recordResult(student.id, game, result);
-    return { progress: updated, result: { levelId: result.levelId, stars: result.stars, score: result.score } };
+    const updated = progress.recordResult(student.id, game, result, { attemptId });
+    return { progress: updated, result: { levelId: result.levelId, stars: result.stars, score: result.score, points: result.pointsDelta || 0 } };
+  }));
+
+  // ---------------- 🏅 pontos e ranking ----------------
+  // Pontos globais (derivados das estrelas, ver points.js). O ranking é
+  // aberto a quem está logado (educando ou professor).
+  const viewer = (req) => {
+    if (readToken(req)) return { student: requireStudent(req) };
+    if (teacher.isValid(req.get('x-teacher-token'))) return { teacher: true };
+    return { student: requireStudent(req) }; // sem ninguém: o erro de login
+  };
+  router.get('/ranking', handle((req) => {
+    const who = viewer(req);
+    const game = req.query.game ? findGame(String(req.query.game)).id : null;
+    const className = req.query.class ? String(req.query.class).slice(0, 40) : null;
+    const list = points.ranking({ game, className, limit: req.query.limit });
+    const me = who.student ? list.find((r) => r.id === who.student.id) || null : null;
+    return { ranking: list, me, classes: accounts.listClasses(), game, className };
+  }));
+  router.get('/me/points', handle((req) => {
+    const student = requireStudent(req);
+    const mine = points.byStudent(student.id);
+    const all = points.ranking();
+    const cls = student.className ? points.ranking({ className: student.className }) : [];
+    const pos = (list) => { const r = list.find((x) => x.id === student.id); return r ? r.position : null; };
+    return { ...mine, position: pos(all), classPosition: pos(cls), players: all.length };
+  }));
+  router.get('/me/history', handle((req) => {
+    const student = requireStudent(req);
+    const game = req.query.game ? findGame(String(req.query.game)).id : null;
+    return { history: progress.history(student.id, game, req.query.limit) };
   }));
 
   // ---------------- área do professor ----------------
@@ -130,6 +167,16 @@ function createPlatformRouter(registry) {
   router.post('/teacher/students/:id/games/:gameId/unlock-all', asTeacher((req) => {
     teacher.setUnlockedAll(registry, req.params.id, req.params.gameId, Boolean(body(req).unlocked));
     return {};
+  }));
+  router.get('/teacher/students/:id/history', asTeacher((req) => {
+    const student = accounts.requireStudentRow(req.params.id);
+    const game = req.query.game ? findGame(String(req.query.game)).id : null;
+    return { history: progress.history(student.id, game, req.query.limit || 200), points: points.byStudent(student.id) };
+  }));
+  // refaz os pontos de todos a partir do progresso (conferência)
+  router.post('/teacher/points/recompute', asTeacher(() => {
+    points.recomputeAll();
+    return { ranking: points.ranking({ limit: 10 }) };
   }));
   router.post('/teacher/settings', asTeacher((req) => {
     if ('allowSignup' in body(req)) teacher.settings.set('allowSignup', Boolean(body(req).allowSignup));

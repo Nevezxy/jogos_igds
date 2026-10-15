@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "test": "node test/digitacao.test.js && node test/matematica.test.js && node test/cadentes.test.js && node test/click.test.js && node test/offline.test.js && node test/tabuleiro.test.js && node test/raciocinio.test.js && node test/dia-a-dia.test.js && node test/visuais.test.js && node test/dama-xadrez.test.js && node test/correcoes.test.js && node test/platform.test.js && node test/teacher.test.js && node test/desafio.test.js && node test/integration.test.js && node test/features.test.js",
+    "test": "node test/digitacao.test.js && node test/matematica.test.js && node test/cadentes.test.js && node test/click.test.js && node test/offline.test.js && node test/tabuleiro.test.js && node test/raciocinio.test.js && node test/dia-a-dia.test.js && node test/visuais.test.js && node test/dama-xadrez.test.js && node test/correcoes.test.js && node test/pontos.test.js && node test/platform.test.js && node test/teacher.test.js && node test/desafio.test.js && node test/integration.test.js && node test/features.test.js",
     "test:carga": "node test/load.test.js 40"
   },
   "engines": {

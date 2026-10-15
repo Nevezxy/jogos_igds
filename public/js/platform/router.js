@@ -4,6 +4,7 @@
 //   /                 login (ou o painel, se já houver alguém logado)
 //   /jogos            painel de seleção de jogos
 //   /jogos/<id>       um jogo (ex.: /jogos/bingo?sala=CODE)
+//   /ranking          🏅 ranking de pontos (educando logado ou professor)
 //   /professor        área do professor (turma e ferramentas dos jogos)
 //   /professor/<id>   ferramenta de um jogo (ex.: /professor/bingo, a sala do bingo)
 //   /telao?sala=CODE  telão do bingo (sem login; a rota só carrega o bingo)
@@ -123,6 +124,11 @@
     if (path === '/jogos') {
       if (!requireLogin()) return;
       return window.PlataformaHub.show();
+    }
+    if (path === '/ranking') {
+      if (window.PlataformaRanking.canView()) return window.PlataformaRanking.show();
+      if (!requireLogin()) return;
+      return window.PlataformaRanking.show();
     }
     const gameMatch = path.match(/^\/jogos\/([a-z0-9-]+)$/);
     if (gameMatch) {
