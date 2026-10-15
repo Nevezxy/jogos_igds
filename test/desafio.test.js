@@ -101,8 +101,11 @@ async function main() {
   assert(r.finished && r.place === 2, 'Bia termina em 2º, com um erro');
   // gasta o limite de novo logo antes de conferir (com a máquina lenta, o
   // tempo entre um envio e outro já liberaria mais algumas teclas)
-  await emit(caio.s, 'dz:keys', { roomCode, playerToken: caio.T, chars: 'x'.repeat(200) });
+  // (as duas vão em seguida, sem esperar a resposta da primeira: a ordem no
+  // mesmo socket é garantida e a ida e volta da rede não libera teclas)
+  const burst = emit(caio.s, 'dz:keys', { roomCode, playerToken: caio.T, chars: 'x'.repeat(200) });
   r = await emit(caio.s, 'dz:keys', { roomCode, playerToken: caio.T, chars: 'oi sol mar' });
+  await burst;
   assert(r.ok && r.typed === 0, 'teto de velocidade: as 200 teclas de uma vez gastaram o limite, as seguintes não contam');
   await wait(2000);
   r = await emit(caio.s, 'dz:keys', { roomCode, playerToken: caio.T, chars: 'oi sol mar' });

@@ -732,6 +732,14 @@ As dependências reais pedem a pontuação global e a classificação de dificul
   **Adiado:** o índice de maratona (Elo) do balanceamento, que fica para quando houver histórico de maratonas.
 
   **Ligação com o progresso:** a corrida da maratona vai para o progresso normal com `attempt_id = mt:<entrada>`; essa é a ligação entre `game_results` e `mt_entries`.
+- **Fase 5, tempo real: ✅ feita.** Inclui:
+  - **`src/marathon/socketHandlers.js`**: os eventos `mt:*` do professor (criar com o token do PIN, voltar com a chave de dono e todas as ações), dos educandos (entrar com o código, votar, mandar resultado, sair) e do telão (só leitura);
+  - **`mt:state`**: vai para cada um com a visão certa. A fase e a semente vão só para quem joga, e nada de tokens nem da força de cada um no telão. Várias mudanças seguidas viram um envio só. O estado leva `serverNow` para a contagem;
+  - **presença**: conectado ou caiu, ao vivo; a criança que abre a maratona durante a rodada fica marcada como "apareceu", o que separa ausente de tempo esgotado;
+  - **ao subir o servidor**: as partidas pela rede e a maratona usam o mesmo gerenciador de duelos; `restore()` e o relógio começam sozinhos;
+  - **HTTP**: `GET /api/maratona/:codigo` (o resultado continua disponível depois do fim) e `GET /api/teacher/maratona/historico`. Quem entra numa maratona encerrada só vê o resultado;
+  - **teste**: `test/maratona-tempo-real.test.js`, com servidor de verdade e sockets, incluindo reiniciar o servidor no mesmo banco no meio da maratona. O ajudante de testes ganhou `dbFile` e `stop({ keepDb })`;
+  - **correção de teste**: o teste do teto de velocidade do Desafio era sensível à lentidão da máquina e agora manda as duas mensagens em seguida.
 
 ### 13.2 Riscos
 

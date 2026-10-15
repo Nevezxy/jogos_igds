@@ -8,8 +8,10 @@ const fs = require('fs');
 const { spawn } = require('child_process');
 
 // `env`: variáveis extras para o servidor (ex.: { PROFESSOR_PIN: '1234' }).
-async function startTestServer(port, env = {}) {
-  const dbFile = path.join(os.tmpdir(), `igds-test-${port}-${process.pid}-${Date.now()}.sqlite`);
+// `dbFile`: usar um banco que já existe (ex.: "reiniciar" o servidor no
+// mesmo banco); nesse caso stop({ keepDb: true }) não apaga o arquivo.
+async function startTestServer(port, env = {}, { dbFile: reuse = null } = {}) {
+  const dbFile = reuse || path.join(os.tmpdir(), `igds-test-${port}-${process.pid}-${Date.now()}.sqlite`);
   const child = spawn(process.execPath, [path.join(__dirname, '..', 'server.js')], {
     env: { ...process.env, PROFESSOR_PIN: '', ...env, PORT: String(port), DB_FILE: dbFile },
     stdio: ['ignore', 'pipe', 'inherit'],
@@ -40,16 +42,16 @@ async function startTestServer(port, env = {}) {
     return res.token;
   }
 
-  async function stop() {
+  async function stop({ keepDb = false } = {}) {
     child.removeAllListeners('exit');
     if (child.exitCode === null) {
       child.kill();
       await new Promise((res) => child.on('exit', res));
     }
-    for (const suffix of ['', '-wal', '-shm']) fs.rmSync(dbFile + suffix, { force: true });
+    if (!keepDb) for (const suffix of ['', '-wal', '-shm']) fs.rmSync(dbFile + suffix, { force: true });
   }
 
-  return { url, api, student, stop };
+  return { url, api, student, stop, dbFile };
 }
 
 module.exports = { startTestServer };
