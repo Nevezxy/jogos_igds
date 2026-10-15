@@ -69,6 +69,7 @@
 
   function createGame(container, ctx) {
     const { sound, fx, ui } = ctx;
+    const comp = window.Competicao.of(ctx); // 🏃 disputa da maratona (js/shared/competition.js)
     const $ = (sel) => container.querySelector(sel);
     const screens = [...container.querySelectorAll('[data-nc]')];
     const sky = $('#nc-sky');
@@ -191,12 +192,12 @@
     function start(level) {
       if (round) round.engine.destroy();
       clearTimeout(waitTimer);
-      const seed = randomSeed();
+      const seed = (comp ? comp.seed >>> 0 : randomSeed());
       const items = Items.makeItems(level, seed);
       sky.querySelectorAll('.nc-piece').forEach((el) => el.remove());
       round = {
         level, seed, items, typed: '', caught: 0, lost: [], wrong: 0, started: false,
-        specials: Kit.pickSpecials(items.length),
+        specials: comp ? items.map(() => null) : Kit.pickSpecials(items.length), // na disputa, sem sorteio fora da semente
         scorer: Kit.createBoard(sky, { best: levelData(level.id).bestScore || 0, onMultiplier }),
         // a rodada acelera: cada conta cai um pouco mais rápido que a anterior
         engine: window.FallingEngine.create(sky, {
@@ -426,11 +427,12 @@
       const stars = Levels.starsFor(r.level.id, { caught: r.caught, count: r.items.length, accuracy });
       const best = levelData(r.level.id).bestScore || 0;
       showResult({ stars, accuracy, durationMs, best });
+      if (comp) window.Competicao.waiting($('#nc-record'));
       try {
-        const res = await ctx.api.post('/progress/numeros/results', {
+        const res = await window.Competicao.send(ctx, '/progress/numeros/results', {
           levelId: r.level.id, seed: r.seed, lost: r.lost, wrong: r.wrong, durationMs, score: r.scorer.score,
         });
-        progress = res.progress;
+        progress = res.progress || progress;
       } catch (e) {
         // sem internet: o resultado fica guardado e vai sozinho quando ela voltar
         if (e.queued) ui.toast(e.message, 'info', 6000);
@@ -469,7 +471,7 @@
         li.textContent = it.kind === 'calc' ? `${it.text} = ${P.fmt(it.answer)}` : `${it.kind === 'domino' ? 'dominó' : 'dados'} ${it.text.replace('|', ' e ')} = ${it.answer}`;
         $('#nc-lost-list').appendChild(li);
       });
-      const next = Levels.LEVELS[r.level.index + 1];
+      const next = comp ? null : Levels.LEVELS[r.level.index + 1];
       $('#nc-next').hidden = !next;
       if (stars >= 1) { fx.confetti({ amount: 40 + stars * 50 }); sound.play(stars === 3 ? 'fanfare' : 'tada'); }
       setTimeout(() => $(stars >= 1 && next ? '#nc-next' : '#nc-retry').focus(), 80);
@@ -493,6 +495,14 @@
     }));
 
     async function load() {
+      if (comp) {
+        // disputa: direto na fase da rodada, sem mapa e sem saídas
+        window.Competicao.hide(container, ['#nc-quit', '[data-nc-go="map"]', '#nc-retry', '#nc-next']);
+        const level = Levels.getLevel(comp.levelId);
+        if (!level) { ui.toast('Essa fase não existe 😵', 'error'); return; }
+        start(level);
+        return;
+      }
       try {
         const res = await ctx.api.get('/progress/numeros');
         progress = res.progress || { levels: {} };

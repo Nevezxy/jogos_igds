@@ -11,6 +11,10 @@
 //   na partida          bg:move { matchId, move }, bg:resign, bg:draw_offer,
 //                       bg:draw_answer { accept }, bg:rejoin { matchId, studentToken }
 //   o servidor manda    bg:state (o estado para cada um, com o lado dele)
+//   🏃 Maratona         createDuel(...) cria a partida entre dois educandos
+//                       escolhidos (eles entram com bg:rejoin); timeUp(id)
+//                       encerra no prazo, pela regra do jogo
+//                       (server.marathon.adjudicate); onEnd avisa o resultado
 //
 // O servidor é o juiz: confere cada lance com o mesmo arquivo de regras do
 // navegador. Quem cair tem RECONNECT_MS para voltar; depois disso, o outro
@@ -64,6 +68,8 @@ function createMatchManager(registry, { now = () => Date.now(), reconnectMs = RE
 
   function createMatch(game, variant, first) {
     const m = {
+      source: 'livre',
+      onEnd: null,
       id: crypto.randomBytes(8).toString('hex'),
       code: null,
       game: game.id,
@@ -153,12 +159,48 @@ function createMatchManager(registry, { now = () => Date.now(), reconnectMs = RE
       try {
         progress.recordResult(p.studentId, game, game.server.friendResult({
           outcome, moves: m.moves.length, durationMs: m.endedAt - (m.startedAt || m.endedAt), variant: m.variant, reason,
-        }));
+        }), { source: m.source });
       } catch (e) {
         console.error('[partida] não gravou o resultado', e);
       }
     });
     broadcast(m);
+    if (m.onEnd) {
+      try { m.onEnd({ matchId: m.id, winner, reason, moves: m.moves.length, students: m.players.map((p) => p && p.studentId) }); } catch (e) { console.error('[partida] onEnd', e); }
+    }
+  }
+
+  // 🏃 Duelo da maratona entre dois educandos já escolhidos: começa na hora
+  // (quem joga com as brancas/primeiro é o primeiro da lista) e cada um
+  // entra com bg:rejoin. students: [{ id, name, firstName, avatar, className }]
+  function createDuel(gameId, variant, students, { onEnd = null } = {}) {
+    const g = boardGame(gameId);
+    const v = checkVariant(g, variant);
+    if (!Array.isArray(students) || students.length !== 2 || students[0].id === students[1].id) throw new MatchError('DUELO_INVALIDO', 'O duelo precisa de dois educandos diferentes.');
+    const seat = (s) => ({
+      studentId: s.id, name: s.name, firstName: s.firstName || String(s.name || '').split(' ')[0], avatar: s.avatar,
+      className: s.className || null, socketId: null, connected: false,
+    });
+    const m = createMatch(g, v, seat(students[0]));
+    m.players[1] = seat(students[1]);
+    m.state = g.server.Rules.initial(v);
+    m.status = 'playing';
+    m.startedAt = now();
+    m.source = 'maratona';
+    m.onEnd = onEnd;
+    return m.id;
+  }
+
+  // Prazo da rodada: termina pela regra do jogo (velha e ligue 4 = empate;
+  // dama e xadrez = quem tem mais material). Devolve o vencedor (0, 1 ou null).
+  function timeUp(matchId) {
+    const m = matches.get(String(matchId || ''));
+    if (!m || m.status !== 'playing') return m && m.result ? m.result.winner : null;
+    const g = boardGame(m.game);
+    const judge = g.server.marathon && g.server.marathon.adjudicate;
+    const winner = judge ? judge(m.state) : null;
+    finish(m, winner === 0 || winner === 1 ? winner : null, 'prazo');
+    return m.result.winner;
   }
 
   function removeFromQueue(socketId) {
@@ -350,7 +392,7 @@ function createMatchManager(registry, { now = () => Date.now(), reconnectMs = RE
     }, 2000).unref();
   }
 
-  return { register, actions, matches, queue, pairQueue, MatchError };
+  return { register, actions, matches, queue, pairQueue, createDuel, timeUp, MatchError };
 }
 
 module.exports = { createMatchManager, MatchError };

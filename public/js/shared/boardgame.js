@@ -168,6 +168,9 @@
     const screens = [...root.querySelectorAll('[data-bgm]')];
     const { Rules, Levels } = cfg;
     const socketApi = window.BingoSocket;
+    // 🏃 duelo da maratona (js/shared/competition.js): a partida pela rede já
+    // foi criada pelo servidor; entra direto nela, sem mapa e sem saídas
+    const comp = window.Competicao ? window.Competicao.of(ctx) : null;
 
     let progress = { levels: {} };
     let screen = 'map';
@@ -250,7 +253,7 @@
       $('[data-bgm-undo]').hidden = !(g.mode === 'bot' && g.level.undo);
       // desfazer volta para a jogada anterior da criança: precisa de 2 lances (o dela e o do robô)
       $('[data-bgm-undo]').disabled = !myTurn || g.moves.length < 2;
-      $('[data-bgm-draw]').hidden = g.mode !== 'friend';
+      $('[data-bgm-draw]').hidden = g.mode !== 'friend' || Boolean(comp); // no duelo da maratona, sem empate combinado
       $('[data-bgm-draw]').disabled = g.ended || g.drawOffer === g.mySeat;
       $('[data-bgm-resign]').disabled = g.ended;
       root.querySelector('.bgm-actions').classList.toggle('is-ended', Boolean(g.ended || g.state.result));
@@ -430,7 +433,14 @@
         const outcome = w === null ? 'draw' : w === view.you ? 'win' : 'loss';
         render();
         const g = game;
-        setTimeout(() => { if (game === g) showResult({ outcome, stars: null, reason: view.result.reason }); }, 700);
+        setTimeout(() => {
+          if (game !== g) return;
+          showResult({ outcome, stars: null, reason: view.result.reason });
+          if (comp) {
+            window.Competicao.waiting($('[data-bgm-result-msg]'), `${$('[data-bgm-result-msg]').textContent} Esperando os outros confrontos…`);
+            if (comp.onDone) comp.onDone({ outcome, reason: view.result.reason });
+          }
+        }, 700);
         ctx.api.get(`/progress/${cfg.id}`).then((r) => { progress = r.progress || progress; }).catch(() => {});
         return;
       }
@@ -458,7 +468,7 @@
     }
 
     // ---------------- resultado ----------------
-    const REASONS = { desistiu: 'por desistência', abandono: 'porque o outro saiu da partida', acordo: 'combinado entre os dois' };
+    const REASONS = { desistiu: 'por desistência', abandono: 'porque o outro saiu da partida', acordo: 'combinado entre os dois', prazo: 'no fim do tempo da rodada (vale quem tinha mais peças)' };
     function showResult({ outcome, stars, resigned, reason }) {
       const g = game;
       if (!g) return;
@@ -543,6 +553,7 @@
     });
 
     async function load() {
+      if (comp) return loadDuel();
       try {
         const res = await ctx.api.get(`/progress/${cfg.id}`);
         progress = res.progress || { levels: {} };
@@ -562,6 +573,15 @@
       } else if (saved && saved.game === cfg.id) {
         rejoin(saved.matchId);
       }
+    }
+    // duelo da maratona: entra direto na partida criada pelo servidor
+    async function loadDuel() {
+      window.Competicao.hide(root, ['[data-bgm-quit]', '[data-bgm-go-map]', '[data-bgm-again]', '[data-bgm-next]', '[data-bgm-draw]', '[data-bgm-cancel]']);
+      $('[data-bgm-wait-search]').hidden = false;
+      $('[data-bgm-wait-code]').hidden = true;
+      $('[data-bgm-wait-search] h3').textContent = 'Entrando no duelo...';
+      show('wait');
+      await rejoin(comp.matchId);
     }
 
     function destroy() {

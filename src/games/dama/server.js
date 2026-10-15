@@ -16,4 +16,15 @@ module.exports.marathon = {
   exclude: () => 'contra o robô', // na Maratona é duelo pela rede
   // partida longa: só no nível 4, com prazo e decisão por material (decisão D3)
   duels: [{ variant: 'brasileira', title: 'Dama brasileira', tier: 4, estMs: 600000, capped: true }],
+  // prazo esgotado: vence quem tem mais material (pedra = 1, dama = 3);
+  // diferença menor que uma pedra = empate
+  adjudicate(state) {
+    let diff = 0;
+    for (const p of state.board) {
+      const side = Rules.sideOf(p);
+      if (side < 0) continue;
+      diff += (side === 0 ? 1 : -1) * (Rules.isKing(p) ? 3 : 1);
+    }
+    return diff >= 1 ? 0 : diff <= -1 ? 1 : null;
+  },
 };

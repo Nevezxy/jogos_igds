@@ -20,4 +20,15 @@ module.exports.marathon = {
   // mate dentro do número de lances (3 ⭐) e quanto sobrou deles
   quality: (r, level) => Math.min(1, level.par / Math.max(1, Math.ceil(r.details.moves / 2))), // a criança joga os lances ímpares
   duels: [{ variant: 'classico', title: 'Partida de xadrez', tier: 4, estMs: 900000, capped: true }],
+  // prazo esgotado: vence quem tem mais material (peão 1, cavalo e bispo 3,
+  // torre 5, dama 9); diferença menor que um peão = empate
+  adjudicate(state) {
+    const V = { P: 1, N: 3, B: 3, R: 5, Q: 9, K: 0 };
+    let diff = 0;
+    for (const p of state.board) {
+      if (p === '.') continue;
+      diff += (Rules.colorOf(p) === 0 ? 1 : -1) * V[p.toUpperCase()];
+    }
+    return diff >= 1 ? 0 : diff <= -1 ? 1 : null;
+  },
 };

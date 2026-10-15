@@ -27,6 +27,7 @@
 
   function createGame(container, ctx) {
     const { sound, fx, ui } = ctx;
+    const comp = window.Competicao.of(ctx); // 🏃 disputa da maratona (js/shared/competition.js)
     const $ = (sel) => container.querySelector(sel);
     const screens = [...container.querySelectorAll('[data-tm]')];
     const keyboard = createKeyboard($('#tm-kb'), layout);
@@ -49,6 +50,8 @@
     // "Apenas maiúsculas": todo exercício (fases e treino livre) vem em MAIÚSCULA
     let uppercase = false;
     try { uppercase = localStorage.getItem(UPPER_KEY) === '1'; } catch (e) { /* ignore */ }
+    // na disputa, todos com as mesmas regras: para no erro e texto como veio
+    if (comp) { stopOnError = true; uppercase = false; }
     $('#tm-uppercase').checked = uppercase;
     let capsOn = false; // estado do Caps Lock, lido a cada tecla
 
@@ -333,8 +336,9 @@
 
       if (!level) return;
       try {
-        const res = await ctx.api.post('/progress/digitacao/results', { levelId: level.id, ...result });
-        progress = res.progress;
+        const res = await window.Competicao.send(ctx, '/progress/digitacao/results', { levelId: level.id, ...(comp ? { seed: comp.seed } : {}), ...result });
+        progress = res.progress || progress;
+        if (comp) { window.Competicao.waiting($('#tm-record')); return; }
         renderNextButton();
       } catch (e) {
         // sem internet: o resultado fica guardado e vai sozinho quando ela voltar
@@ -433,6 +437,15 @@
     document.addEventListener('keydown', onDocKeydown);
 
     async function load() {
+      if (comp) {
+        // disputa: direto na fase da rodada (texto pela semente), sem mapa e sem saídas
+        window.Competicao.hide(container, ['#tm-quit', '[data-tm-go="map"]', '#tm-retry', '#tm-next']);
+        const level = Levels.getLevel(comp.levelId);
+        if (!level) { ui.toast('Essa fase não existe 😵', 'error'); return; }
+        current = { level };
+        start({ level, title: level.title, text: Content.generate(level, comp.seed >>> 0) });
+        return;
+      }
       // tablets e celulares sem teclado físico: avisa (com teclado bluetooth funciona)
       $('#tm-touch-notice').hidden = !window.matchMedia('(hover: none) and (pointer: coarse)').matches;
       try {
