@@ -16,6 +16,8 @@
 //   deu dica nenhuma);
 //   finish({ body, stars, stats: [{ value, label }], msg, record }) termina a
 //   fase (body vai para POST /progress/<id>/results); seed: semente da rodada.
+// 🏃 Disputa (ctx.competition, ver js/shared/competition.js): abre direto na
+// fase da rodada, com a semente dela, e o resultado vai para a maratona.
 
 (function () {
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -84,6 +86,7 @@
     const $$ = (sel) => [...root.querySelectorAll(sel)];
     const screens = $$('[data-pz]');
     const { Levels } = cfg;
+    const comp = window.Competicao ? window.Competicao.of(ctx) : null;
 
     let progress = { levels: {} };
     let screen = 'map';
@@ -148,7 +151,7 @@
       area.innerHTML = '';
       area.className = `pz-area pz-area-${cfg.id}`;
       show('play');
-      const seed = window.SeededRng.randomSeed();
+      const seed = comp ? comp.seed >>> 0 : window.SeededRng.randomSeed();
       const r = { level, seed, ended: false, startedAt: Date.now() };
       run = r;
       r.ctrl = cfg.play(level, area, {
@@ -212,8 +215,8 @@
       const prevBest = bestOf(r.level.id);
       setTimeout(() => { if (run === r) showResult(r, res, prevBest); }, res.delay != null ? res.delay : 700);
       try {
-        const out = await ctx.api.post(`/progress/${cfg.id}/results`, { levelId: r.level.id, seed: r.seed, durationMs: Date.now() - r.startedAt, ...res.body });
-        progress = out.progress;
+        const out = await window.Competicao.send(ctx, `/progress/${cfg.id}/results`, { levelId: r.level.id, seed: r.seed, durationMs: Date.now() - r.startedAt, ...res.body });
+        progress = out.progress || progress;
       } catch (e) {
         if (e.queued) ui.toast(e.message, 'info', 6000);
         else ui.toast('Não consegui salvar o seu resultado 😵 Confira a internet.', 'error', 5000);
@@ -236,10 +239,11 @@
       rec.textContent = !cfg.record || value == null ? '' : beat
         ? (prevBest != null ? `🏆 Novo recorde: ${value} ${cfg.record.label} (antes: ${prevBest})` : '🏆 Primeiro recorde desta fase!')
         : prevBest != null ? `Seu recorde nesta fase: ${prevBest} ${cfg.record.label}` : '';
-      const next = Levels.LEVELS[r.level.index + 1];
+      const next = comp ? null : Levels.LEVELS[r.level.index + 1];
       $('[data-pz-next]').hidden = !next;
+      if (comp) window.Competicao.waiting($('[data-pz-record]'));
       if (stars >= 1) { fx.confetti({ amount: 40 + stars * 50 }); sound.play(stars === 3 ? 'fanfare' : 'tada'); }
-      setTimeout(() => $(stars >= 1 && next ? '[data-pz-next]' : '[data-pz-retry]').focus(), 80);
+      if (!comp) setTimeout(() => $(stars >= 1 && next ? '[data-pz-next]' : '[data-pz-retry]').focus(), 80);
     }
 
     async function quit() {
@@ -270,6 +274,14 @@
     document.addEventListener('keydown', onKeydown);
 
     async function load() {
+      if (comp) {
+        // disputa: direto na fase da rodada, sem mapa e sem saídas
+        window.Competicao.hide(root, ['[data-pz-quit]', '[data-pz-go-map]', '[data-pz-retry]', '[data-pz-next]']);
+        const level = Levels.getLevel(comp.levelId);
+        if (!level) { ui.toast('Essa fase não existe 😵', 'error'); return; }
+        start(level);
+        return;
+      }
       try {
         const res = await ctx.api.get(`/progress/${cfg.id}`);
         progress = res.progress || { levels: {} };

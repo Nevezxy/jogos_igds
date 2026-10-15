@@ -711,6 +711,15 @@ As dependências reais pedem a pontuação global e a classificação de dificul
   | 2 | Velha 3 × 3 e 4 × 4, Ligue 4 e o Xadrez mate em 1 entram |
   | 3 | Velha só 4 × 4, Ligue 4 e Ligue 5, Xadrez mate em 1 e em 2 |
   | 4 | tudo; Dama e a partida completa de xadrez só aqui |
+- **Fase 3, modo competitivo dentro dos jogos: ✅ feita.** Inclui:
+  - **`js/shared/competition.js`**: com `ctx.competition` (`levelId`, `seed`, `submit`, `matchId`, `onDone`), o jogo abre direto na fase da rodada, sem mapa, com a semente do servidor. O resultado vai para `submit` e os botões que saem da disputa (sair, mapa, jogar de novo, próxima fase) somem;
+  - **jogos adaptados**:
+    - as telas comuns PuzzleShell (9 jogos) e BoardGame;
+    - Letras, Números, Matemática (sem as contas de revisão), Click (sempre com cronômetro) e Teclado Mágico (`Content.generate(level, seed)`: o mesmo texto para os dois lados; para no erro e sem maiúsculas forçadas);
+    - as peças especiais (sorteadas sem semente) ficam desligadas na disputa;
+  - **duelos**: `match.js` ganhou `createDuel` (partida entre dois educandos escolhidos, que entram com `bg:rejoin`), `timeUp` (prazo: Velha e Ligue 4 empatam; Dama e Xadrez pelo material, com `adjudicate` no adaptador) e `onEnd`. O progresso é gravado com `source = 'maratona'`;
+  - **`src/marathon/competitive.js`**: confere a corrida com a fase e a semente **impostas pelo servidor**, pelo mesmo `validateResult` do modo livre, e devolve a nota;
+  - **teste**: `test/maratona-competicao.test.js` cobre os 15 jogos de corrida (cada um aceito com a semente da rodada e sem nota cheia com outra), o texto do Teclado e os duelos com prazo.
 
 ### 13.2 Riscos
 

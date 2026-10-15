@@ -283,7 +283,19 @@
   const ACCENTED = /[áéíóúãõâêôàü]/;
 
   // ---------------- utilitários ----------------
-  const rand = (n) => Math.floor(Math.random() * n);
+  // sorteio: Math.random, ou a semente da rodada (generate(level, seed): o
+  // mesmo texto para os dois lados de uma disputa da Maratona)
+  let random = Math.random;
+  function seeded(seed) {
+    let a = seed >>> 0;
+    return () => {
+      a = (a + 0x6D2B79F5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  const rand = (n) => Math.floor(random() * n);
   const pick = (list) => list[rand(list.length)];
   function shuffle(list) {
     const a = list.slice();
@@ -326,7 +338,11 @@
 
   // ---------------- gerador ----------------
   // Devolve o texto do exercício de uma fase de levels.js.
-  function generate(level) {
+  function generate(level, seed) {
+    if (seed != null) {
+      random = seeded(seed);
+      try { return generate(level); } finally { random = Math.random; }
+    }
     let parts;
     switch (level.kind) {
       case 'drill':

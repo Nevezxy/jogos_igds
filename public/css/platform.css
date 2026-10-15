@@ -823,3 +823,8 @@
   .ranking-avatar { width: 2.1rem; height: 2.1rem; font-size: 1.2rem; }
 }
 @media (prefers-reduced-motion: reduce) { .ranking-row { animation: none; } }
+
+/* 🏃 disputa da maratona: o aviso no lugar dos botões do resultado */
+.comp-waiting { display: inline-block; margin: 6px auto 0; padding: 6px 14px; border-radius: 999px; background: #E8F8EE; color: #146C3A; font-weight: 800; animation: compPulse 1.6s ease-in-out infinite; }
+@keyframes compPulse { 50% { opacity: .65; } }
+@media (prefers-reduced-motion: reduce) { .comp-waiting { animation: none; } }
