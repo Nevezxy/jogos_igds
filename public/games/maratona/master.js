@@ -23,7 +23,7 @@
   let state = null;
   let stops = [];
   let catalog = []; // status dos jogos (da API do professor)
-  const form = { games: new Set(), topics: {}, ordem: [] };
+  const form = { games: new Set(), topics: {}, ordem: [], area: 'todos' };
 
   const save = () => { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(session)); } catch (e) { /* ignore */ } };
   const loadSession = () => { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch (e) { return null; } };
@@ -43,9 +43,23 @@
   }
 
   // ---------------- criar ----------------
+  // Página única: nível, jogos (filtrados por área), formato, rodadas e as
+  // opções avançadas à esquerda; o resumo (com a duração estimada e o botão
+  // de criar) fica sempre à vista ao lado (no celular, embaixo, com uma
+  // barrinha fixa que leva até ele).
+  const radio = (name) => (document.querySelector(`input[name="${name}"]:checked`) || {}).value;
+  const clampInput = (id) => {
+    const el = $(id);
+    const v = Math.round(Number(el.value));
+    return Math.max(Number(el.min), Math.min(Number(el.max), el.value !== '' && Number.isFinite(v) ? v : Number(el.defaultValue)));
+  };
   const formValue = () => ({
-    nivel: Number((document.querySelector('input[name="mt-nivel"]:checked') || {}).value || 1),
-    tempoMin: Number($('mt-f-tempo').value) || 5,
+    nivel: Number(radio('mt-nivel') || 1),
+    tempoMin: clampInput('mt-f-tempo'),
+    rodadas: clampInput('mt-f-rodadas'),
+    votoSeg: clampInput('mt-f-voto'),
+    formato: radio('mt-formato') || 'dupla',
+    rotacao: radio('mt-rotacao') || 'aleatorio',
   });
 
   let catalogSeq = 0;
@@ -67,12 +81,35 @@
     }
   }
   const HELP = {
-    1: 'Só as fases mais fáceis de cada jogo.', 2: 'Fases fáceis e médias.', 3: 'Fases médias e difíceis.', 4: 'Todas as fases (Dama e a partida de xadrez só aqui).',
+    1: 'Só as fases fáceis de cada jogo.',
+    2: 'Fases fáceis e médias (inclui as do nível 1).',
+    3: 'Fases fáceis, médias e difíceis (inclui as dos níveis 1 e 2).',
+    4: 'Todas as fases (inclui as dos níveis 1, 2 e 3; Dama e a partida de xadrez só aqui).',
   };
+  const AREAS = [
+    { id: 'digitacao', label: '⌨️ Digitação' }, { id: 'matematica', label: '🔢 Matemática' }, { id: 'mouse', label: '🖱️ Mouse' },
+    { id: 'raciocinio', label: '🧩 Raciocínio' }, { id: 'tabuleiro', label: '♟️ Tabuleiro' }, { id: 'outros', label: '🎲 Outros' },
+  ];
+  const areaOf = (id) => { const s = C.gameOf(id).subject; return AREAS.some((a) => a.id === s) ? s : 'outros'; };
+  const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+
+  function renderFilters(available) {
+    const counts = {};
+    available.forEach((g) => { counts[areaOf(g.id)] = (counts[areaOf(g.id)] || 0) + 1; });
+    if (form.area !== 'todos' && !counts[form.area]) form.area = 'todos';
+    const chip = (id, label, n) => `<button type="button" class="mt-chip${form.area === id ? ' is-on' : ''}" data-area="${id}" aria-pressed="${form.area === id}">${label} <b>${n}</b></button>`;
+    $('mt-f-filters').innerHTML = chip('todos', 'Todos', available.length) + AREAS.filter((a) => counts[a.id]).map((a) => chip(a.id, a.label, counts[a.id])).join('');
+    $('mt-f-filters').querySelectorAll('[data-area]').forEach((b) => b.addEventListener('click', () => { form.area = b.dataset.area; renderGames(); }));
+  }
+
+  const visibleGames = () => catalog.filter((g) => g.count && (form.area === 'todos' || areaOf(g.id) === form.area));
 
   function renderGames() {
+    const available = catalog.filter((g) => g.count);
+    renderFilters(available);
     const box = $('mt-f-games');
-    box.innerHTML = catalog.map((g) => {
+    const list = visibleGames();
+    box.innerHTML = list.length ? list.map((g) => {
       const on = form.games.has(g.id);
       const chosen = new Set(form.topics[g.id] || []);
       const topics = on && g.topics.filter((t) => g.byTopicAll[t.id]).length > 1 ? `<div class="mt-topics" data-topics="${esc(g.id)}">
@@ -80,13 +117,13 @@
         ${g.topics.filter((t) => g.byTopicAll[t.id] || chosen.has(t.id)).map((t) => `<button type="button" class="mt-chip${chosen.has(t.id) ? ' is-on' : ''}" data-topic="${esc(t.id)}" aria-pressed="${chosen.has(t.id)}">${esc(t.icon)} ${esc(t.name)} <b>${g.byTopicAll[t.id] || 0}</b></button>`).join('')}
       </div>` : '';
       const badges = [g.requiresKeyboard ? '<span class="mt-badge" title="Precisa de teclado">⌨️</span>' : '', g.trust === 'fraca' ? '<span class="mt-badge is-warn" title="O servidor confere pouco o resultado deste jogo">⚠️ conferência fraca</span>' : '', g.duelos ? '<span class="mt-badge">⚔️ duelo</span>' : ''].join('');
-      return `<div class="mt-game${on ? ' is-on' : ''}${g.count ? '' : ' is-off'}">
-        <label><input type="checkbox" data-game="${esc(g.id)}" ${on ? 'checked' : ''} ${g.count ? '' : 'disabled'} />
+      return `<div class="mt-game${on ? ' is-on' : ''}">
+        <label><input type="checkbox" data-game="${esc(g.id)}" ${on ? 'checked' : ''} />
           <span class="mt-game-icon">${esc(g.icon)}</span><span class="mt-game-name">${esc(g.name)}</span>${badges}
-          <small class="mt-game-count">${g.count ? `${g.count} fase${g.count === 1 ? '' : 's'}` : esc(g.reason || '')}</small></label>
+          <small class="mt-game-count">${plural(g.count, 'fase', 'fases')}</small></label>
         ${topics}
       </div>`;
-    }).join('');
+    }).join('') : '<p class="mt-empty">Nenhum jogo desta área tem fases neste nível.</p>';
     box.querySelectorAll('[data-game]').forEach((cb) => cb.addEventListener('change', () => {
       if (cb.checked) form.games.add(cb.dataset.game); else { form.games.delete(cb.dataset.game); delete form.topics[cb.dataset.game]; }
       renderGames();
@@ -98,36 +135,78 @@
       if (set.size) form.topics[g] = [...set]; else delete form.topics[g];
       loadCatalog();
     })));
+    // os jogos sem fase neste nível ficam recolhidos, com o motivo
+    const off = catalog.filter((g) => !g.count);
+    $('mt-f-off').hidden = !off.length;
+    $('mt-f-off-sum').textContent = `${plural(off.length, 'jogo fica', 'jogos ficam')} de fora no nível ${formValue().nivel}`;
+    $('mt-f-off-list').innerHTML = off.map((g) => `<span title="${esc(g.reason || '')}">${esc(g.icon)} ${esc(g.name)}</span>`).join('');
     $('mt-f-games-count').textContent = form.games.size ? `${form.games.size} escolhido${form.games.size === 1 ? '' : 's'}` : '';
-    $('mt-f-nivel-help').textContent = HELP[formValue().nivel];
     renderOrdem();
   }
 
   function renderOrdem() {
-    const show = $('mt-f-rotacao').value === 'ordem';
+    const { rotacao } = formValue();
+    const show = rotacao === 'ordem';
     $('mt-f-ordem-wrap').hidden = !show;
-    $('mt-f-voto-wrap').hidden = $('mt-f-rotacao').value !== 'votacao';
-    if (!show) return;
-    form.ordem = form.ordem.filter((g) => form.games.has(g));
-    $('mt-f-ordem').innerHTML = form.ordem.length
-      ? form.ordem.map((g, i) => `<button type="button" class="mt-chip is-on" data-del="${i}" title="Tirar da lista">${i + 1}. ${esc(C.gameOf(g).icon)} ${esc(C.gameOf(g).name)} ✕</button>`).join('')
-      : '<small class="muted">Nenhuma rodada ainda: sem lista, os jogos vão em sequência.</small>';
-    $('mt-f-ordem-add').innerHTML = [...form.games].map((g) => `<button type="button" class="mt-chip" data-add="${esc(g)}">＋ ${esc(C.gameOf(g).icon)} ${esc(C.gameOf(g).name)}</button>`).join('');
-    $('mt-f-ordem').querySelectorAll('[data-del]').forEach((b) => b.addEventListener('click', () => { form.ordem.splice(Number(b.dataset.del), 1); renderOrdem(); }));
-    $('mt-f-ordem-add').querySelectorAll('[data-add]').forEach((b) => b.addEventListener('click', () => { if (form.ordem.length < 20) form.ordem.push(b.dataset.add); renderOrdem(); }));
+    $('mt-f-voto-wrap').hidden = rotacao !== 'votacao';
+    if (show) {
+      form.ordem = form.ordem.filter((g) => form.games.has(g));
+      $('mt-f-ordem').innerHTML = form.ordem.length
+        ? form.ordem.map((g, i) => `<button type="button" class="mt-chip is-on" data-del="${i}" title="Tirar da lista">${i + 1}. ${esc(C.gameOf(g).icon)} ${esc(C.gameOf(g).name)} ✕</button>`).join('')
+        : '<small class="muted">Nenhuma rodada ainda: sem lista, os jogos vão em sequência.</small>';
+      $('mt-f-ordem-add').innerHTML = [...form.games].map((g) => `<button type="button" class="mt-chip" data-add="${esc(g)}">＋ ${esc(C.gameOf(g).icon)} ${esc(C.gameOf(g).name)}</button>`).join('');
+      $('mt-f-ordem').querySelectorAll('[data-del]').forEach((b) => b.addEventListener('click', () => { form.ordem.splice(Number(b.dataset.del), 1); renderOrdem(); }));
+      $('mt-f-ordem-add').querySelectorAll('[data-add]').forEach((b) => b.addEventListener('click', () => { if (form.ordem.length < 20) form.ordem.push(b.dataset.add); renderOrdem(); }));
+    }
+    renderSummary();
+  }
+
+  // o resumo ao lado: o que foi escolhido, quanto tempo leva e os avisos
+  function renderSummary() {
+    const f = formValue();
+    $('mt-f-nivel-help').textContent = HELP[f.nivel];
+    $('mt-f-balancear-wrap').hidden = f.formato === 'solo';
+    const chosen = catalog.filter((g) => form.games.has(g.id));
+    const names = chosen.map((g) => `${g.icon} ${g.name}${form.topics[g.id] ? ` (${plural(form.topics[g.id].length, 'assunto', 'assuntos')})` : ''}`).join(', ');
+    const extras = [f.formato !== 'solo' ? ($('mt-f-balancear').checked ? '⚖️ equipes equilibradas' : '🎲 equipes sorteadas') : '', $('mt-f-auto').checked ? '⏩ passa sozinho' : '', $('mt-f-bonus').checked ? '⭐ bônus de perfeição' : ''].filter(Boolean);
+    $('mt-sum').innerHTML = `
+      <dt>Jogos</dt><dd>${chosen.length ? esc(names) : '<span class="muted">nenhum ainda</span>'}</dd>
+      <dt>Nível</dt><dd>${f.nivel}</dd>
+      <dt>Formato</dt><dd>${C.FORMATOS[f.formato]}</dd>
+      <dt>Rodadas</dt><dd>${f.rodadas} × até ${f.tempoMin} min</dd>
+      <dt>Escolha</dt><dd>${C.ROTACAO[f.rotacao]}${f.rotacao === 'votacao' ? ` (${f.votoSeg} s)` : ''}${f.rotacao === 'ordem' && form.ordem.length ? ` (${plural(form.ordem.length, 'rodada', 'rodadas')} na lista)` : ''}</dd>
+      ${extras.length ? `<dt>Opções</dt><dd>${extras.join(' · ')}</dd>` : ''}`;
+    // pior caso: cada rodada no tempo máximo, mais ~1 min de largada e
+    // resultado (e a votação, quando tem)
+    const perRound = f.tempoMin + 1 + (f.rotacao === 'votacao' ? f.votoSeg / 60 : 0);
+    const total = Math.ceil(f.rodadas * perRound);
+    $('mt-sum-time').textContent = `até ~${total} min`;
+    const warn = [];
+    const kb = chosen.filter((g) => g.requiresKeyboard);
+    if (kb.length) warn.push(`⌨️ ${kb.map((g) => g.name).join(', ')}: precisa de teclado (não dá no tablet).`);
+    const weak = chosen.filter((g) => g.trust === 'fraca');
+    if (weak.length) warn.push(`⚠️ ${weak.map((g) => g.name).join(', ')}: o servidor confere pouco o resultado.`);
+    if ((f.rotacao === 'aleatorio' || f.rotacao === 'sequencial') && chosen.length > f.rodadas) warn.push(`🎲 São ${chosen.length} jogos para ${f.rodadas} rodadas: nem todos vão cair.`);
+    if (total > 50) warn.push('⏰ Passa de 50 min: talvez não caiba numa aula.');
+    $('mt-sum-warn').innerHTML = warn.map((w) => `<li>${esc(w)}</li>`).join('');
+    $('mt-sum-bar').innerHTML = `<span>${chosen.length ? `${plural(chosen.length, 'jogo', 'jogos')} · até ~${total} min` : 'Escolha os jogos'}</span><span>Criar ↓</span>`;
   }
 
   async function create(ev) {
     ev.preventDefault();
     $('mt-create-error').textContent = '';
-    const { nivel, tempoMin } = formValue();
+    const f = formValue();
     const config = {
-      games: [...form.games], topics: form.topics, nivel, tempoMin,
-      formato: $('mt-f-formato').value, rotacao: $('mt-f-rotacao').value, ordem: form.ordem,
-      rodadas: Number($('mt-f-rodadas').value) || 5, votoSeg: Number($('mt-f-voto').value) || 30,
+      games: [...form.games], topics: form.topics, nivel: f.nivel, tempoMin: f.tempoMin,
+      formato: f.formato, rotacao: f.rotacao, ordem: form.ordem,
+      rodadas: f.rodadas, votoSeg: f.votoSeg,
       balancear: $('mt-f-balancear').checked, auto: $('mt-f-auto').checked, bonus: $('mt-f-bonus').checked,
     };
-    if (!config.games.length) { $('mt-create-error').textContent = 'Escolha pelo menos um jogo.'; return; }
+    if (!config.games.length) {
+      $('mt-create-error').textContent = 'Escolha pelo menos um jogo.';
+      $('mt-f-games').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
     try {
       const res = await emitAsync('mt:create', { teacherToken: teacherToken(), config, name: $('mt-f-name').value });
       session = { code: res.code, masterToken: res.masterToken };
@@ -376,9 +455,26 @@
   // ---------------- botões e eventos ----------------
   $('mt-form').addEventListener('submit', create);
   document.querySelectorAll('input[name="mt-nivel"]').forEach((r) => r.addEventListener('change', loadCatalog));
+  document.querySelectorAll('input[name="mt-formato"], input[name="mt-rotacao"]').forEach((r) => r.addEventListener('change', renderOrdem));
+  ['mt-f-balancear', 'mt-f-auto', 'mt-f-bonus'].forEach((id) => $(id).addEventListener('change', renderSummary));
   let tempoTimer = null;
-  $('mt-f-tempo').addEventListener('input', () => { clearTimeout(tempoTimer); tempoTimer = setTimeout(loadCatalog, 400); });
-  $('mt-f-rotacao').addEventListener('change', renderOrdem);
+  $('mt-f-tempo').addEventListener('input', () => { renderSummary(); clearTimeout(tempoTimer); tempoTimer = setTimeout(loadCatalog, 400); });
+  ['mt-f-rodadas', 'mt-f-voto'].forEach((id) => $(id).addEventListener('input', renderSummary));
+  // ao sair do campo, o número volta para dentro dos limites
+  ['mt-f-rodadas', 'mt-f-tempo', 'mt-f-voto'].forEach((id) => $(id).addEventListener('change', () => { $(id).value = clampInput(id); }));
+  document.querySelectorAll('[data-step]').forEach((b) => b.addEventListener('click', () => {
+    const el = $(b.dataset.step);
+    el.value = Math.max(Number(el.min), Math.min(Number(el.max), clampInput(b.dataset.step) + Number(b.dataset.d)));
+    el.dispatchEvent(new Event('input'));
+  }));
+  $('mt-f-all').addEventListener('click', () => { visibleGames().forEach((g) => form.games.add(g.id)); renderGames(); });
+  $('mt-f-none').addEventListener('click', () => {
+    const hadTopics = Object.keys(form.topics).length > 0;
+    form.games.clear();
+    form.topics = {};
+    if (hadTopics) loadCatalog(); else renderGames();
+  });
+  $('mt-sum-bar').addEventListener('click', () => $('mt-create-submit').scrollIntoView({ behavior: 'smooth', block: 'center' }));
   $('mt-create-back').addEventListener('click', () => window.PlataformaRouter.go('/professor'));
   $('mt-master-back').addEventListener('click', () => window.PlataformaRouter.go('/professor'));
   $('mt-m-telao').addEventListener('click', openTelao);

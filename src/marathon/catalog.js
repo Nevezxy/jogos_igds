@@ -20,7 +20,7 @@
 const points = require('../platform/points');
 
 // nível da maratona (1 a 4) -> dificuldades aceitas
-const NIVEIS = { 1: [1], 2: [1, 2], 3: [2, 3], 4: [1, 2, 3, 4] };
+const NIVEIS = { 1: [1], 2: [1, 2], 3: [1, 2, 3], 4: [1, 2, 3, 4] }; // cada nível inclui os de baixo
 const ROUND_MS = { min: 2 * 60 * 1000, max: 10 * 60 * 1000, default: 5 * 60 * 1000 };
 
 const clamp01 = (x) => (Number.isFinite(x) ? Math.max(0, Math.min(1, x)) : 0);

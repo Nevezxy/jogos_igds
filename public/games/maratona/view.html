@@ -109,58 +109,87 @@
       <h3 class="mt-h3">📜 Maratonas anteriores</h3>
       <ul class="mt-archive" id="mt-archive-list"></ul>
     </section>
-    <form class="card-block mt-form" id="mt-form" novalidate>
-      <label class="mt-field"><span>Nome da maratona</span><input type="text" id="mt-f-name" maxlength="60" placeholder="Maratona da turma" /></label>
+    <form class="mt-setup" id="mt-form" novalidate>
+      <div class="mt-setup-main">
+        <section class="card-block mt-step">
+          <h3 class="mt-step-title"><span class="mt-step-n">1</span> Nível de dificuldade</h3>
+          <div class="mt-levels" id="mt-f-nivel" role="radiogroup" aria-label="Nível de dificuldade">
+            <label><input type="radio" name="mt-nivel" value="1" checked /><span><b>1</b><small>fácil</small></span></label>
+            <label><input type="radio" name="mt-nivel" value="2" /><span><b>2</b><small>+ médio</small></span></label>
+            <label><input type="radio" name="mt-nivel" value="3" /><span><b>3</b><small>+ difícil</small></span></label>
+            <label><input type="radio" name="mt-nivel" value="4" /><span><b>4</b><small>tudo</small></span></label>
+          </div>
+          <small class="muted" id="mt-f-nivel-help"></small>
+        </section>
 
-      <fieldset class="mt-field"><legend>Nível de dificuldade</legend>
-        <div class="mt-seg" id="mt-f-nivel" role="radiogroup">
-          <label><input type="radio" name="mt-nivel" value="1" checked /><span>1 · fácil</span></label>
-          <label><input type="radio" name="mt-nivel" value="2" /><span>2</span></label>
-          <label><input type="radio" name="mt-nivel" value="3" /><span>3</span></label>
-          <label><input type="radio" name="mt-nivel" value="4" /><span>4 · tudo</span></label>
-        </div>
-        <small class="muted" id="mt-f-nivel-help"></small>
-      </fieldset>
+        <section class="card-block mt-step">
+          <div class="mt-step-head">
+            <h3 class="mt-step-title"><span class="mt-step-n">2</span> Jogos <small class="muted" id="mt-f-games-count"></small></h3>
+            <div class="mt-row mt-step-tools">
+              <button type="button" class="btn-mini" id="mt-f-all">✔ Marcar os visíveis</button>
+              <button type="button" class="btn-mini" id="mt-f-none">✖ Limpar</button>
+            </div>
+          </div>
+          <div class="mt-filters" id="mt-f-filters" role="group" aria-label="Filtrar por área"></div>
+          <div class="mt-games" id="mt-f-games"><p class="muted">Carregando os jogos…</p></div>
+          <details class="mt-off" id="mt-f-off" hidden><summary id="mt-f-off-sum"></summary><div class="mt-off-list" id="mt-f-off-list"></div></details>
+        </section>
 
-      <fieldset class="mt-field"><legend>Jogos <small class="muted" id="mt-f-games-count"></small></legend>
-        <div class="mt-games" id="mt-f-games"><p class="muted">Carregando os jogos…</p></div>
-      </fieldset>
+        <section class="card-block mt-step">
+          <h3 class="mt-step-title"><span class="mt-step-n">3</span> Formato</h3>
+          <div class="mt-cards mt-cards-5" role="radiogroup" aria-label="Formato">
+            <label class="mt-card"><input type="radio" name="mt-formato" value="solo" /><span><i>👤</i><b>Solo</b><small>cada um por si</small></span></label>
+            <label class="mt-card"><input type="radio" name="mt-formato" value="dupla" checked /><span><i>👥</i><b>Duplas</b><small>equipes de 2</small></span></label>
+            <label class="mt-card"><input type="radio" name="mt-formato" value="trio" /><span><i>👨‍👩‍👦</i><b>Trios</b><small>equipes de 3</small></span></label>
+            <label class="mt-card"><input type="radio" name="mt-formato" value="quarteto" /><span><i>🧑‍🤝‍🧑</i><b>Quartetos</b><small>equipes de 4</small></span></label>
+            <label class="mt-card"><input type="radio" name="mt-formato" value="duas" /><span><i>⚔️</i><b>Duas equipes</b><small>a turma toda</small></span></label>
+          </div>
+          <label class="mt-check" id="mt-f-balancear-wrap"><input type="checkbox" id="mt-f-balancear" checked /> ⚖️ Equipes equilibradas pelos pontos (senão, sorteadas)</label>
+        </section>
 
-      <div class="mt-grid">
-        <label class="mt-field"><span>Formato</span>
-          <select id="mt-f-formato">
-            <option value="solo">👤 Solo (cada um por si)</option>
-            <option value="dupla">👥 Duplas</option>
-            <option value="trio">👨‍👩‍👦 Trios</option>
-            <option value="quarteto">🧑‍🤝‍🧑 Quartetos</option>
-            <option value="duas">⚔️ Duas equipes (a turma toda)</option>
-          </select>
-        </label>
-        <label class="mt-field"><span>Como escolher o jogo de cada rodada</span>
-          <select id="mt-f-rotacao">
-            <option value="aleatorio">🎲 Sorteio (sem repetir antes de passar por todos)</option>
-            <option value="sequencial">🔁 Em sequência</option>
-            <option value="votacao">🗳️ Votação das crianças</option>
-            <option value="ordem">📋 Ordem que eu escolher</option>
-            <option value="professor">🧑‍🏫 Eu escolho a cada rodada</option>
-          </select>
-        </label>
-        <label class="mt-field"><span>Rodadas</span><input type="number" id="mt-f-rodadas" min="1" max="20" value="5" /></label>
-        <label class="mt-field"><span>Tempo máximo da rodada (min)</span><input type="number" id="mt-f-tempo" min="2" max="10" value="5" /></label>
-        <label class="mt-field" id="mt-f-voto-wrap" hidden><span>Tempo da votação (s)</span><input type="number" id="mt-f-voto" min="15" max="60" value="30" /></label>
+        <section class="card-block mt-step">
+          <h3 class="mt-step-title"><span class="mt-step-n">4</span> Rodadas</h3>
+          <div class="mt-steppers">
+            <div class="mt-stepper"><span>Rodadas</span>
+              <div><button type="button" data-step="mt-f-rodadas" data-d="-1" aria-label="Menos rodadas">−</button><input type="number" id="mt-f-rodadas" min="1" max="20" value="5" aria-label="Rodadas" /><button type="button" data-step="mt-f-rodadas" data-d="1" aria-label="Mais rodadas">+</button></div></div>
+            <div class="mt-stepper"><span>Tempo máximo de cada rodada</span>
+              <div><button type="button" data-step="mt-f-tempo" data-d="-1" aria-label="Menos tempo">−</button><input type="number" id="mt-f-tempo" min="2" max="10" value="5" aria-label="Minutos por rodada" /><button type="button" data-step="mt-f-tempo" data-d="1" aria-label="Mais tempo">+</button><em>min</em></div></div>
+          </div>
+          <p class="mt-label">Como escolher o jogo de cada rodada</p>
+          <div class="mt-cards mt-cards-rot" role="radiogroup" aria-label="Como escolher o jogo de cada rodada">
+            <label class="mt-card"><input type="radio" name="mt-rotacao" value="aleatorio" checked /><span><i>🎲</i><b>Sorteio</b><small>sem repetir até passar por todos</small></span></label>
+            <label class="mt-card"><input type="radio" name="mt-rotacao" value="sequencial" /><span><i>🔁</i><b>Em sequência</b><small>na ordem da lista</small></span></label>
+            <label class="mt-card"><input type="radio" name="mt-rotacao" value="votacao" /><span><i>🗳️</i><b>Votação</b><small>as crianças escolhem</small></span></label>
+            <label class="mt-card"><input type="radio" name="mt-rotacao" value="ordem" /><span><i>📋</i><b>Minha ordem</b><small>monto a lista agora</small></span></label>
+            <label class="mt-card"><input type="radio" name="mt-rotacao" value="professor" /><span><i>🧑‍🏫</i><b>Eu escolho</b><small>a cada rodada</small></span></label>
+          </div>
+          <div class="mt-field" id="mt-f-ordem-wrap" hidden>
+            <span>Ordem das rodadas <small class="muted">(toque nos jogos para montar a lista)</small></span>
+            <div class="mt-ordem" id="mt-f-ordem"></div>
+            <div class="mt-ordem-add" id="mt-f-ordem-add"></div>
+          </div>
+          <div class="mt-stepper" id="mt-f-voto-wrap" hidden><span>Tempo da votação</span>
+            <div><button type="button" data-step="mt-f-voto" data-d="-5" aria-label="Menos tempo de votação">−</button><input type="number" id="mt-f-voto" min="15" max="60" step="5" value="30" aria-label="Segundos de votação" /><button type="button" data-step="mt-f-voto" data-d="5" aria-label="Mais tempo de votação">+</button><em>s</em></div></div>
+        </section>
+
+        <details class="card-block mt-step mt-adv">
+          <summary class="mt-step-title">⚙️ Opções avançadas</summary>
+          <div class="mt-checks">
+            <label class="mt-check"><input type="checkbox" id="mt-f-auto" /> ⏩ Passar sozinho para a próxima rodada depois de 20 s</label>
+            <label class="mt-check"><input type="checkbox" id="mt-f-bonus" /> ⭐ Bônus de perfeição (+1 ponto para quem tirar 3 estrelas)</label>
+          </div>
+        </details>
       </div>
-      <div class="mt-field" id="mt-f-ordem-wrap" hidden>
-        <span>Ordem das rodadas <small class="muted">(toque nos jogos para montar a lista)</small></span>
-        <div class="mt-ordem" id="mt-f-ordem"></div>
-        <div class="mt-ordem-add" id="mt-f-ordem-add"></div>
-      </div>
-      <div class="mt-checks">
-        <label><input type="checkbox" id="mt-f-balancear" checked /> ⚖️ Equipes equilibradas pelos pontos (senão, sorteadas)</label>
-        <label><input type="checkbox" id="mt-f-auto" /> ⏩ Passar sozinho para a próxima rodada depois de 20 s</label>
-        <label><input type="checkbox" id="mt-f-bonus" /> ⭐ Bônus de perfeição (+1 ponto para quem tirar 3 estrelas)</label>
-      </div>
-      <p class="mt-error" id="mt-create-error" role="alert"></p>
-      <button type="submit" class="btn btn-success btn-lg btn-block" id="mt-create-submit">🏁 Criar a maratona</button>
+
+      <aside class="card-block mt-summary" aria-label="Resumo da maratona">
+        <label class="mt-field"><span>Nome da maratona</span><input type="text" id="mt-f-name" maxlength="60" placeholder="Maratona da turma" /></label>
+        <dl class="mt-dl mt-sum-dl" id="mt-sum"></dl>
+        <div class="mt-sum-time"><small>Duração estimada</small><strong id="mt-sum-time">—</strong></div>
+        <ul class="mt-sum-warn" id="mt-sum-warn"></ul>
+        <p class="mt-error" id="mt-create-error" role="alert"></p>
+        <button type="submit" class="btn btn-success btn-lg btn-block" id="mt-create-submit">🏁 Criar a maratona</button>
+      </aside>
+      <button type="button" class="mt-sum-bar" id="mt-sum-bar"></button>
     </form>
   </div>
 </section>

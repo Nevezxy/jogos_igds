@@ -59,6 +59,10 @@ function checkEligibility() {
     const wrong = C.catalog(registry).flatMap((i) => C.eligible(i, { nivel: Number(nivel) }).filter((e) => !tiers.includes(e.tier)).map((e) => `${i.id}/${e.key}`));
     assert(wrong.length === 0, `nível ${nivel}: só fases de dificuldade ${tiers.join(', ')}`);
   }
+  // cada nível inclui as fases dos níveis de baixo
+  assert([1, 2, 3, 4].every((n) => C.NIVEIS[n].length === n && C.NIVEIS[n].every((t, i) => t === i + 1)), 'nível N aceita as dificuldades de 1 até N');
+  const count = (nivel) => C.status(registry, { nivel }).reduce((a, s) => a + s.count, 0);
+  assert(count(1) <= count(2) && count(2) <= count(3) && count(3) <= count(4), `subir de nível nunca tira fases (${[1, 2, 3, 4].map(count).join(' ≤ ')})`);
   const st4 = C.status(registry, { nivel: 4 });
   assert(st4.every((s) => s.count > 0), `nível 4: todo jogo tem fase para cair (${st4.filter((s) => !s.count).map((s) => s.id).join(', ') || 'ok'})`);
   const st1 = C.status(registry, { nivel: 1 });

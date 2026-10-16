@@ -192,7 +192,7 @@ Cada fase ganha um `tier` de 1 a 4 (seção 6.3):
 |---|---|
 | 1 | 1 |
 | 2 | 1 e 2 |
-| 3 | 2 e 3 |
+| 3 | 1, 2 e 3 |
 | 4 | 1, 2, 3 e 4 (todas as elegíveis) |
 
 **Elegível** = tem o tier aceito, **não é contra o robô**, cabe no tempo da rodada (`estMs ≤ tempo da rodada`) e o jogo está selecionado.
