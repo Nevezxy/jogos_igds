@@ -116,11 +116,13 @@
         <small>Assuntos (nenhum marcado = todos):</small>
         ${g.topics.filter((t) => g.byTopicAll[t.id] || chosen.has(t.id)).map((t) => `<button type="button" class="mt-chip${chosen.has(t.id) ? ' is-on' : ''}" data-topic="${esc(t.id)}" aria-pressed="${chosen.has(t.id)}">${esc(t.icon)} ${esc(t.name)} <b>${g.byTopicAll[t.id] || 0}</b></button>`).join('')}
       </div>` : '';
-      const badges = [g.requiresKeyboard ? '<span class="mt-badge" title="Precisa de teclado">⌨️</span>' : '', g.trust === 'fraca' ? '<span class="mt-badge is-warn" title="O servidor confere pouco o resultado deste jogo">⚠️ conferência fraca</span>' : '', g.duelos ? '<span class="mt-badge">⚔️ duelo</span>' : ''].join('');
-      return `<div class="mt-game${on ? ' is-on' : ''}">
+      const badges = [g.requiresKeyboard ? '<span class="mt-badge" title="Precisa de teclado">⌨️</span>' : '', g.trust === 'fraca' ? '<span class="mt-badge is-warn" title="O servidor confere pouco o resultado deste jogo">⚠️ conf. fraca</span>' : '', g.duelos ? '<span class="mt-badge">⚔️ duelo</span>' : ''].join('');
+      // todos os cartões com as mesmas duas linhas (nome; selos e fases);
+      // com os assuntos abertos, o cartão ocupa a linha inteira
+      return `<div class="mt-game${on ? ' is-on' : ''}${topics ? ' has-topics' : ''}">
         <label><input type="checkbox" data-game="${esc(g.id)}" ${on ? 'checked' : ''} />
-          <span class="mt-game-icon">${esc(g.icon)}</span><span class="mt-game-name">${esc(g.name)}</span>${badges}
-          <small class="mt-game-count">${plural(g.count, 'fase', 'fases')}</small></label>
+          <span class="mt-game-icon">${esc(g.icon)}</span><span class="mt-game-name" title="${esc(g.name)}">${esc(g.name)}</span>
+          <span class="mt-game-meta">${badges}<small class="mt-game-count">${plural(g.count, 'fase', 'fases')}</small></span></label>
         ${topics}
       </div>`;
     }).join('') : '<p class="mt-empty">Nenhum jogo desta área tem fases neste nível.</p>';

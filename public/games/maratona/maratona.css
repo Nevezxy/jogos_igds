@@ -126,13 +126,15 @@
 /* jogos */
 .mt-filters { display: flex; flex-wrap: wrap; gap: 6px; }
 .mt-filters .mt-chip b { color: inherit; opacity: .6; }
-.mt-games { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; align-items: start; }
-.mt-game { padding: 8px 10px; border: 2px solid var(--line); border-radius: 14px; background: var(--surface); font-weight: 700; }
+.mt-games { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; align-items: stretch; }
+.mt-game { padding: 8px 10px; border: 2px solid var(--line); border-radius: 14px; background: var(--surface); font-weight: 700; min-width: 0; }
 .mt-game.is-on { border-color: var(--green-dark); background: #EFFBF4; box-shadow: 0 3px 0 var(--green-dark); }
-.mt-game label { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; cursor: pointer; }
+.mt-game.has-topics { grid-column: 1 / -1; }
+.mt-game label { display: grid; grid-template-columns: auto auto minmax(0, 1fr); align-items: center; gap: 4px 6px; cursor: pointer; }
 .mt-game input { width: 18px; height: 18px; flex: none; accent-color: var(--green-dark); }
-.mt-game-icon { font-size: 1.3rem; }
-.mt-game-name { font-weight: 800; }
+.mt-game-icon { font-size: 1.3rem; line-height: 1; }
+.mt-game-name { font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mt-game-meta { grid-column: 1 / -1; display: flex; align-items: center; gap: 4px; min-height: 1.3rem; white-space: nowrap; }
 .mt-game-count { margin-left: auto; color: var(--ink-soft); }
 .mt-badge { padding: 0 6px; border-radius: 999px; background: var(--surface-3); font-size: .75rem; font-weight: 800; }
 .mt-badge.is-warn { background: #FFE9C7; }
