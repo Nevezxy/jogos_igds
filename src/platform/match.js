@@ -13,8 +13,9 @@
 //   o servidor manda    bg:state (o estado para cada um, com o lado dele)
 //   🏃 Maratona         createDuel(...) cria a partida entre dois educandos
 //                       escolhidos (eles entram com bg:rejoin); timeUp(id)
-//                       encerra no prazo, pela regra do jogo
-//                       (server.marathon.adjudicate); onEnd avisa o resultado
+//                       encerra no prazo (dama e xadrez: pontos das peças
+//                       capturadas, server.marathon.captureValue; os outros
+//                       empatam); onEnd avisa o resultado
 //
 // O servidor é o juiz: confere cada lance com o mesmo arquivo de regras do
 // navegador. Quem cair tem RECONNECT_MS para voltar; depois disso, o outro
@@ -129,6 +130,7 @@ function createMatchManager(registry, { now = () => Date.now(), reconnectMs = RE
       state: m.state,
       moves: m.moves,
       result: m.result,
+      capturas: m.capt || null, // pontos das peças capturadas (dama e xadrez)
       drawOffer: m.drawOffer,
       reconnectMs,
     };
@@ -150,7 +152,7 @@ function createMatchManager(registry, { now = () => Date.now(), reconnectMs = RE
     if (m.status === 'ended') return;
     m.status = 'ended';
     m.endedAt = now();
-    m.result = { winner, reason };
+    m.result = { winner, reason, ...(m.capt ? { capturas: m.capt.slice() } : {}) };
     m.timers.forEach((t) => t && clearTimeout(t));
     const game = boardGame(m.game);
     m.players.forEach((p, seat) => {
@@ -166,7 +168,7 @@ function createMatchManager(registry, { now = () => Date.now(), reconnectMs = RE
     });
     broadcast(m);
     if (m.onEnd) {
-      try { m.onEnd({ matchId: m.id, winner, reason, moves: m.moves.length, students: m.players.map((p) => p && p.studentId) }); } catch (e) { console.error('[partida] onEnd', e); }
+      try { m.onEnd({ matchId: m.id, winner, reason, moves: m.moves.length, capturas: m.result.capturas || null, students: m.players.map((p) => p && p.studentId) }); } catch (e) { console.error('[partida] onEnd', e); }
     }
   }
 
@@ -187,19 +189,20 @@ function createMatchManager(registry, { now = () => Date.now(), reconnectMs = RE
     m.status = 'playing';
     m.startedAt = now();
     m.source = 'maratona';
+    m.capt = g.server.marathon && g.server.marathon.captureValue ? [0, 0] : null;
     m.onEnd = onEnd;
     return m.id;
   }
 
   // Prazo da rodada: termina pela regra do jogo (velha e ligue 4 = empate;
-  // dama e xadrez = quem tem mais material). Devolve o vencedor (0, 1 ou null).
+  // dama e xadrez = quem fez mais pontos com as peças capturadas; pontos
+  // iguais = empate). Devolve o vencedor (0, 1 ou null).
   function timeUp(matchId) {
     const m = matches.get(String(matchId || ''));
     if (!m || m.status !== 'playing') return m && m.result ? m.result.winner : null;
-    const g = boardGame(m.game);
-    const judge = g.server.marathon && g.server.marathon.adjudicate;
-    const winner = judge ? judge(m.state) : null;
-    finish(m, winner === 0 || winner === 1 ? winner : null, 'prazo');
+    let winner = null;
+    if (m.capt) winner = m.capt[0] > m.capt[1] ? 0 : m.capt[1] > m.capt[0] ? 1 : null;
+    finish(m, winner, 'prazo');
     return m.result.winner;
   }
 
@@ -284,9 +287,12 @@ function createMatchManager(registry, { now = () => Date.now(), reconnectMs = RE
       const { m, seat } = mine(socket, matchId);
       if (m.status !== 'playing') throw new MatchError('PARTIDA_ENCERRADA', 'A partida já acabou.');
       if (m.state.turn !== seat) throw new MatchError('NAO_E_SUA_VEZ', 'Espere a sua vez.');
-      const Rules = boardGame(m.game).server.Rules;
+      const g = boardGame(m.game);
+      const Rules = g.server.Rules;
       if (!Rules.isLegal(m.state, move)) throw new MatchError('LANCE_INVALIDO', 'Esse lance não vale.');
+      const prev = m.state;
       m.state = Rules.play(m.state, move);
+      if (m.capt) m.capt[seat] += g.server.marathon.captureValue(prev, m.state);
       m.moves.push(move);
       m.drawOffer = null;
       if (m.state.result) finish(m, m.state.result.winner, 'fim');

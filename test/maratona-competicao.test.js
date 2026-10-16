@@ -7,7 +7,7 @@
 //   • o texto do Teclado Mágico sai igual para a mesma semente
 //   • duelo: o servidor cria a partida entre dois educandos escolhidos, eles
 //     entram com bg:rejoin, o fim é avisado (onEnd) e grava com a origem
-//     "maratona"; no prazo, Velha empata e Dama/Xadrez vão pelo material
+//     "maratona"; no prazo, Velha empata e Dama/Xadrez vão pelas peças capturadas
 
 const os = require('os');
 const path = require('path');
@@ -195,18 +195,29 @@ async function checkDuels() {
   // prazo: velha sem fim = empate
   const v2 = mm.createDuel('velha', '4x4', [sb, sa], { onEnd: (r) => ends.push(r) });
   assert(mm.timeUp(v2) === null && mm.matches.get(v2).result.reason === 'prazo', 'prazo na Velha: empate');
-  // dama: quem tem mais peças
+  // dama: no prazo, vence quem fez mais pontos com as peças capturadas
   const d = mm.createDuel('dama', 'brasileira', [sa, sb], { onEnd: (r) => ends.push(r) });
-  const dm = mm.matches.get(d);
-  dm.state = { ...dm.state, board: dm.state.board.map((p, i) => (p === 'b' && i < 8 ? '.' : p)) }; // brancas com 4 a mais
-  assert(mm.timeUp(d) === 0, 'prazo na Dama: vence quem tem mais material');
-  // xadrez: material igual = empate; dama a mais = vence
+  mm.matches.get(d).capt = [1, 3]; // as pretas capturaram uma dama
+  assert(mm.timeUp(d) === 1 && mm.matches.get(d).result.capturas.join() === '1,3' && ends[ends.length - 1].capturas.join() === '1,3', 'prazo na Dama: vence quem tem mais pontos de peças capturadas (e a maratona recebe os pontos)');
+  // xadrez: ninguém capturou = empate
   const x = mm.createDuel('xadrez', 'classico', [sa, sb]);
-  assert(mm.timeUp(x) === null, 'prazo no xadrez com material igual: empate');
+  assert(mm.timeUp(x) === null, 'prazo no xadrez sem capturas: empate');
+  // xadrez com lances de verdade: as brancas tomam um peão
   const x2 = mm.createDuel('xadrez', 'classico', [sa, sb]);
-  const xm = mm.matches.get(x2);
-  xm.state = { ...xm.state, board: xm.state.board.map((p) => (p === 'Q' ? '.' : p)) }; // brancas sem a dama
-  assert(mm.timeUp(x2) === 1, 'prazo no xadrez: as pretas com a dama a mais vencem');
+  mm.actions.rejoin(sock('s-xa'), { matchId: x2, studentToken: a.token });
+  mm.actions.rejoin(sock('s-xb'), { matchId: x2, studentToken: b.token });
+  for (const [who, move] of [['s-xa', 'e2e4'], ['s-xb', 'd7d5'], ['s-xa', 'e4d5']]) mm.actions.move(sock(who), { matchId: x2, move });
+  assert(mm.matches.get(x2).capt.join() === '1,0', 'xadrez: capturar um peão vale 1 ponto');
+  mm.actions.move(sock('s-xb'), { matchId: x2, move: 'd8d5' });
+  assert(mm.matches.get(x2).capt.join() === '1,1' && mm.timeUp(x2) === null, 'xadrez: pontos iguais no prazo = empate');
+  // pontos de cada peça (no próprio adaptador)
+  const XV = game('xadrez').server.marathon.captureValue;
+  const promo = Xadrez.fromFen('7k/P7/8/8/8/8/8/K7 w - - 0 1');
+  assert(XV(promo, Xadrez.play(promo, 'a7a8q')) === 0, 'xadrez: promover não conta como captura');
+  const promoCap = Xadrez.fromFen('1r5k/P7/8/8/8/8/8/K7 w - - 0 1');
+  assert(XV(promoCap, Xadrez.play(promoCap, 'a7b8q')) === 5, 'xadrez: tomar a torre vale 5');
+  const ep = Xadrez.play(Xadrez.fromFen('4k3/8/8/8/1p6/8/P7/4K3 w - - 0 1'), 'a2a4');
+  assert(XV(ep, Xadrez.play(ep, 'b4a3')) === 1, 'xadrez: en passant vale 1');
   let e = null;
   try { mm.createDuel('velha', '3x3', [sa, sa]); } catch (err) { e = err; }
   assert(e && e.code === 'DUELO_INVALIDO', 'duelo precisa de dois educandos diferentes');
@@ -214,9 +225,14 @@ async function checkDuels() {
   const lone = mm.createDuel('ligue4', '4', [sa, sb], { onEnd: (r) => ends.push(r) });
   mm.actions.rejoin(sock('s-a2'), { matchId: lone, studentToken: a.token });
   assert(mm.timeUp(lone) === null && ends[ends.length - 1].reason === 'prazo', 'duelo em que o outro nunca entrou acaba no prazo');
-  // a regra de material da Dama no próprio adaptador
-  const judge = game('dama').server.marathon.adjudicate;
-  assert(judge(Dama.initial()) === null, 'Dama no começo: empate de material');
+  // pontos das peças da Dama no próprio adaptador (pedra 1, dama 3)
+  const DV = game('dama').server.marathon.captureValue;
+  const d0 = Dama.initial();
+  const firstB = d0.board.indexOf('b');
+  const take = (board, sq) => board.map((p, i) => (i === sq ? '.' : p));
+  assert(DV(d0, { ...d0, turn: 1, board: take(d0.board, firstB) }) === 1, 'Dama: capturar uma pedra vale 1');
+  const withKing = { ...d0, board: d0.board.map((p, i) => (i === firstB ? 'B' : p)) };
+  assert(DV(withKing, { ...withKing, turn: 1, board: take(withKing.board, firstB) }) === 3, 'Dama: capturar uma dama vale 3');
 }
 
 (async () => {

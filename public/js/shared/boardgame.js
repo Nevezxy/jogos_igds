@@ -225,7 +225,8 @@
         const p = g.players[seat] || {};
         el.innerHTML = `<span class="bgm-piece">${esc(cfg.seats[seat].icon)}</span>
           <span class="bgm-avatar">${esc(p.avatar || '')}</span>
-          <span class="bgm-name">${esc(p.name || '')}${p.connected === false ? ' <small>(saiu)</small>' : ''}</span>`;
+          <span class="bgm-name">${esc(p.name || '')}${p.connected === false ? ' <small>(saiu)</small>' : ''}</span>
+          ${g.capturas ? `<span class="bgm-capt" title="Pontos das peças capturadas (desempate no fim do tempo)">⚔️ ${g.capturas[seat]}</span>` : ''}`;
         el.classList.toggle('is-turn', !g.state.result && g.state.turn === seat);
         el.classList.toggle('is-me', seat === g.mySeat);
       });
@@ -424,7 +425,7 @@
         ui.toast(view.you === 0 ? 'Partida começando: você começa!' : 'Partida começando: o seu amigo começa.', 'info', 3000);
       }
       const before = game.moves ? game.moves.length : 0;
-      Object.assign(game, { mySeat: view.you, state: view.state, moves: view.moves, players: view.players, drawOffer: view.drawOffer });
+      Object.assign(game, { mySeat: view.you, state: view.state, moves: view.moves, players: view.players, drawOffer: view.drawOffer, capturas: view.capturas || null });
       if (view.moves.length > before && !fresh) sound.play('pop');
       if (view.status === 'ended' && !game.ended) {
         game.ended = true;
@@ -435,7 +436,7 @@
         const g = game;
         setTimeout(() => {
           if (game !== g) return;
-          showResult({ outcome, stars: null, reason: view.result.reason });
+          showResult({ outcome, stars: null, reason: view.result.reason, capt: view.result.capturas, seat: view.you });
           if (comp) {
             window.Competicao.waiting($('[data-bgm-result-msg]'), `${$('[data-bgm-result-msg]').textContent} Esperando os outros confrontos…`);
             if (comp.onDone) comp.onDone({ outcome, reason: view.result.reason });
@@ -468,8 +469,8 @@
     }
 
     // ---------------- resultado ----------------
-    const REASONS = { desistiu: 'por desistência', abandono: 'porque o outro saiu da partida', acordo: 'combinado entre os dois', prazo: 'no fim do tempo da rodada (vale quem tinha mais peças)' };
-    function showResult({ outcome, stars, resigned, reason }) {
+    const REASONS = { desistiu: 'por desistência', abandono: 'porque o outro saiu da partida', acordo: 'combinado entre os dois', prazo: 'no fim do tempo da rodada' };
+    function showResult({ outcome, stars, resigned, reason, capt, seat }) {
       const g = game;
       if (!g) return;
       const box = $('[data-bgm-result]');
@@ -483,6 +484,8 @@
       [...starsBox.children].forEach((el, i) => el.classList.toggle('is-on', stars !== null && i < stars));
       let msg = '';
       if (reason && REASONS[reason]) msg = `${outcome === 'win' ? 'Vitória' : outcome === 'draw' ? 'Empate' : 'Derrota'} ${REASONS[reason]}.`;
+      // no prazo, dama e xadrez desempatam pelos pontos das peças capturadas
+      if (reason === 'prazo' && capt) msg = `${msg.slice(0, -1)}: peças capturadas valem ${capt[seat]} ponto${capt[seat] === 1 ? '' : 's'} para você e ${capt[1 - seat]} para o outro lado.`;
       else if (g.mode === 'bot') {
         if (resigned) msg = 'Desistir também faz parte. Tente de novo!';
         else if (stars === 3) msg = 'Sem desfazer nenhuma jogada. Que fera! 🎉';

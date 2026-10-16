@@ -465,10 +465,12 @@ function createMarathonManager(registry, { matchManager = null, now = () => Date
       e.stars = 0;
       e.score = res.winner === seat ? 1 : res.winner === null ? 0.5 : 0;
       e.timeMs = round && round.startsAt ? Math.max(0, t - round.startsAt) : null;
-      e.result = { winner: res.winner, reason: res.reason, moves: res.moves };
+      e.result = { winner: res.winner, reason: res.reason, moves: res.moves, ...(res.capturas ? { capturas: res.capturas } : {}) };
       e.submittedAt = t;
       // quem nunca apareceu e perdeu por abandono/prazo conta como ausente
-      if (!e.seen && res.reason !== 'fim' && e.score < 1) e.status = 'ausente';
+      // (fazer um lance na partida também é aparecer: as brancas jogam o 1º)
+      const moved = (res.moves || 0) > seat;
+      if (!e.seen && !moved && res.reason !== 'fim' && e.score < 1) e.status = 'ausente';
     }
     commit(m, { entries: [ea, eb] });
     maybeResolve(m, 'auto');

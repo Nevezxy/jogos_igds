@@ -13,9 +13,9 @@ module.exports = createBoardServer({ Rules, Levels });
 // desempata entre quem tem as mesmas estrelas) e a força da validação.
 module.exports.marathon = {
   trust: 'forte',
-  exclude: () => 'contra o robô', // na Maratona é duelo pela rede
+  exclude: () => 'contra o robô', // na Maratona é sempre jogador contra jogador
   duels: [
-    { variant: '4', title: 'Ligue 4', tier: 2, estMs: 180000 },
+    { variant: '4', title: 'Ligue 4', tier: 1, estMs: 180000 },
     { variant: '5', title: 'Ligue 5', tier: 3, estMs: 300000 },
   ],
 };

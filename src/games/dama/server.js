@@ -13,19 +13,17 @@ module.exports = createBoardServer({ Rules, Levels });
 // desempata entre quem tem as mesmas estrelas) e a força da validação.
 module.exports.marathon = {
   trust: 'forte',
-  exclude: () => 'contra o robô', // na Maratona é duelo pela rede
-  // partida longa: com prazo e decisão por material (decisão D3); por ser
-  // a única fase sem robô, entra em todos os níveis (catalog.eligible)
-  duels: [{ variant: 'brasileira', title: 'Dama brasileira', tier: 4, estMs: 600000, capped: true }],
-  // prazo esgotado: vence quem tem mais material (pedra = 1, dama = 3);
-  // diferença menor que uma pedra = empate
-  adjudicate(state) {
-    let diff = 0;
-    for (const p of state.board) {
-      const side = Rules.sideOf(p);
-      if (side < 0) continue;
-      diff += (side === 0 ? 1 : -1) * (Rules.isKing(p) ? 3 : 1);
-    }
-    return diff >= 1 ? 0 : diff <= -1 ? 1 : null;
+  exclude: () => 'contra o robô', // na Maratona é sempre jogador contra jogador
+  // partida longa: em todos os níveis, cortada pelo tempo da rodada
+  duels: [{ variant: 'brasileira', title: 'Dama brasileira', tier: 1, estMs: 600000, capped: true }],
+  // desempate no fim do tempo da rodada: pontos das peças capturadas
+  // (pedra 1, dama 3). Devolve os pontos que quem acabou de jogar ganhou
+  // neste lance (virar dama não conta).
+  pieceValues: { pedra: 1, dama: 3 },
+  captureValue(prev, next) {
+    const V = module.exports.marathon.pieceValues;
+    const enemy = 1 - prev.turn;
+    const sum = (st) => st.board.reduce((acc, p) => acc + (Rules.sideOf(p) === enemy ? (Rules.isKing(p) ? V.dama : V.pedra) : 0), 0);
+    return Math.max(0, sum(prev) - sum(next));
   },
 };

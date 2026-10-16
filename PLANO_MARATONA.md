@@ -125,7 +125,7 @@ Cada item é marcado assim:
 - **Duelo:** os lados jogam **um contra o outro** pela rede (`match.js`). Vale para Velha, Ligue 4, Dama e Xadrez, nas variantes de partida, não nas fases contra o robô.
   - Em **equipes**, cada integrante joga uma partida contra um integrante da outra equipe, como num match de xadrez por equipes. Vence a equipe com mais vitórias; o empate em vitórias decide pelos empates de partida, depois pelo tempo total, e no fim fica empate.
   - Se as equipes tiverem tamanhos diferentes, quem sobra **descansa naquela rodada**. (Mudou na implementação: jogar contra alguém que já está num tabuleiro não dá, porque as partidas são ao mesmo tempo.)
-  - O Xadrez "Fim de partida" (mate em 1 ou 2) entra como **corrida**: as duas crianças resolvem a mesma posição.
+  - **Xadrez, Dama e Ligue 4 são sempre jogador contra jogador**, em todos os níveis. O Xadrez "Fim de partida" não entra na Maratona.
 
 ### 3.4 Desempenho normalizado (corrida de fase)
 
@@ -198,7 +198,7 @@ Cada fase ganha um `tier` de 1 a 4 (seção 6.3):
 **Elegível** = tem o tier aceito, **não é contra o robô**, cabe no tempo da rodada (`estMs ≤ tempo da rodada`) e o jogo está selecionado.
 
 **Se faltarem fases:**
-- **Todo jogo entra em todos os níveis:** quando um jogo não tem fase na faixa do nível (Ligue 4, Xadrez e Dama no nível 1; Dama nos níveis 2 e 3), valem as fases mais fáceis que ele tem, e a configuração mostra o selo "⬆️ mais difícil".
+- **Todo jogo entra em todos os níveis:** se um jogo não tiver fase na faixa do nível, valem as fases mais fáceis que ele tem, e a configuração mostra o selo "⬆️ mais difícil". Hoje isso só acontece quando o professor escolhe um assunto difícil num nível baixo, porque a partida de Xadrez, a de Dama e o duelo de Ligue 4 valem em todos os níveis.
 - Um jogo só fica desabilitado se os assuntos escolhidos ou o tempo da rodada não deixarem nenhuma fase.
 - Quando o saco de fases de um jogo esvazia, ele é **reabastecido**: a mesma fase pode voltar com outra semente, priorizando a menos usada.
 - A maratona só começa com pelo menos 1 jogo elegível.
@@ -348,7 +348,7 @@ marathon: {
 | Velha | BoardGame | duelo | `state.result` | **forte** (`match.js` é o juiz) | — | duelo direto |
 | Ligue 4 | BoardGame | duelo | idem | **forte** | — | — |
 | Dama | BoardGame | duelo | idem | **forte** | — | tempo máximo e regra 8.5 |
-| Xadrez | BoardGame | duelo (partida) e corrida (Fim de partida) | idem | **forte** | estrelas e lances do Fim de partida | partida completa só no nível 4 e com tempo (D3); nos níveis 1 a 3 entram os mates |
+| Xadrez | BoardGame | duelo (partida) | idem | **forte** | — | só jogador contra jogador, em todos os níveis; no prazo, peças capturadas (8.5) |
 | Bingo, Desafio | salas da turma | **fora** | — | — | — | já são atividades da turma inteira |
 
 ### 6.3 Classificação de dificuldade (`tier`)
@@ -362,10 +362,10 @@ tier = ceil(4 × (posição da fase no jogo + 1) ÷ total de fases)
 **Exceção explícita** (campo `tier` no mundo ou na fase do `levels.js`), onde os mundos são assuntos:
 - **Matemática:** figurinhas = 1. Adição e subtração: até 20 = 1, dezena = 2, centena e milhar = 3. Multiplicação: tabuadas = 2, números maiores = 3. Conta armada = 3. Divisão: tabuada = 2, maiores e com resto = 3. Misturadas = 2 a 3. Negativos, potências, raízes e expressões = 4. Há uma sugestão extra (D2): deixar o professor filtrar **por assunto**, porque "nível 2" em Matemática vai do 1º ao 5º ano.
 - **Memória:** pelo número de pares e pelo tipo. mm1a e mm1b = 1, mm1c = 2, mm1d = 3; números = 1 a 2; letras = 1 a 3; palavras = 2 a 3; contas = 2 a 4; contra o robô = fora.
-- **Xadrez:** Fim de partida mate em 1 = 2, mate em 2 = 3, rei e dama ou torre = 4, partida = 4.
+- **Xadrez:** Fim de partida mate em 1 = 2, mate em 2 = 3, rei e dama ou torre = 4 (pontos do modo livre). Na Maratona, a partida = 1 (entra em todos os níveis).
 - **Velha:** 3 × 3 = 1, 4 × 4 = 2.
-- **Ligue 4:** Ligue 4 = 2, Ligue 5 = 3.
-- **Dama** = 3.
+- **Ligue 4:** duelo Ligue 4 = 1, Ligue 5 = 3.
+- **Dama:** fases contra o robô = 2 a 4 (pontos do modo livre). Na Maratona, a partida = 1 (entra em todos os níveis).
 
 **Elegibilidade:** `elegivel = !contraRobô && estMs ≤ tempo máximo da rodada`.
 - O `estMs` é uma estimativa por fase, que pode ser ajustada depois com o tempo médio real de `game_results`.
@@ -481,10 +481,12 @@ src/marathon/socketHandlers.js  ──►  src/marathon/manager.js (máquina de 
 ### 8.5 Duelo: tempo esgotado
 
 - **Velha e Ligue 4:** viram empate (raramente chegam ao limite).
-- **Dama e Xadrez:** vence quem tiver mais material:
+- **Dama e Xadrez:** desempate pelas **peças capturadas**. Cada peça capturada vale pontos para quem capturou, e vence quem tiver mais pontos:
   - Dama: pedra = 1 e dama = 3;
-  - Xadrez: a tabela de valores que o robô já usa;
-  - se a diferença for menor que uma pedra ou um peão, é empate.
+  - Xadrez: peão = 1, cavalo = 3, bispo = 3, torre = 5 e dama = 9;
+  - promover um peão ou virar dama não vale ponto; só a captura;
+  - pontos iguais = empate.
+- Os pontos aparecem ao lado do nome de cada jogador durante a partida (⚔️) e no resultado.
 
 ### 8.6 Ninguém joga fases de novo
 
@@ -677,7 +679,7 @@ As dependências reais pedem a pontuação global e a classificação de dificul
 |---|---|---|
 | D1 | Quem vê o ranking global | **Qualquer um pode olhar.** O ranking completo (geral, por turma e por jogo) fica aberto a quem está logado: educandos e professor |
 | D2 | Matemática por assunto | **O professor escolhe os assuntos** (os mundos) da Matemática na configuração da maratona. Isso vale também para outros jogos grandes, se fizer sentido |
-| D3 | Xadrez completo e Dama | **Sim**: entram com prazo e decisão por material (8.5), a partida de xadrez só no nível 4; a Dama, por só ter a partida, em todos os níveis. O Fim de partida (mate em 1) entra desde o nível 1 |
+| D3 | Xadrez completo e Dama | **Sim**: sempre jogador contra jogador, em todos os níveis, com prazo e desempate pelas peças capturadas (8.5). O Fim de partida não entra |
 | D4 | Jogos com validação fraca | Como recomendado: entram; o Quebra-cabeça fica desligado por padrão |
 | D5 | Integrante ausente | **Como recomendado**: conta 0, e o professor pode "dispensar" (sai da média) quem faltou por motivo justo |
 | D6 | Jogos de teclado em tablets | Como recomendado: aviso na configuração |
@@ -708,9 +710,9 @@ As dependências reais pedem a pontuação global e a classificação de dificul
 
   | Nível | Fases |
   |---|---|
-  | 1 | Velha 3 × 3; Ligue 4 (duelo clássico), Xadrez (mate em 1) e Dama (partida no prazo) entram com as fases mais fáceis |
-  | 2 | Velha 3 × 3 e 4 × 4, Ligue 4, Xadrez mate em 1 e Dama (partida no prazo) |
-  | 3 | Velha 3 × 3 e 4 × 4, Ligue 4 e Ligue 5, Xadrez mate em 1 e em 2, Dama (partida no prazo) |
+  | 1 | Velha 3 × 3, Ligue 4, partida de Xadrez e de Dama (no prazo) |
+  | 2 | Velha 3 × 3 e 4 × 4, Ligue 4, partida de Xadrez e de Dama |
+  | 3 | Velha 3 × 3 e 4 × 4, Ligue 4 e Ligue 5, partida de Xadrez e de Dama |
   | 4 | tudo; Dama e a partida completa de xadrez só aqui |
 - **Fase 3, modo competitivo dentro dos jogos: ✅ feita.** Inclui:
   - **`js/shared/competition.js`**: com `ctx.competition` (`levelId`, `seed`, `submit`, `matchId`, `onDone`), o jogo abre direto na fase da rodada, sem mapa, com a semente do servidor. O resultado vai para `submit` e os botões que saem da disputa (sair, mapa, jogar de novo, próxima fase) somem;
@@ -718,7 +720,7 @@ As dependências reais pedem a pontuação global e a classificação de dificul
     - as telas comuns PuzzleShell (9 jogos) e BoardGame;
     - Letras, Números, Matemática (sem as contas de revisão), Click (sempre com cronômetro) e Teclado Mágico (`Content.generate(level, seed)`: o mesmo texto para os dois lados; para no erro e sem maiúsculas forçadas);
     - as peças especiais (sorteadas sem semente) ficam desligadas na disputa;
-  - **duelos**: `match.js` ganhou `createDuel` (partida entre dois educandos escolhidos, que entram com `bg:rejoin`), `timeUp` (prazo: Velha e Ligue 4 empatam; Dama e Xadrez pelo material, com `adjudicate` no adaptador) e `onEnd`. O progresso é gravado com `source = 'maratona'`;
+  - **duelos**: `match.js` ganhou `createDuel` (partida entre dois educandos escolhidos, que entram com `bg:rejoin`), `timeUp` (prazo: Velha e Ligue 4 empatam; Dama e Xadrez pelas peças capturadas, com `captureValue` no adaptador) e `onEnd`. O progresso é gravado com `source = 'maratona'`;
   - **`src/marathon/competitive.js`**: confere a corrida com a fase e a semente **impostas pelo servidor**, pelo mesmo `validateResult` do modo livre, e devolve a nota;
   - **teste**: `test/maratona-competicao.test.js` cobre os 15 jogos de corrida (cada um aceito com a semente da rodada e sem nota cheia com outra), o texto do Teclado e os duelos com prazo.
 - **Fase 4, núcleo da maratona no servidor: ✅ feita.** Inclui:

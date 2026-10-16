@@ -84,7 +84,7 @@
     1: 'Só as fases fáceis de cada jogo.',
     2: 'Fases fáceis e médias (inclui as do nível 1).',
     3: 'Fases fáceis, médias e difíceis (inclui as dos níveis 1 e 2).',
-    4: 'Todas as fases (inclui as dos níveis 1, 2 e 3; a partida completa de xadrez só aqui).',
+    4: 'Todas as fases (inclui as dos níveis 1, 2 e 3).',
   };
   const AREAS = [
     { id: 'digitacao', label: '⌨️ Digitação' }, { id: 'matematica', label: '🔢 Matemática' }, { id: 'mouse', label: '🖱️ Mouse' },
