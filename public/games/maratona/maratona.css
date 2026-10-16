@@ -138,6 +138,7 @@
 .mt-game-count { margin-left: auto; color: var(--ink-soft); }
 .mt-badge { padding: 0 6px; border-radius: 999px; background: var(--surface-3); font-size: .75rem; font-weight: 800; }
 .mt-badge.is-warn { background: #FFE9C7; }
+.mt-badge.is-up { background: #DDF0FF; }
 .mt-topics { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
 .mt-topics small { width: 100%; color: var(--ink-soft); }
 .mt-chip { padding: 3px 10px; border: 2px solid var(--ink); border-radius: 999px; background: var(--surface); font: inherit; font-size: .85rem; font-weight: 700; cursor: pointer; }

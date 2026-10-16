@@ -56,8 +56,9 @@ function checkEligibility() {
   const info = (id) => C.describe(game(id));
   // o nível escolhe as dificuldades
   for (const [nivel, tiers] of Object.entries(C.NIVEIS)) {
-    const wrong = C.catalog(registry).flatMap((i) => C.eligible(i, { nivel: Number(nivel) }).filter((e) => !tiers.includes(e.tier)).map((e) => `${i.id}/${e.key}`));
-    assert(wrong.length === 0, `nível ${nivel}: só fases de dificuldade ${tiers.join(', ')}`);
+    // (fora da faixa só o jogo que não tem nenhuma fase nela, marcado com aboveLevel)
+    const wrong = C.catalog(registry).flatMap((i) => C.eligible(i, { nivel: Number(nivel) }).filter((e) => !tiers.includes(e.tier) && !e.aboveLevel).map((e) => `${i.id}/${e.key}`));
+    assert(wrong.length === 0, `nível ${nivel}: só fases de dificuldade ${tiers.join(', ')} (${wrong.join(', ') || 'ok'})`);
   }
   // cada nível inclui as fases dos níveis de baixo
   assert([1, 2, 3, 4].every((n) => C.NIVEIS[n].length === n && C.NIVEIS[n].every((t, i) => t === i + 1)), 'nível N aceita as dificuldades de 1 até N');
@@ -66,8 +67,11 @@ function checkEligibility() {
   const st4 = C.status(registry, { nivel: 4 });
   assert(st4.every((s) => s.count > 0), `nível 4: todo jogo tem fase para cair (${st4.filter((s) => !s.count).map((s) => s.id).join(', ') || 'ok'})`);
   const st1 = C.status(registry, { nivel: 1 });
-  const off1 = st1.filter((s) => !s.count);
-  assert(off1.length > 0 && off1.every((s) => s.reason === 'não tem fases no nível 1'), `nível 1: os jogos sem fase fácil aparecem desabilitados com o motivo (${off1.map((s) => s.id).join(', ')})`);
+  assert(st1.every((s) => s.count > 0), `nível 1: todo jogo tem fase para cair (${st1.filter((s) => !s.count).map((s) => s.id).join(', ') || 'ok'})`);
+  // sem fase na faixa do nível, o jogo entra com as suas fases mais fáceis
+  const above = st1.filter((s) => s.aboveLevel).map((s) => s.id).sort().join();
+  assert(above === 'dama,ligue4,xadrez', `nível 1: Dama, Ligue 4 e Xadrez entram com as fases mais fáceis (${above})`);
+  assert([2, 3].every((n) => C.status(registry, { nivel: n }).filter((s) => s.aboveLevel).map((s) => s.id).join() === 'dama') && !C.status(registry, { nivel: 4 }).some((s) => s.aboveLevel), 'níveis 2 e 3: só a Dama sobe; nível 4: ninguém');
   // contra o robô fica de fora
   const mem = info('memoria');
   assert(mem.entries.filter((e) => e.levelId && e.levelId.startsWith('mm6')).every((e) => e.excluded === 'contra o robô'), 'Memória contra o robô fica de fora');
@@ -75,10 +79,13 @@ function checkEligibility() {
   assert(v.entries.filter((e) => e.kind === 'corrida').every((e) => e.excluded) && v.entries.filter((e) => e.kind === 'duelo').length === 2, 'Velha: só duelo pela rede (3 × 3 e 4 × 4)');
   const x = info('xadrez');
   assert(x.entries.filter((e) => e.levelId && e.levelId.startsWith('xp')).every((e) => e.excluded) && x.entries.filter((e) => e.levelId && e.levelId.startsWith('xf')).every((e) => !e.excluded), 'Xadrez: o Fim de partida é corrida, os robôs ficam de fora');
-  // Dama e Xadrez completos só no nível 4, cortados pelo prazo (decisão D3)
+  // partida de xadrez só no nível 4; a Dama (só tem a partida) em todos, cortada pelo prazo (decisão D3)
   const duel = (id, nivel) => C.eligible(info(id), { nivel }).filter((e) => e.kind === 'duelo').map((e) => e.variant);
-  assert(duel('dama', 3).length === 0 && duel('dama', 4).join() === 'brasileira' && duel('xadrez', 3).length === 0 && duel('xadrez', 4).join() === 'classico',
-    'Dama e partida de xadrez: só no nível 4');
+  assert([1, 2, 3, 4].every((n) => duel('dama', n).join() === 'brasileira') && duel('xadrez', 3).length === 0 && duel('xadrez', 4).join() === 'classico',
+    'Dama em todos os níveis; partida de xadrez só no nível 4');
+  const x1 = C.eligible(info('xadrez'), { nivel: 1 });
+  assert(x1.length === 4 && x1.every((e) => e.kind === 'corrida' && e.aboveLevel), 'Xadrez no nível 1: os 4 mates em 1 lance');
+  assert(C.eligible(info('ligue4'), { nivel: 1 }).map((e) => e.variant).join() === '4', 'Ligue 4 no nível 1: o duelo clássico');
   assert(C.eligible(info('xadrez'), { nivel: 4, roundMs: C.ROUND_MS.min }).some((e) => e.variant === 'classico'), 'a partida de xadrez entra mesmo com rodada curta (acaba no prazo)');
   // tempo da rodada: fase que não cabe fica de fora
   const short = C.eligible(info('quebracabeca'), { nivel: 4, roundMs: C.ROUND_MS.min });
@@ -87,8 +94,10 @@ function checkEligibility() {
   // assuntos (decisão D2)
   const mu = C.eligible(info('matematica'), { nivel: 2, topics: ['mu'] });
   assert(mu.length > 0 && mu.every((e) => e.topic === 'mu' && e.tier <= 2), `Matemática só "Multiplicação" no nível 2: ${mu.length} fases, todas tabuadas`);
-  const none = C.status(registry, { nivel: 1, topics: { matematica: ['ng'] } }).find((s) => s.id === 'matematica');
-  assert(none.count === 0 && none.reason === 'nenhuma fase desses assuntos neste nível', 'assunto sem fase no nível: o motivo aparece');
+  const up = C.status(registry, { nivel: 1, topics: { matematica: ['ng'] } }).find((s) => s.id === 'matematica');
+  assert(up.count > 0 && up.aboveLevel && !up.reason, 'assunto sem fase no nível: entra com as fases mais fáceis dele');
+  const none = C.status(registry, { nivel: 1, topics: { matematica: ['nada'] } }).find((s) => s.id === 'matematica');
+  assert(none.count === 0 && none.reason === 'nenhuma fase desses assuntos neste nível', 'assunto sem nenhuma fase: o motivo aparece');
   assert(C.describe(game('quebracabeca')).off === true && C.describe(game('quebracabeca')).trust === 'fraca', 'Quebra-cabeça: desligado por padrão (validação fraca)');
 }
 
@@ -141,7 +150,7 @@ function checkPerf() {
     const t = await srv.api('POST', '/api/teacher/login', { pin: '' });
     const teacher = { teacher: t.token };
     let r = await srv.api('GET', '/api/teacher/maratona/catalogo?nivel=1&tempo=5', null, teacher);
-    assert(r.ok && r.games.length === 18 && r.games.find((g) => g.id === 'dama').reason && r.games.find((g) => g.id === 'carrinhos').count > 0, 'API: catálogo do nível 1 com os motivos');
+    assert(r.ok && r.games.length === 18 && r.games.every((g) => g.count > 0) && r.games.find((g) => g.id === 'dama').aboveLevel && !r.games.find((g) => g.id === 'carrinhos').aboveLevel, 'API: catálogo do nível 1 com todos os jogos (Dama acima do nível)');
     r = await srv.api('GET', `/api/teacher/maratona/catalogo/matematica?nivel=2&assuntos=${encodeURIComponent(JSON.stringify({ matematica: ['dv'] }))}`, null, teacher);
     assert(r.ok && r.fases.length > 0 && r.fases.every((f) => f.topic === 'dv'), 'API: as fases que podem cair de um jogo, com os assuntos escolhidos');
     const kid = await srv.student('Duda Catalogo');

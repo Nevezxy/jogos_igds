@@ -198,7 +198,8 @@ Cada fase ganha um `tier` de 1 a 4 (seção 6.3):
 **Elegível** = tem o tier aceito, **não é contra o robô**, cabe no tempo da rodada (`estMs ≤ tempo da rodada`) e o jogo está selecionado.
 
 **Se faltarem fases:**
-- Um jogo sem nenhuma fase elegível **fica desabilitado** na configuração, com o motivo ("Dama não tem fases no nível 1").
+- **Todo jogo entra em todos os níveis:** quando um jogo não tem fase na faixa do nível (Ligue 4, Xadrez e Dama no nível 1; Dama nos níveis 2 e 3), valem as fases mais fáceis que ele tem, e a configuração mostra o selo "⬆️ mais difícil".
+- Um jogo só fica desabilitado se os assuntos escolhidos ou o tempo da rodada não deixarem nenhuma fase.
 - Quando o saco de fases de um jogo esvazia, ele é **reabastecido**: a mesma fase pode voltar com outra semente, priorizando a menos usada.
 - A maratona só começa com pelo menos 1 jogo elegível.
 
@@ -347,7 +348,7 @@ marathon: {
 | Velha | BoardGame | duelo | `state.result` | **forte** (`match.js` é o juiz) | — | duelo direto |
 | Ligue 4 | BoardGame | duelo | idem | **forte** | — | — |
 | Dama | BoardGame | duelo | idem | **forte** | — | tempo máximo e regra 8.5 |
-| Xadrez | BoardGame | duelo (partida) e corrida (Fim de partida) | idem | **forte** | estrelas e lances do Fim de partida | partida completa só no nível 4 e com tempo (D3) |
+| Xadrez | BoardGame | duelo (partida) e corrida (Fim de partida) | idem | **forte** | estrelas e lances do Fim de partida | partida completa só no nível 4 e com tempo (D3); nos níveis 1 a 3 entram os mates |
 | Bingo, Desafio | salas da turma | **fora** | — | — | — | já são atividades da turma inteira |
 
 ### 6.3 Classificação de dificuldade (`tier`)
@@ -676,7 +677,7 @@ As dependências reais pedem a pontuação global e a classificação de dificul
 |---|---|---|
 | D1 | Quem vê o ranking global | **Qualquer um pode olhar.** O ranking completo (geral, por turma e por jogo) fica aberto a quem está logado: educandos e professor |
 | D2 | Matemática por assunto | **O professor escolhe os assuntos** (os mundos) da Matemática na configuração da maratona. Isso vale também para outros jogos grandes, se fizer sentido |
-| D3 | Xadrez completo e Dama | **Sim**: entram com prazo e decisão por material (8.5), só no nível 4. O Fim de partida entra a partir do nível 2 |
+| D3 | Xadrez completo e Dama | **Sim**: entram com prazo e decisão por material (8.5), a partida de xadrez só no nível 4; a Dama, por só ter a partida, em todos os níveis. O Fim de partida (mate em 1) entra desde o nível 1 |
 | D4 | Jogos com validação fraca | Como recomendado: entram; o Quebra-cabeça fica desligado por padrão |
 | D5 | Integrante ausente | **Como recomendado**: conta 0, e o professor pode "dispensar" (sai da média) quem faltou por motivo justo |
 | D6 | Jogos de teclado em tablets | Como recomendado: aviso na configuração |
@@ -707,9 +708,9 @@ As dependências reais pedem a pontuação global e a classificação de dificul
 
   | Nível | Fases |
   |---|---|
-  | 1 | Ligue 4, Dama e Xadrez ficam desabilitados ("não tem fases no nível 1") |
-  | 2 | Velha 3 × 3 e 4 × 4, Ligue 4 e o Xadrez mate em 1 entram |
-  | 3 | Velha só 4 × 4, Ligue 4 e Ligue 5, Xadrez mate em 1 e em 2 |
+  | 1 | Velha 3 × 3; Ligue 4 (duelo clássico), Xadrez (mate em 1) e Dama (partida no prazo) entram com as fases mais fáceis |
+  | 2 | Velha 3 × 3 e 4 × 4, Ligue 4, Xadrez mate em 1 e Dama (partida no prazo) |
+  | 3 | Velha 3 × 3 e 4 × 4, Ligue 4 e Ligue 5, Xadrez mate em 1 e em 2, Dama (partida no prazo) |
   | 4 | tudo; Dama e a partida completa de xadrez só aqui |
 - **Fase 3, modo competitivo dentro dos jogos: ✅ feita.** Inclui:
   - **`js/shared/competition.js`**: com `ctx.competition` (`levelId`, `seed`, `submit`, `matchId`, `onDone`), o jogo abre direto na fase da rodada, sem mapa, com a semente do servidor. O resultado vai para `submit` e os botões que saem da disputa (sair, mapa, jogar de novo, próxima fase) somem;

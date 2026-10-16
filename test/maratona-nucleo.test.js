@@ -164,7 +164,7 @@ async function checkManager() {
 
   // configuração inválida
   assert(throwsCode(() => M.create({ games: [] })) === 'SEM_JOGOS', 'criar sem jogos: recusado');
-  assert(throwsCode(() => M.create({ games: ['dama'], nivel: 1 })) === 'JOGO_SEM_FASES', 'Dama no nível 1: recusado (não tem fases)');
+  assert(throwsCode(() => M.create({ games: ['carrinhos'], nivel: 1, tempoMin: 2, topics: { carrinhos: ['nada'] } })) === 'JOGO_SEM_FASES', 'jogo sem fase com esses assuntos: recusado');
   assert(throwsCode(() => M.create({ games: ['bingo'] })) === 'JOGO_INVALIDO', 'Bingo não entra na Maratona');
 
   // corrida em duplas, 2 rodadas, sequencial

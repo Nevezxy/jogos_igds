@@ -84,7 +84,7 @@
     1: 'Só as fases fáceis de cada jogo.',
     2: 'Fases fáceis e médias (inclui as do nível 1).',
     3: 'Fases fáceis, médias e difíceis (inclui as dos níveis 1 e 2).',
-    4: 'Todas as fases (inclui as dos níveis 1, 2 e 3; Dama e a partida de xadrez só aqui).',
+    4: 'Todas as fases (inclui as dos níveis 1, 2 e 3; a partida completa de xadrez só aqui).',
   };
   const AREAS = [
     { id: 'digitacao', label: '⌨️ Digitação' }, { id: 'matematica', label: '🔢 Matemática' }, { id: 'mouse', label: '🖱️ Mouse' },
@@ -116,7 +116,7 @@
         <small>Assuntos (nenhum marcado = todos):</small>
         ${g.topics.filter((t) => g.byTopicAll[t.id] || chosen.has(t.id)).map((t) => `<button type="button" class="mt-chip${chosen.has(t.id) ? ' is-on' : ''}" data-topic="${esc(t.id)}" aria-pressed="${chosen.has(t.id)}">${esc(t.icon)} ${esc(t.name)} <b>${g.byTopicAll[t.id] || 0}</b></button>`).join('')}
       </div>` : '';
-      const badges = [g.requiresKeyboard ? '<span class="mt-badge" title="Precisa de teclado">⌨️</span>' : '', g.trust === 'fraca' ? '<span class="mt-badge is-warn" title="O servidor confere pouco o resultado deste jogo">⚠️ conf. fraca</span>' : '', g.duelos ? '<span class="mt-badge">⚔️ duelo</span>' : ''].join('');
+      const badges = [g.requiresKeyboard ? '<span class="mt-badge" title="Precisa de teclado">⌨️</span>' : '', g.trust === 'fraca' ? '<span class="mt-badge is-warn" title="O servidor confere pouco o resultado deste jogo">⚠️ conf. fraca</span>' : '', g.duelos ? '<span class="mt-badge">⚔️ duelo</span>' : '', g.aboveLevel ? '<span class="mt-badge is-up" title="Não tem fases tão fáceis: entra com as mais fáceis que tem">⬆️ mais difícil</span>' : ''].join('');
       // todos os cartões com as mesmas duas linhas (nome; selos e fases);
       // com os assuntos abertos, o cartão ocupa a linha inteira
       return `<div class="mt-game${on ? ' is-on' : ''}${topics ? ' has-topics' : ''}">

@@ -14,7 +14,8 @@ module.exports = createBoardServer({ Rules, Levels });
 module.exports.marathon = {
   trust: 'forte',
   exclude: () => 'contra o robô', // na Maratona é duelo pela rede
-  // partida longa: só no nível 4, com prazo e decisão por material (decisão D3)
+  // partida longa: com prazo e decisão por material (decisão D3); por ser
+  // a única fase sem robô, entra em todos os níveis (catalog.eligible)
   duels: [{ variant: 'brasileira', title: 'Dama brasileira', tier: 4, estMs: 600000, capped: true }],
   // prazo esgotado: vence quem tem mais material (pedra = 1, dama = 3);
   // diferença menor que uma pedra = empate

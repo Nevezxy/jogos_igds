@@ -81,13 +81,19 @@ function catalog(registry) {
 //   topics  ids dos mundos escolhidos (vazio = todos)
 //   roundMs tempo máximo da rodada (a fase tem que caber; o duelo
 //           `capped` acaba no prazo e é decidido pela regra 8.5)
+// Todo jogo entra em todos os níveis: quando nenhuma fase dele está na
+// faixa do nível (Ligue 4, Xadrez e Dama no nível 1, Dama no 2 e no 3),
+// valem as fases mais fáceis que ele tem (marcadas com `aboveLevel`).
 function eligible(info, { nivel, topics = [], roundMs = ROUND_MS.default }) {
   const tiers = NIVEIS[nivel] || NIVEIS[4];
   const chosen = new Set(topics || []);
-  return info.entries.filter((e) => !e.excluded
-    && tiers.includes(e.tier)
+  const fits = info.entries.filter((e) => !e.excluded
     && (e.kind === 'duelo' || !chosen.size || chosen.has(e.topic))
     && (e.kind === 'duelo' ? (e.capped || e.estMs <= roundMs) : e.estMs <= roundMs));
+  const inLevel = fits.filter((e) => tiers.includes(e.tier));
+  if (inLevel.length || !fits.length) return inLevel;
+  const easiest = Math.min(...fits.map((e) => e.tier));
+  return fits.filter((e) => e.tier === easiest).map((e) => ({ ...e, aboveLevel: true }));
 }
 
 // Situação de cada jogo para a tela de configuração: quantas fases podem
@@ -97,10 +103,8 @@ function status(registry, { nivel, topics = {}, roundMs = ROUND_MS.default } = {
     const list = eligible(info, { nivel, topics: topics[info.id], roundMs });
     let reason = null;
     if (!list.length) {
-      const anyTier = info.entries.some((e) => !e.excluded && (NIVEIS[nivel] || []).includes(e.tier));
-      reason = !anyTier ? `não tem fases no nível ${nivel}`
-        : (topics[info.id] || []).length ? 'nenhuma fase desses assuntos neste nível'
-          : 'as fases deste nível não cabem no tempo da rodada';
+      reason = (topics[info.id] || []).length ? 'nenhuma fase desses assuntos neste nível'
+        : 'as fases deste jogo não cabem no tempo da rodada';
     }
     const byTopic = {};
     for (const e of list) if (e.topic) byTopic[e.topic] = (byTopic[e.topic] || 0) + 1;
@@ -110,6 +114,7 @@ function status(registry, { nivel, topics = {}, roundMs = ROUND_MS.default } = {
     return {
       id: info.id, name: info.name, icon: info.icon, requiresKeyboard: info.requiresKeyboard,
       trust: info.trust, off: info.off, topics: info.topics,
+      aboveLevel: list.some((e) => e.aboveLevel), // entrou com as fases mais fáceis, acima do nível
       count: list.length, corridas: list.filter((e) => e.kind === 'corrida').length, duelos: list.filter((e) => e.kind === 'duelo').length,
       byTopic, byTopicAll, reason,
     };
