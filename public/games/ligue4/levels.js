@@ -31,6 +31,9 @@
   ];
 
   const api = Board.build(WORLDS);
+  // Dificuldade de cada fase (1 a 4) para os pontos globais e o Modo Maratona: a força do robô.
+  const TIERS = { l4a: 1, l4b: 2, l4c: 2, l4d: 3, l4e: 3, l4f: 4, l5a: 2, l5b: 3, l5c: 3, l5d: 4 };
+  api.LEVELS.forEach((l) => { l.tier = TIERS[l.id] || l.tier; });
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Ligue4Levels = api;
 })(typeof window !== 'undefined' ? window : globalThis);

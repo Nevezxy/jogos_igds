@@ -46,6 +46,7 @@
 
   function createGame(container, ctx) {
     const { sound, fx, ui } = ctx;
+    const comp = window.Competicao.of(ctx); // 🏃 disputa da maratona (js/shared/competition.js)
     const $ = (sel) => container.querySelector(sel);
     const screens = [...container.querySelectorAll('[data-lc]')];
     const input = $('#lc-input');
@@ -176,13 +177,13 @@
 
     function start(level) {
       if (round) round.engine.destroy();
-      const seed = randomSeed();
+      const seed = (comp ? comp.seed >>> 0 : randomSeed());
       // em maiúsculas é só o jeito de mostrar: a lista (e o servidor) é a mesma
       const items = Items.makeItems(level, seed).map((it) => (uppercase ? upper(it) : it));
       sky.querySelectorAll('.lc-piece').forEach((el) => el.remove());
       round = {
         level, seed, items, uppercase, target: null, caught: 0, lost: [], wrong: 0, errors: {}, started: false,
-        specials: Kit.pickSpecials(items.length),
+        specials: comp ? items.map(() => null) : Kit.pickSpecials(items.length), // na disputa, sem sorteio fora da semente
         scorer: Kit.createBoard(sky, { best: levelData(level.id).bestScore || 0, onMultiplier }),
         // a rodada acelera: cada peça cai um pouco mais rápido que a anterior
         engine: window.FallingEngine.create(sky, {
@@ -418,11 +419,12 @@
       const stars = Levels.starsFor(r.level.id, { caught: r.caught, count: r.items.length, accuracy });
       const best = levelData(r.level.id).bestScore || 0;
       showResult({ stars, accuracy, durationMs, best });
+      if (comp) window.Competicao.waiting($('#lc-record'));
       try {
-        const res = await ctx.api.post('/progress/letras/results', {
+        const res = await window.Competicao.send(ctx, '/progress/letras/results', {
           levelId: r.level.id, seed: r.seed, lost: r.lost, wrong: r.wrong, durationMs, errorsByChar: r.errors, score: r.scorer.score,
         });
-        progress = res.progress;
+        progress = res.progress || progress;
       } catch (e) {
         // sem internet: o resultado fica guardado e vai sozinho quando ela voltar
         if (e.queued) ui.toast(e.message, 'info', 6000);
@@ -456,7 +458,7 @@
       $('#lc-lost').hidden = lost.length === 0;
       $('#lc-lost-list').innerHTML = '';
       lost.forEach((it) => $('#lc-lost-list').appendChild(Object.assign(document.createElement('span'), { className: 'lc-chip', textContent: it })));
-      const next = Levels.LEVELS[r.level.index + 1];
+      const next = comp ? null : Levels.LEVELS[r.level.index + 1];
       $('#lc-next').hidden = !next;
       if (stars >= 1) { fx.confetti({ amount: 40 + stars * 50 }); sound.play(stars === 3 ? 'fanfare' : 'tada'); }
       setTimeout(() => $(stars >= 1 && next ? '#lc-next' : '#lc-retry').focus(), 80);
@@ -493,6 +495,14 @@
     document.addEventListener('keydown', onDocKeydown);
 
     async function load() {
+      if (comp) {
+        // disputa: direto na fase da rodada, sem mapa e sem saídas
+        window.Competicao.hide(container, ['#lc-quit', '[data-lc-go="map"]', '#lc-retry', '#lc-next']);
+        const level = Levels.getLevel(comp.levelId);
+        if (!level) { ui.toast('Essa fase não existe 😵', 'error'); return; }
+        start(level);
+        return;
+      }
       $('#lc-touch-notice').hidden = !window.matchMedia('(hover: none) and (pointer: coarse)').matches;
       try {
         const res = await ctx.api.get('/progress/letras');

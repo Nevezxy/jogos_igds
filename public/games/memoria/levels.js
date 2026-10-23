@@ -72,6 +72,9 @@
   ];
 
   const api = P.build(WORLDS);
+  // Dificuldade de cada fase (1 a 4) para os pontos globais e o Modo Maratona: os mundos são tipos de par, então vale o tipo e o número de cartas.
+  const TIERS = { mm1a: 1, mm1b: 1, mm1c: 2, mm1d: 3, mm2a: 1, mm2b: 1, mm2c: 2, mm3a: 1, mm3b: 2, mm3c: 3, mm4a: 2, mm4b: 2, mm4c: 3, mm5a: 2, mm5b: 3, mm5c: 4, mm6a: 2, mm6b: 3, mm6c: 4 };
+  api.LEVELS.forEach((l) => { l.tier = TIERS[l.id] || l.tier; });
   // Estrelas sozinho: tentativas (duas cartas viradas) perto do número de pares.
   // Contra o robô: vencer = 3, empatar = 2, perder = 1 (terminou a partida).
   api.starsFor = (level, { tries, pairs, outcome }) => {

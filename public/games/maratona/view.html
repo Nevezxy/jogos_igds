@@ -1,0 +1,261 @@
+<!-- public/games/maratona/view.html
+     Telas do 🏃 Modo Maratona (criança, professor e telão). A plataforma
+     injeta este HTML uma vez, antes dos scripts (client.persistent). -->
+
+<!-- ======================= CRIANÇA: entrar ======================= -->
+<section id="mt-join" class="screen screen-center">
+  <button class="btn-back" id="mt-join-back" type="button">← Jogos</button>
+  <div class="panel-card">
+    <div class="panel-head">
+      <div data-mascot id="mt-join-mascot"></div>
+      <p class="speech" id="mt-join-speech" aria-live="polite">Qual é o código da maratona? 🏃</p>
+    </div>
+    <form id="mt-join-form" novalidate autocomplete="off">
+      <label class="field">
+        <span class="sr-only">Código da maratona (4 letras)</span>
+        <input id="mt-join-code" class="input-big mt-code-input" type="text" maxlength="4" placeholder="CÓDIGO" autocapitalize="characters" spellcheck="false" autocomplete="off" />
+      </label>
+      <button type="submit" class="btn btn-success btn-block btn-lg">Entrar na maratona 🚀</button>
+    </form>
+  </div>
+</section>
+
+<!-- ======================= CRIANÇA: sala de espera ======================= -->
+<section id="mt-lobby" class="screen screen-top">
+  <div class="mt-wrap">
+    <header class="mt-head">
+      <button class="btn-back mt-back" id="mt-lobby-leave" type="button">← Jogos</button>
+      <h2 class="title-game mt-title" id="mt-lobby-title">🏃 Maratona</h2>
+      <span class="mt-pill" id="mt-lobby-code">----</span>
+    </header>
+    <div class="panel-head mt-lobby-talk">
+      <div data-mascot id="mt-lobby-mascot"></div>
+      <p class="speech" id="mt-lobby-speech" aria-live="polite">Já já começa! Quando o(a) professor(a) der a largada, a primeira rodada aparece aqui ✨</p>
+    </div>
+    <div class="mt-myteam" id="mt-lobby-myteam" hidden></div>
+    <p class="mt-config" id="mt-lobby-config"></p>
+    <div class="mt-teams" id="mt-lobby-teams"></div>
+  </div>
+</section>
+
+<!-- ======================= CRIANÇA: votação ======================= -->
+<section id="mt-vote" class="screen screen-top">
+  <div class="mt-wrap">
+    <header class="mt-head">
+      <h2 class="title-game mt-title">🗳️ Vote no próximo jogo!</h2>
+      <span class="mt-timer" id="mt-vote-timer">0:30</span>
+    </header>
+    <p class="mt-sub" id="mt-vote-sub">Toque no jogo que você quer. Dá para trocar até o tempo acabar.</p>
+    <div class="mt-vote-cards" id="mt-vote-cards"></div>
+  </div>
+</section>
+
+<!-- ======================= CRIANÇA: preparação da rodada ======================= -->
+<section id="mt-prep" class="screen screen-center">
+  <div class="panel-card mt-prep-card">
+    <p class="mt-round-n" id="mt-prep-round">Rodada 1</p>
+    <div class="mt-prep-game" id="mt-prep-game"></div>
+    <div class="mt-versus" id="mt-prep-versus"></div>
+    <p class="mt-sub" id="mt-prep-msg"></p>
+    <div class="mt-count" id="mt-prep-count" aria-live="assertive">3</div>
+  </div>
+</section>
+
+<!-- ======================= CRIANÇA: jogando ======================= -->
+<section id="mt-play" class="screen screen-top">
+  <div class="mt-strip" id="mt-play-strip">
+    <span class="mt-strip-round" id="mt-play-round">Rodada 1</span>
+    <span class="mt-strip-vs" id="mt-play-vs"></span>
+    <span class="mt-strip-done" id="mt-play-done" title="Quantos já terminaram"></span>
+    <span class="mt-timer" id="mt-play-timer" title="Tempo da rodada">5:00</span>
+  </div>
+  <div id="mt-game-root" class="game-root mt-game-root"></div>
+</section>
+
+<!-- ======================= CRIANÇA: entre as rodadas ======================= -->
+<section id="mt-between" class="screen screen-top">
+  <div class="mt-wrap">
+    <header class="mt-head">
+      <h2 class="title-game mt-title" id="mt-between-title">Fim da rodada 1</h2>
+    </header>
+    <div class="mt-outcome" id="mt-between-outcome"></div>
+    <h3 class="mt-h3">🏆 Classificação</h3>
+    <ol class="mt-standings" id="mt-between-standings"></ol>
+    <p class="mt-sub" id="mt-between-next"></p>
+  </div>
+</section>
+
+<!-- ======================= CRIANÇA: fim ======================= -->
+<section id="mt-final" class="screen screen-top">
+  <div class="mt-wrap" id="mt-final-root"></div>
+  <div class="mt-final-actions"><button type="button" class="btn btn-primary" id="mt-final-back">← Jogos</button></div>
+</section>
+
+<!-- ======================= PROFESSOR: criar ======================= -->
+<section id="mt-create" class="screen screen-top">
+  <div class="mt-wrap mt-wide">
+    <header class="mt-head">
+      <button class="btn-back mt-back" id="mt-create-back" type="button">← Professor</button>
+      <h2 class="title-game mt-title">🏃 Nova maratona</h2>
+    </header>
+    <div class="card-block mt-resume" id="mt-resume" hidden>
+      <p>Você tem uma maratona aberta: <strong id="mt-resume-code">----</strong></p>
+      <div class="mt-row">
+        <button type="button" class="btn btn-primary" id="mt-resume-go">▶ Voltar para ela</button>
+        <button type="button" class="btn btn-ghost" id="mt-resume-forget">Esquecer</button>
+      </div>
+    </div>
+    <section class="card-block mt-archive-list" id="mt-archive-card" hidden>
+      <h3 class="mt-h3">📜 Maratonas anteriores</h3>
+      <ul class="mt-archive" id="mt-archive-list"></ul>
+    </section>
+    <form class="mt-setup" id="mt-form" novalidate>
+      <div class="mt-setup-main">
+        <section class="card-block mt-step">
+          <h3 class="mt-step-title"><span class="mt-step-n">1</span> Nível de dificuldade</h3>
+          <div class="mt-levels" id="mt-f-nivel" role="radiogroup" aria-label="Nível de dificuldade">
+            <label><input type="radio" name="mt-nivel" value="1" checked /><span><b>1</b><small>fácil</small></span></label>
+            <label><input type="radio" name="mt-nivel" value="2" /><span><b>2</b><small>+ médio</small></span></label>
+            <label><input type="radio" name="mt-nivel" value="3" /><span><b>3</b><small>+ difícil</small></span></label>
+            <label><input type="radio" name="mt-nivel" value="4" /><span><b>4</b><small>tudo</small></span></label>
+          </div>
+          <small class="muted" id="mt-f-nivel-help"></small>
+        </section>
+
+        <section class="card-block mt-step">
+          <div class="mt-step-head">
+            <h3 class="mt-step-title"><span class="mt-step-n">2</span> Jogos <small class="muted" id="mt-f-games-count"></small></h3>
+            <div class="mt-row mt-step-tools">
+              <button type="button" class="btn-mini" id="mt-f-all">✔ Marcar os visíveis</button>
+              <button type="button" class="btn-mini" id="mt-f-none">✖ Limpar</button>
+            </div>
+          </div>
+          <div class="mt-filters" id="mt-f-filters" role="group" aria-label="Filtrar por área"></div>
+          <div class="mt-games" id="mt-f-games"><p class="muted">Carregando os jogos…</p></div>
+          <details class="mt-off" id="mt-f-off" hidden><summary id="mt-f-off-sum"></summary><div class="mt-off-list" id="mt-f-off-list"></div></details>
+        </section>
+
+        <section class="card-block mt-step">
+          <h3 class="mt-step-title"><span class="mt-step-n">3</span> Formato</h3>
+          <div class="mt-cards mt-cards-5" role="radiogroup" aria-label="Formato">
+            <label class="mt-card"><input type="radio" name="mt-formato" value="solo" /><span><i>👤</i><b>Solo</b><small>cada um por si</small></span></label>
+            <label class="mt-card"><input type="radio" name="mt-formato" value="dupla" checked /><span><i>👥</i><b>Duplas</b><small>equipes de 2</small></span></label>
+            <label class="mt-card"><input type="radio" name="mt-formato" value="trio" /><span><i>👨‍👩‍👦</i><b>Trios</b><small>equipes de 3</small></span></label>
+            <label class="mt-card"><input type="radio" name="mt-formato" value="quarteto" /><span><i>🧑‍🤝‍🧑</i><b>Quartetos</b><small>equipes de 4</small></span></label>
+            <label class="mt-card"><input type="radio" name="mt-formato" value="duas" /><span><i>⚔️</i><b>Duas equipes</b><small>a turma toda</small></span></label>
+          </div>
+          <label class="mt-check" id="mt-f-balancear-wrap"><input type="checkbox" id="mt-f-balancear" checked /> ⚖️ Equipes equilibradas pelos pontos (senão, sorteadas)</label>
+        </section>
+
+        <section class="card-block mt-step">
+          <h3 class="mt-step-title"><span class="mt-step-n">4</span> Rodadas</h3>
+          <div class="mt-steppers">
+            <div class="mt-stepper"><span>Rodadas</span>
+              <div><button type="button" data-step="mt-f-rodadas" data-d="-1" aria-label="Menos rodadas">−</button><input type="number" id="mt-f-rodadas" min="1" max="20" value="5" aria-label="Rodadas" /><button type="button" data-step="mt-f-rodadas" data-d="1" aria-label="Mais rodadas">+</button></div></div>
+            <div class="mt-stepper"><span>Tempo máximo de cada rodada</span>
+              <div><button type="button" data-step="mt-f-tempo" data-d="-1" aria-label="Menos tempo">−</button><input type="number" id="mt-f-tempo" min="2" max="10" value="5" aria-label="Minutos por rodada" /><button type="button" data-step="mt-f-tempo" data-d="1" aria-label="Mais tempo">+</button><em>min</em></div></div>
+          </div>
+          <p class="mt-label">Como escolher o jogo de cada rodada</p>
+          <div class="mt-cards mt-cards-rot" role="radiogroup" aria-label="Como escolher o jogo de cada rodada">
+            <label class="mt-card"><input type="radio" name="mt-rotacao" value="aleatorio" checked /><span><i>🎲</i><b>Sorteio</b><small>sem repetir até passar por todos</small></span></label>
+            <label class="mt-card"><input type="radio" name="mt-rotacao" value="sequencial" /><span><i>🔁</i><b>Em sequência</b><small>na ordem da lista</small></span></label>
+            <label class="mt-card"><input type="radio" name="mt-rotacao" value="votacao" /><span><i>🗳️</i><b>Votação</b><small>as crianças escolhem</small></span></label>
+            <label class="mt-card"><input type="radio" name="mt-rotacao" value="ordem" /><span><i>📋</i><b>Minha ordem</b><small>monto a lista agora</small></span></label>
+            <label class="mt-card"><input type="radio" name="mt-rotacao" value="professor" /><span><i>🧑‍🏫</i><b>Eu escolho</b><small>a cada rodada</small></span></label>
+          </div>
+          <div class="mt-field" id="mt-f-ordem-wrap" hidden>
+            <span>Ordem das rodadas <small class="muted">(toque nos jogos para montar a lista)</small></span>
+            <div class="mt-ordem" id="mt-f-ordem"></div>
+            <div class="mt-ordem-add" id="mt-f-ordem-add"></div>
+          </div>
+          <div class="mt-stepper" id="mt-f-voto-wrap" hidden><span>Tempo da votação</span>
+            <div><button type="button" data-step="mt-f-voto" data-d="-5" aria-label="Menos tempo de votação">−</button><input type="number" id="mt-f-voto" min="15" max="60" step="5" value="30" aria-label="Segundos de votação" /><button type="button" data-step="mt-f-voto" data-d="5" aria-label="Mais tempo de votação">+</button><em>s</em></div></div>
+        </section>
+
+        <details class="card-block mt-step mt-adv">
+          <summary class="mt-step-title">⚙️ Opções avançadas</summary>
+          <div class="mt-checks">
+            <label class="mt-check"><input type="checkbox" id="mt-f-auto" /> ⏩ Passar sozinho para a próxima rodada depois de 20 s</label>
+            <label class="mt-check"><input type="checkbox" id="mt-f-bonus" /> ⭐ Bônus de perfeição (+1 ponto para quem tirar 3 estrelas)</label>
+          </div>
+        </details>
+      </div>
+
+      <aside class="card-block mt-summary" aria-label="Resumo da maratona">
+        <label class="mt-field"><span>Nome da maratona</span><input type="text" id="mt-f-name" maxlength="60" placeholder="Maratona da turma" /></label>
+        <dl class="mt-dl mt-sum-dl" id="mt-sum"></dl>
+        <div class="mt-sum-time"><small>Duração estimada</small><strong id="mt-sum-time">—</strong></div>
+        <ul class="mt-sum-warn" id="mt-sum-warn"></ul>
+        <p class="mt-error" id="mt-create-error" role="alert"></p>
+        <button type="submit" class="btn btn-success btn-lg btn-block" id="mt-create-submit">🏁 Criar a maratona</button>
+      </aside>
+      <button type="button" class="mt-sum-bar" id="mt-sum-bar"></button>
+    </form>
+  </div>
+</section>
+
+<!-- ======================= PROFESSOR: painel ======================= -->
+<section id="mt-master" class="screen screen-top">
+  <div class="mt-wrap mt-wide">
+    <header class="mt-head">
+      <button class="btn-back mt-back" id="mt-master-back" type="button">← Professor</button>
+      <h2 class="title-game mt-title" id="mt-m-title">🏃 Maratona</h2>
+      <span class="mt-pill mt-pill-status" id="mt-m-status">sala de espera</span>
+    </header>
+    <div class="mt-m-grid">
+      <div class="mt-m-main">
+        <section class="card-block mt-m-actions" id="mt-m-actions"></section>
+        <section class="mt-m-final" id="mt-m-final" hidden></section>
+        <section class="card-block" id="mt-m-round" hidden></section>
+        <section class="card-block">
+          <h3 class="mt-h3" id="mt-m-teams-title">👥 Participantes</h3>
+          <div class="mt-teams" id="mt-m-teams"></div>
+          <div class="mt-waiting" id="mt-m-waiting"></div>
+        </section>
+        <section class="card-block" id="mt-m-standings-card" hidden>
+          <h3 class="mt-h3">🏆 Classificação</h3>
+          <ol class="mt-standings" id="mt-m-standings"></ol>
+        </section>
+        <section class="card-block" id="mt-m-history-card" hidden>
+          <h3 class="mt-h3">📜 Rodadas</h3>
+          <ol class="mt-history" id="mt-m-history"></ol>
+        </section>
+      </div>
+      <aside class="mt-m-side">
+        <section class="card-block mt-m-join">
+          <h3 class="mt-h3">📲 Entrar na maratona</h3>
+          <p class="mt-code-big" id="mt-m-code">----</p>
+          <img class="mt-qr" id="mt-m-qr" alt="QR Code para entrar na maratona" />
+          <p class="muted mt-m-url" id="mt-m-url"></p>
+          <button type="button" class="btn btn-violet btn-block" id="mt-m-telao">📺 Abrir o telão</button>
+        </section>
+        <section class="card-block mt-m-config">
+          <h3 class="mt-h3">⚙️ Configuração</h3>
+          <dl class="mt-dl" id="mt-m-config"></dl>
+        </section>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= PROFESSOR: rever uma maratona antiga ======================= -->
+<section id="mt-archive" class="screen screen-top">
+  <div class="mt-wrap mt-wide">
+    <header class="mt-head">
+      <button class="btn-back mt-back" id="mt-archive-back" type="button">← Maratonas</button>
+      <span class="mt-pill" id="mt-archive-code">----</span>
+    </header>
+    <div id="mt-archive-root"></div>
+  </div>
+</section>
+
+<!-- ======================= TELÃO ======================= -->
+<section id="mt-telao" class="screen screen-top mt-telao">
+  <button class="btn-back telao-back" id="mt-telao-back" type="button" title="Fechar o telão">← Voltar</button>
+  <div class="mt-t-missing" id="mt-t-missing" hidden>
+    <div data-mascot data-mood="wow" data-base-mood="wow"></div>
+    <h1 class="title-game">Maratona não encontrada</h1>
+    <p>Abra o telão pelo botão 📺 no painel da maratona.</p>
+  </div>
+  <div class="mt-t-body" id="mt-t-body"></div>
+</section>

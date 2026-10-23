@@ -29,6 +29,7 @@
 
   function createGame(container, ctx) {
     const { sound, fx, ui } = ctx;
+    const comp = window.Competicao.of(ctx); // 🏃 disputa da maratona (js/shared/competition.js)
     const $ = (sel) => container.querySelector(sel);
     const screens = [...container.querySelectorAll('[data-cc]')];
 
@@ -183,8 +184,9 @@
 
     // ---------------- rodada ----------------
     function start(level) {
-      const seed = randomSeed();
-      const review = reviewKeys(level);
+      const seed = comp ? comp.seed >>> 0 : randomSeed();
+      // na disputa, sem as contas de revisão (os dois lados têm as mesmas contas)
+      const review = comp ? [] : reviewKeys(level);
       round = {
         level,
         seed,
@@ -586,15 +588,16 @@
       const avgSec = durationMs / 1000 / r.problems.length;
       const stars = Levels.starsFor(r.level.id, { score: firstTry + secondTry * 0.5, count: r.problems.length, avgSec });
       showResult({ firstTry, secondTry, avgSec, stars });
+      if (comp) window.Competicao.waiting($('#cc-record'));
       try {
-        const res = await ctx.api.post('/progress/matematica/results', {
+        const res = await window.Competicao.send(ctx, '/progress/matematica/results', {
           levelId: r.level.id,
           seed: r.seed,
           review: r.review,
           answers: r.answers,
           durationMs,
         });
-        progress = res.progress;
+        progress = res.progress || progress;
       } catch (e) {
         // sem internet: o resultado fica guardado e vai sozinho quando ela voltar
         if (e.queued) ui.toast(e.message, 'info', 6000);
@@ -638,7 +641,7 @@
         li.textContent = P.solution(p);
         $('#cc-missed-list').appendChild(li);
       });
-      const next = Levels.LEVELS[level.index + 1];
+      const next = comp ? null : Levels.LEVELS[level.index + 1];
       $('#cc-next').hidden = !next;
       if (stars >= 1) { fx.confetti({ amount: 40 + stars * 50 }); sound.play(stars === 3 ? 'fanfare' : 'tada'); }
       setTimeout(() => $(stars >= 1 && next ? '#cc-next' : '#cc-retry').focus(), 80);
@@ -700,6 +703,14 @@
     document.addEventListener('keydown', onKeydown);
 
     async function load() {
+      if (comp) {
+        // disputa: direto na fase da rodada, sem mapa e sem saídas
+        window.Competicao.hide(container, ['#cc-quit', '[data-cc-go="map"]', '#cc-retry', '#cc-next']);
+        const level = Levels.getLevel(comp.levelId);
+        if (!level) { ui.toast('Essa fase não existe 😵', 'error'); return; }
+        start(level);
+        return;
+      }
       try {
         const res = await ctx.api.get('/progress/matematica');
         progress = res.progress || { levels: {} };

@@ -158,6 +158,7 @@
     renderUser();
     document.getElementById('hub-speech').textContent = GREETINGS[Math.floor(Math.random() * GREETINGS.length)];
     showScreen('screen-hub');
+    if (window.PlataformaRanking) window.PlataformaRanking.refreshBadge();
     return renderGames();
   }
 

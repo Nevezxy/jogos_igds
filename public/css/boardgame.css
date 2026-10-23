@@ -66,6 +66,7 @@
 .bgm-piece { font-size: 1.4rem; }
 .bgm-avatar { font-size: 1.4rem; }
 .bgm-name small { color: var(--red); }
+.bgm-capt { margin-left: auto; padding: 1px 8px; border-radius: 999px; background: var(--surface-2); border: 2px solid var(--line); font-weight: 800; font-size: .9rem; white-space: nowrap; }
 .bgm-vs { font-family: var(--font-display); color: #fff; font-size: 1.4rem; text-shadow: 0 2px 0 var(--ink); }
 .bgm-status { min-height: 1.6em; margin: 8px 0; text-align: center; font-weight: 800; color: #fff; text-shadow: 0 2px 0 var(--ink); font-size: 1.15rem; }
 .bgm-draw-offer { display: flex; justify-content: center; align-items: center; gap: 8px; margin: 0 auto 8px; padding: 6px 12px; max-width: 460px; background: var(--yellow); border: 2px solid var(--ink); border-radius: 999px; font-weight: 800; }

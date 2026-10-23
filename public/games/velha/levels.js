@@ -29,6 +29,9 @@
   ];
 
   const api = Board.build(WORLDS);
+  // Dificuldade de cada fase (1 a 4) para os pontos globais e o Modo Maratona: a força do robô.
+  const TIERS = { v3a: 1, v3b: 1, v3c: 2, v3d: 2, v4a: 2, v4b: 3, v4c: 3 };
+  api.LEVELS.forEach((l) => { l.tier = TIERS[l.id] || l.tier; });
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.VelhaLevels = api;
 })(typeof window !== 'undefined' ? window : globalThis);

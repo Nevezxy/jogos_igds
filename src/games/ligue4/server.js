@@ -7,3 +7,15 @@ const Levels = require('../../../public/games/ligue4/levels.js');
 const { createBoardServer } = require('../boardgame');
 
 module.exports = createBoardServer({ Rules, Levels });
+
+// 🏃 Modo Maratona (src/marathon/catalog.js): quanto tempo a fase leva
+// (estMs), o que fica de fora, a qualidade do resultado já validado (0 a 1,
+// desempata entre quem tem as mesmas estrelas) e a força da validação.
+module.exports.marathon = {
+  trust: 'forte',
+  exclude: () => 'contra o robô', // na Maratona é sempre jogador contra jogador
+  duels: [
+    { variant: '4', title: 'Ligue 4', tier: 1, estMs: 180000 },
+    { variant: '5', title: 'Ligue 5', tier: 3, estMs: 300000 },
+  ],
+};

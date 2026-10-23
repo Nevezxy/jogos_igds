@@ -30,3 +30,12 @@ module.exports = createPuzzleServer({
     return { stars, record: score, accuracy: Math.round((first / tasks.length) * 100), details: { score, first, count: tasks.length } };
   },
 });
+
+// 🏃 Modo Maratona (src/marathon/catalog.js): quanto tempo a fase leva
+// (estMs), o que fica de fora, a qualidade do resultado já validado (0 a 1,
+// desempata entre quem tem as mesmas estrelas) e a força da validação.
+module.exports.marathon = {
+  trust: 'forte',
+  estMs: (level) => level.count * 20000 + 10000,
+  quality: (r) => r.accuracy / 100, // tarefas certas de primeira
+};

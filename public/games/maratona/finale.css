@@ -1,0 +1,101 @@
+/* 🏆 Fim da Maratona: revelação de trás para frente, rufar, pódio que sobe,
+   coroa e luz para o campeão, destaques e linha do tempo das rodadas.
+   Só transform e opacity nas animações (leve em computador fraco). */
+
+.fin { display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 10px 0 30px; text-align: center; }
+.fin-head { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.fin-kicker { margin: 0; color: #fff; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; text-shadow: 0 2px 0 var(--ink); }
+.fin-title { margin: 0; color: #fff; text-shadow: 0 4px 0 var(--ink); font-size: clamp(2rem, 6vw, 3.4rem); animation: finDrop .7s var(--ease-bounce) both; }
+.fin-drum { margin: 4px 0 0; color: #FFE27A; font-family: var(--font-display); font-size: 1.5rem; text-shadow: 0 3px 0 var(--ink); }
+.fin.is-drum .fin-drum { animation: finShake .12s linear infinite; }
+@keyframes finDrop { from { opacity: 0; transform: translateY(-30px) scale(.9); } }
+@keyframes finShake { 25% { transform: translateX(-3px) rotate(-1deg); } 75% { transform: translateX(3px) rotate(1deg); } }
+
+/* quem ficou fora do pódio */
+.fin-rest { list-style: none; margin: 0; padding: 0; width: min(620px, 100%); display: flex; flex-direction: column-reverse; gap: 8px; }
+.fin-row { display: grid; grid-template-columns: 3rem 1fr auto auto; gap: 10px; align-items: center; padding: 8px 16px; background: var(--surface); border: var(--stroke) solid var(--ink); border-left: 10px solid var(--team); border-radius: 16px; box-shadow: 0 4px 0 var(--ink); text-align: left; opacity: 0; transform: translateX(-40px); transition: opacity .35s ease, transform .5s var(--ease-bounce); }
+.fin-row.is-in { opacity: 1; transform: none; }
+.fin-row.is-me { outline: 4px solid var(--yellow); background: #FFF6CC; }
+.fin-pos { font-family: var(--font-display); font-size: 1.4rem; text-align: center; }
+.fin-team { font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fin-row-wdl { color: var(--ink-soft); font-size: .9rem; font-weight: 700; }
+.fin-row .fin-pts { font-family: var(--font-display); font-size: 1.4rem; min-width: 2ch; text-align: right; }
+
+/* o pódio */
+.fin-podium { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; gap: 12px; width: min(760px, 100%); margin-top: 24px; }
+.fin-pod { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; opacity: 0; transform: translateY(60px) scale(.9); transition: opacity .4s ease, transform .8s var(--ease-bounce); }
+.fin-pod.is-in { opacity: 1; transform: none; }
+.fin-who { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #fff; text-shadow: 0 2px 0 var(--ink); }
+.fin-who strong { font-family: var(--font-display); font-size: 1.2rem; line-height: 1.1; max-width: 100%; overflow-wrap: anywhere; }
+.fin-icon { font-size: 2.8rem; line-height: 1; filter: drop-shadow(0 4px 0 rgba(30, 18, 64, .35)); }
+.fin-faces { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px; }
+.fin-faces .avatar-badge { width: 1.9rem; height: 1.9rem; font-size: 1.05rem; }
+.fin-block { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 2px; padding: 12px 6px; background: var(--team); background: linear-gradient(180deg, var(--team), color-mix(in srgb, var(--team) 70%, #000)); border: var(--stroke) solid var(--ink); border-radius: 18px 18px 6px 6px; box-shadow: var(--shadow-pop); color: #fff; text-shadow: 0 2px 0 rgba(30, 18, 64, .5); }
+.fin-pod-1 .fin-block { min-height: 210px; }
+.fin-pod-2 .fin-block { min-height: 160px; }
+.fin-pod-3 .fin-block { min-height: 120px; }
+.fin-medal { font-size: 2.4rem; line-height: 1; }
+.fin-block .fin-pts { font-family: var(--font-display); font-size: 2.4rem; line-height: 1; }
+.fin-pod-1 .fin-pts { font-size: 3rem; }
+.fin-wdl { opacity: .9; font-weight: 700; }
+.fin-pod.is-me .fin-block { outline: 5px solid var(--yellow); outline-offset: 3px; }
+
+/* o campeão: coroa e luz */
+.fin-crown { position: absolute; top: -42px; font-size: 2.8rem; z-index: 2; opacity: 0; transform: translateY(-30px) rotate(-20deg); }
+.fin-pod-1.is-in .fin-crown { animation: finCrown .8s .5s var(--ease-bounce) forwards, finBob 2.4s 1.3s ease-in-out infinite; }
+@keyframes finCrown { to { opacity: 1; transform: none; } }
+@keyframes finBob { 50% { transform: translateY(-6px) rotate(4deg); } }
+.fin-rays { position: absolute; top: -40px; left: 50%; width: 360px; height: 360px; margin-left: -180px; z-index: -1; border-radius: 50%; opacity: 0;
+  background: repeating-conic-gradient(from 0deg, rgba(255, 226, 122, .55) 0deg 10deg, transparent 10deg 24deg);
+  -webkit-mask: radial-gradient(circle, #000 25%, transparent 70%); mask: radial-gradient(circle, #000 25%, transparent 70%); pointer-events: none; }
+.fin-pod-1.is-in .fin-rays { animation: finRaysIn .8s .3s ease forwards, finSpin 14s linear infinite; }
+@keyframes finRaysIn { to { opacity: 1; } }
+@keyframes finSpin { to { transform: rotate(360deg); } }
+
+/* depois da festa */
+.fin-after { width: min(760px, 100%); display: flex; flex-direction: column; gap: 12px; opacity: 0; transform: translateY(20px); transition: opacity .6s ease, transform .6s var(--ease-out); }
+.fin.is-done .fin-after { opacity: 1; transform: none; }
+.fin-h2 { margin: 6px 0 0; color: #fff; font-family: var(--font-display); text-shadow: 0 3px 0 var(--ink); }
+.fin-hls { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+.fin-hl { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px; background: var(--surface); border: var(--stroke) solid var(--ink); border-radius: var(--radius-md); box-shadow: 0 4px 0 var(--ink); }
+.fin-hl-icon { font-size: 1.8rem; line-height: 1; }
+.fin-hl small { color: var(--ink-soft); font-weight: 800; text-transform: uppercase; font-size: .72rem; letter-spacing: .05em; }
+.fin-hl strong { font-weight: 800; }
+.fin-hl em { font-style: normal; color: var(--ink-soft); font-weight: 700; font-size: .9rem; }
+.fin-rounds { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; text-align: left; }
+.fin-rounds li { display: flex; gap: 10px; align-items: center; padding: 8px 12px; background: var(--surface); border: 2px solid var(--ink); border-radius: 14px; }
+.fin-rounds div { display: flex; flex-direction: column; min-width: 0; }
+.fin-rounds small { color: var(--ink-soft); font-weight: 700; }
+.fin-r-icon { font-size: 1.6rem; }
+.fin-actions { display: flex; justify-content: center; }
+
+/* telão: tudo maior */
+.fin.is-big .fin-title { font-size: clamp(2.6rem, 6vw, 4.6rem); }
+.fin.is-big .fin-podium { width: min(1100px, 100%); }
+.fin.is-big .fin-pod-1 .fin-block { min-height: 300px; }
+.fin.is-big .fin-pod-2 .fin-block { min-height: 230px; }
+.fin.is-big .fin-pod-3 .fin-block { min-height: 170px; }
+.fin.is-big .fin-icon { font-size: 4rem; }
+.fin.is-big .fin-who strong { font-size: 1.8rem; }
+.fin.is-big .fin-rest, .fin.is-big .fin-after { width: min(1000px, 100%); }
+.fin.is-big .fin-row { font-size: 1.3rem; }
+
+@media (max-width: 480px) {
+  .fin-podium { gap: 6px; }
+  .fin-icon { font-size: 2rem; }
+  .fin-who strong { font-size: .95rem; }
+  .fin-block .fin-pts { font-size: 1.8rem; }
+  .fin-pod-1 .fin-pts { font-size: 2.2rem; }
+  .fin-medal { font-size: 1.8rem; }
+  .fin-pod-1 .fin-block { min-height: 170px; }
+  .fin-pod-2 .fin-block { min-height: 130px; }
+  .fin-pod-3 .fin-block { min-height: 100px; }
+  .fin-rays { width: 240px; height: 240px; margin-left: -120px; }
+  .fin-row { grid-template-columns: 2.2rem 1fr auto; }
+  .fin-row-wdl { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fin-title, .fin.is-drum .fin-drum, .fin-crown, .fin-rays { animation: none !important; }
+  .fin-crown, .fin-rays { opacity: 1; transform: none; }
+  .fin-row, .fin-pod, .fin-after { transition: none; opacity: 1; transform: none; }
+}

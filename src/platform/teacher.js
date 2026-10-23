@@ -9,6 +9,7 @@ const { db } = require('./db');
 const { generateToken } = require('./idGenerator');
 const accounts = require('./accounts');
 const progress = require('./progress');
+const points = require('./points');
 const settings = require('./settings');
 
 const TOKEN_TTL_MS = 12 * 60 * 60 * 1000;
@@ -141,7 +142,9 @@ function evolution(now = Date.now(), weeks = EVOLUTION_WEEKS) {
 // cada jogo (o jogo decide como, em mergeAccounts), histórico de rodadas e
 // jogadores do bingo passam para a conta certa; a conta repetida some.
 const moveHistory = db.transaction((fromId, intoId) => {
-  db.prepare('UPDATE game_results SET student_id = ? WHERE student_id = ?').run(intoId, fromId);
+  // a mesma identificação de rodada nas duas contas (raríssimo): a repetida perde a identificação
+  db.prepare('UPDATE OR IGNORE game_results SET student_id = ? WHERE student_id = ?').run(intoId, fromId);
+  db.prepare('UPDATE game_results SET student_id = ?, attempt_id = NULL WHERE student_id = ?').run(intoId, fromId);
   db.prepare('UPDATE players SET student_id = ? WHERE student_id = ?').run(intoId, fromId);
   db.prepare('DELETE FROM game_progress WHERE student_id = ?').run(fromId);
 });
@@ -162,6 +165,9 @@ function mergeStudents(registry, fromId, intoId) {
   }
   moveHistory(from.id, into.id);
   accounts.removeMergedStudent(from.id);
+  // pontos: a conta certa recalcula com o progresso juntado; a outra some
+  points.recompute(into.id);
+  points.recompute(from.id);
 }
 
 // Libera (ou bloqueia de novo) todas as fases de um jogo para um educando.

@@ -83,6 +83,7 @@
     <div class="user-bar">
       <button type="button" class="avatar-badge user-avatar" id="hub-avatar" aria-label="Trocar meu bichinho" title="Trocar meu bichinho">🐼</button>
       <span>Oi, <strong id="hub-first-name">amigo(a)</strong>!</span>
+      <button type="button" class="btn-mini hub-points" id="hub-points" title="Ver o ranking">🏅 Ranking</button>
       <button type="button" class="btn-mini user-logout" id="btn-logout">Não sou eu / Sair</button>
     </div>
   </header>
@@ -99,6 +100,23 @@
   </div>
 
   <div class="game-grid" id="game-grid" aria-label="Jogos"></div>
+</section>
+
+<!-- ======================= 🏅 RANKING (educandos e professor) ======================= -->
+<section id="screen-ranking" class="screen screen-top">
+  <header class="game-top">
+    <button type="button" class="btn-back" id="ranking-back">← Jogos</button>
+    <h2 class="game-title">🏅 Ranking</h2>
+  </header>
+  <div class="ranking-wrap">
+    <p class="ranking-how">Cada fase com estrela vale pontos: <b>estrelas × 10 × dificuldade</b> (1 a 4). Jogar de novo só soma se você melhorar as estrelas.</p>
+    <div class="ranking-me card-block" id="ranking-me" hidden></div>
+    <div class="ranking-filters">
+      <label>Turma <select id="ranking-class" aria-label="Turma"></select></label>
+      <label>Jogo <select id="ranking-game" aria-label="Jogo"></select></label>
+    </div>
+    <ol class="ranking-list" id="ranking-list" aria-live="polite"></ol>
+  </div>
 </section>
 
 <!-- ======================= JOGO (tela genérica para jogos carregados sob demanda) ======================= -->
@@ -135,6 +153,7 @@
     <h1 class="title-game teacher-title">🧑‍🏫 Área do professor</h1>
     <div class="teacher-top-actions">
       <button type="button" class="btn-mini" id="teacher-home">🏠 Início</button>
+      <button type="button" class="btn-mini" id="teacher-ranking">🏅 Ranking</button>
       <button type="button" class="btn-mini" id="teacher-logout" hidden>🔒 Sair</button>
     </div>
   </header>
@@ -222,12 +241,14 @@
 <script src="/js/shared/levelmap.js"></script>
 <script src="/js/shared/falling.js"></script>
 <script src="/js/shared/cadentes.js"></script>
+<script src="/js/shared/competition.js"></script>
 <!-- núcleo da plataforma -->
 <script src="/js/platform/api.js"></script>
 <script src="/js/platform/auth.js"></script>
 <script src="/js/platform/games.js"></script>
 <script src="/js/platform/hub.js"></script>
 <script src="/js/platform/teacher.js"></script>
+<script src="/js/platform/ranking.js"></script>
 <script src="/js/platform/router.js"></script>
 <script src="/js/platform/app.js"></script>
 </body>

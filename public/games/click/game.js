@@ -49,6 +49,7 @@
 
   function createGame(container, ctx) {
     const { sound, fx, ui } = ctx;
+    const comp = window.Competicao.of(ctx); // 🏃 disputa da maratona (js/shared/competition.js)
     const $ = (sel) => container.querySelector(sel);
     const screens = [...container.querySelectorAll('[data-ck]')];
     const arena = $('#ck-arena');
@@ -65,6 +66,7 @@
     // como perdido); desligado (o padrão), os alvos esperam e não têm anel.
     let timer = false;
     try { timer = localStorage.getItem(TIMER_KEY) === '1'; } catch (e) { /* ignore */ }
+    if (comp) timer = true; // na disputa, todo mundo com cronômetro
     const timerBoxes = [...container.querySelectorAll('[data-ck-timer]')];
     function syncTimer() {
       timerBoxes.forEach((box) => { box.checked = timer; });
@@ -597,7 +599,7 @@
 
     function start(level) {
       cleanupRound();
-      const seed = randomSeed();
+      const seed = (comp ? comp.seed >>> 0 : randomSeed());
       const items = Targets.makeTargets(level, seed);
       layer.innerHTML = '';
       arena.classList.remove('is-revealed', 'is-frozen-sky');
@@ -608,7 +610,7 @@
       round = {
         level, seed, items, picture, timer,
         tiles: buildPicture(level, picture), revealed: 0,
-        specials: Kit.pickSpecials(items.length),
+        specials: comp ? items.map(() => null) : Kit.pickSpecials(items.length), // na disputa, sem sorteio fora da semente
         board: Kit.createBoard(arena, { best: bestOf(level.id), onMultiplier: () => sound.play('tada') }),
         alive: [], next: 0, lastSpawn: -1e9, elapsed: 0, frozenUntil: 0,
         hits: 0, hitsBy: {}, lost: [], wrong: 0, wrongBy: {},
@@ -738,13 +740,13 @@
       b.textContent = `Você revelou ${r.picture.name}!`;
       arena.appendChild(b);
       setTimeout(() => b.remove(), 1300);
-      setTimeout(() => { if (round === r && !destroyed) showResult({ stars, accuracy, best }); }, 1500);
+      setTimeout(() => { if (round === r && !destroyed) { showResult({ stars, accuracy, best }); if (comp) window.Competicao.waiting($('#ck-record')); } }, 1500);
       try {
-        const res = await ctx.api.post('/progress/click/results', {
+        const res = await window.Competicao.send(ctx, '/progress/click/results', {
           levelId: r.level.id, seed: r.seed, timer: r.timer, lost: r.lost, wrong: r.wrong, wrongBy: r.wrongBy,
           durationMs, score: r.board.score, bestStreak: r.board.bestStreak,
         });
-        progress = res.progress;
+        progress = res.progress || progress;
       } catch (e) {
         // sem internet: o resultado fica guardado e vai sozinho quando ela voltar
         if (e.queued) ui.toast(e.message, 'info', 6000);
@@ -791,7 +793,7 @@
           byKind.appendChild(li);
         });
       }
-      const next = Levels.LEVELS[r.level.index + 1];
+      const next = comp ? null : Levels.LEVELS[r.level.index + 1];
       $('#ck-next').hidden = !next;
       if (stars >= 1) { fx.confetti({ amount: 40 + stars * 50 }); sound.play(stars === 3 ? 'fanfare' : 'tada'); }
       setTimeout(() => $(stars >= 1 && next ? '#ck-next' : '#ck-retry').focus(), 80);
@@ -815,6 +817,14 @@
     }));
 
     async function load() {
+      if (comp) {
+        // disputa: direto na fase da rodada, sem mapa e sem saídas
+        window.Competicao.hide(container, ['#ck-quit', '[data-ck-go="map"]', '#ck-retry', '#ck-next']);
+        const level = Levels.getLevel(comp.levelId);
+        if (!level) { ui.toast('Essa fase não existe 😵', 'error'); return; }
+        start(level);
+        return;
+      }
       try {
         const res = await ctx.api.get('/progress/click');
         progress = res.progress || { levels: {} };

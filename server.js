@@ -15,6 +15,7 @@ const registry = require('./src/games/registry');
 const { createPlatformRouter } = require('./src/platform/routes');
 const offline = require('./src/platform/offline');
 const { createMatchManager } = require('./src/platform/match');
+const { createMarathonRealtime } = require('./src/marathon/socketHandlers');
 
 const PORT = process.env.PORT || 3000;
 
@@ -86,7 +87,13 @@ for (const game of registry.games) {
   if (game.server && typeof game.server.registerSockets === 'function') game.server.registerSockets(io);
 }
 // 👫 partidas pela rede dos jogos de tabuleiro (código de sala e pareamento)
-createMatchManager(registry).register(io);
+const matchManager = createMatchManager(registry);
+matchManager.register(io);
+// 🏃 Modo Maratona: salas, rodadas e duelos (usa as partidas pela rede); ao
+// subir, retoma as maratonas que estavam em andamento
+const marathon = createMarathonRealtime(registry, { matchManager });
+marathon.register(io);
+app.locals.marathon = marathon.manager;
 
 server.listen(PORT, () => {
   console.log(`🎉 Jogos IGDS rodando em http://localhost:${PORT}`);

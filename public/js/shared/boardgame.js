@@ -168,6 +168,9 @@
     const screens = [...root.querySelectorAll('[data-bgm]')];
     const { Rules, Levels } = cfg;
     const socketApi = window.BingoSocket;
+    // 🏃 duelo da maratona (js/shared/competition.js): a partida pela rede já
+    // foi criada pelo servidor; entra direto nela, sem mapa e sem saídas
+    const comp = window.Competicao ? window.Competicao.of(ctx) : null;
 
     let progress = { levels: {} };
     let screen = 'map';
@@ -222,7 +225,8 @@
         const p = g.players[seat] || {};
         el.innerHTML = `<span class="bgm-piece">${esc(cfg.seats[seat].icon)}</span>
           <span class="bgm-avatar">${esc(p.avatar || '')}</span>
-          <span class="bgm-name">${esc(p.name || '')}${p.connected === false ? ' <small>(saiu)</small>' : ''}</span>`;
+          <span class="bgm-name">${esc(p.name || '')}${p.connected === false ? ' <small>(saiu)</small>' : ''}</span>
+          ${g.capturas ? `<span class="bgm-capt" title="Pontos das peças capturadas (desempate no fim do tempo)">⚔️ ${g.capturas[seat]}</span>` : ''}`;
         el.classList.toggle('is-turn', !g.state.result && g.state.turn === seat);
         el.classList.toggle('is-me', seat === g.mySeat);
       });
@@ -250,7 +254,7 @@
       $('[data-bgm-undo]').hidden = !(g.mode === 'bot' && g.level.undo);
       // desfazer volta para a jogada anterior da criança: precisa de 2 lances (o dela e o do robô)
       $('[data-bgm-undo]').disabled = !myTurn || g.moves.length < 2;
-      $('[data-bgm-draw]').hidden = g.mode !== 'friend';
+      $('[data-bgm-draw]').hidden = g.mode !== 'friend' || Boolean(comp); // no duelo da maratona, sem empate combinado
       $('[data-bgm-draw]').disabled = g.ended || g.drawOffer === g.mySeat;
       $('[data-bgm-resign]').disabled = g.ended;
       root.querySelector('.bgm-actions').classList.toggle('is-ended', Boolean(g.ended || g.state.result));
@@ -421,7 +425,7 @@
         ui.toast(view.you === 0 ? 'Partida começando: você começa!' : 'Partida começando: o seu amigo começa.', 'info', 3000);
       }
       const before = game.moves ? game.moves.length : 0;
-      Object.assign(game, { mySeat: view.you, state: view.state, moves: view.moves, players: view.players, drawOffer: view.drawOffer });
+      Object.assign(game, { mySeat: view.you, state: view.state, moves: view.moves, players: view.players, drawOffer: view.drawOffer, capturas: view.capturas || null });
       if (view.moves.length > before && !fresh) sound.play('pop');
       if (view.status === 'ended' && !game.ended) {
         game.ended = true;
@@ -430,7 +434,14 @@
         const outcome = w === null ? 'draw' : w === view.you ? 'win' : 'loss';
         render();
         const g = game;
-        setTimeout(() => { if (game === g) showResult({ outcome, stars: null, reason: view.result.reason }); }, 700);
+        setTimeout(() => {
+          if (game !== g) return;
+          showResult({ outcome, stars: null, reason: view.result.reason, capt: view.result.capturas, seat: view.you });
+          if (comp) {
+            window.Competicao.waiting($('[data-bgm-result-msg]'), `${$('[data-bgm-result-msg]').textContent} Esperando os outros confrontos…`);
+            if (comp.onDone) comp.onDone({ outcome, reason: view.result.reason });
+          }
+        }, 700);
         ctx.api.get(`/progress/${cfg.id}`).then((r) => { progress = r.progress || progress; }).catch(() => {});
         return;
       }
@@ -458,8 +469,8 @@
     }
 
     // ---------------- resultado ----------------
-    const REASONS = { desistiu: 'por desistência', abandono: 'porque o outro saiu da partida', acordo: 'combinado entre os dois' };
-    function showResult({ outcome, stars, resigned, reason }) {
+    const REASONS = { desistiu: 'por desistência', abandono: 'porque o outro saiu da partida', acordo: 'combinado entre os dois', prazo: 'no fim do tempo da rodada' };
+    function showResult({ outcome, stars, resigned, reason, capt, seat }) {
       const g = game;
       if (!g) return;
       const box = $('[data-bgm-result]');
@@ -473,6 +484,8 @@
       [...starsBox.children].forEach((el, i) => el.classList.toggle('is-on', stars !== null && i < stars));
       let msg = '';
       if (reason && REASONS[reason]) msg = `${outcome === 'win' ? 'Vitória' : outcome === 'draw' ? 'Empate' : 'Derrota'} ${REASONS[reason]}.`;
+      // no prazo, dama e xadrez desempatam pelos pontos das peças capturadas
+      if (reason === 'prazo' && capt) msg = `${msg.slice(0, -1)}: peças capturadas valem ${capt[seat]} ponto${capt[seat] === 1 ? '' : 's'} para você e ${capt[1 - seat]} para o outro lado.`;
       else if (g.mode === 'bot') {
         if (resigned) msg = 'Desistir também faz parte. Tente de novo!';
         else if (stars === 3) msg = 'Sem desfazer nenhuma jogada. Que fera! 🎉';
@@ -543,6 +556,7 @@
     });
 
     async function load() {
+      if (comp) return loadDuel();
       try {
         const res = await ctx.api.get(`/progress/${cfg.id}`);
         progress = res.progress || { levels: {} };
@@ -562,6 +576,15 @@
       } else if (saved && saved.game === cfg.id) {
         rejoin(saved.matchId);
       }
+    }
+    // duelo da maratona: entra direto na partida criada pelo servidor
+    async function loadDuel() {
+      window.Competicao.hide(root, ['[data-bgm-quit]', '[data-bgm-go-map]', '[data-bgm-again]', '[data-bgm-next]', '[data-bgm-draw]', '[data-bgm-cancel]']);
+      $('[data-bgm-wait-search]').hidden = false;
+      $('[data-bgm-wait-code]').hidden = true;
+      $('[data-bgm-wait-search] h3').textContent = 'Entrando no duelo...';
+      show('wait');
+      await rejoin(comp.matchId);
     }
 
     function destroy() {

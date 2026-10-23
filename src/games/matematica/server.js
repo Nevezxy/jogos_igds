@@ -196,3 +196,13 @@ function mergeAccounts(a, b) {
 }
 
 module.exports = { validateResult, mergeProgress, summary, teacherSummary, mergeAccounts };
+
+// 🏃 Modo Maratona (src/marathon/catalog.js): quanto tempo a fase leva
+// (estMs), o que fica de fora, a qualidade do resultado já validado (0 a 1,
+// desempata entre quem tem as mesmas estrelas) e a força da validação.
+module.exports.marathon = {
+  trust: 'forte',
+  // 10 contas no tempo da 3ª estrela, com folga
+  estMs: (level) => (level.count || 10) * level.target * 1500 + 10000,
+  quality: (r) => r.accuracy / 100, // contas certas de primeira
+};

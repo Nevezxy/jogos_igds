@@ -604,6 +604,7 @@
     }
   });
   document.getElementById('teacher-home').addEventListener('click', () => window.PlataformaAuth.goHome());
+  document.getElementById('teacher-ranking').addEventListener('click', () => window.PlataformaRouter.go('/ranking'));
   document.getElementById('teacher-logout').addEventListener('click', async () => {
     try { await request('POST', '/logout'); } catch (e) { /* sai mesmo assim */ }
     storeToken(null);
