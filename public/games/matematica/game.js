@@ -124,8 +124,9 @@
       return Object.entries(review).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k]) => k);
     }
 
-    function openIntro(level) {
+    function openIntro(level, dynamic = false) {
       currentLevel = level;
+      if (window.Dinamico) window.Dinamico.markIntro($('#cc-intro-title'), dynamic);
       const world = Levels.getWorld(level.world);
       $('#cc-intro-world').textContent = `${world.icon} ${world.name} · fase ${level.indexInWorld + 1} de ${world.levels.length}`;
       $('#cc-intro-title').textContent = level.title;
@@ -580,6 +581,16 @@
     $('#cc-quit').addEventListener('click', quit);
 
     // ---------------- resultado ----------------
+    // 🔀 Modo Dinâmico (js/shared/dynamic.js): com o resultado já no servidor,
+    // o "Próxima fase" pode virar uma fase de outro jogo
+    function dynamicAfter(r, stars) {
+      if (comp || !window.Dinamico || round !== r) return;
+      window.Dinamico.after(ctx, {
+        gameId: 'matematica', levelId: r.level.id, stars, button: $('#cc-next'),
+        message: (t) => { $('#cc-result-msg').textContent = t; },
+      });
+    }
+
     async function finishRound() {
       const r = round;
       const durationMs = Date.now() - r.startedAt;
@@ -598,6 +609,7 @@
           durationMs,
         });
         progress = res.progress || progress;
+        dynamicAfter(r, stars);
       } catch (e) {
         // sem internet: o resultado fica guardado e vai sozinho quando ela voltar
         if (e.queued) ui.toast(e.message, 'info', 6000);
@@ -642,6 +654,7 @@
         $('#cc-missed-list').appendChild(li);
       });
       const next = comp ? null : Levels.LEVELS[level.index + 1];
+      if (window.Dinamico) window.Dinamico.reset(container);
       $('#cc-next').hidden = !next;
       if (stars >= 1) { fx.confetti({ amount: 40 + stars * 50 }); sound.play(stars === 3 ? 'fanfare' : 'tada'); }
       setTimeout(() => $(stars >= 1 && next ? '#cc-next' : '#cc-retry').focus(), 80);
@@ -720,6 +733,9 @@
       if (destroyed) return;
       show('map');
       renderMap();
+      // link com a fase (Modo Dinâmico): direto na tela "antes da fase"
+      const asked = window.Dinamico && Levels.getLevel(window.Dinamico.levelFromParams(ctx) || '');
+      if (asked) openIntro(asked, window.Dinamico.fromDynamic(ctx));
     }
 
     function destroy() {

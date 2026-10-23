@@ -8,6 +8,7 @@ const accounts = require('./accounts');
 const progress = require('./progress');
 const points = require('./points');
 const marathonCatalog = require('../marathon/catalog');
+const dynamic = require('./dynamic');
 const teacher = require('./teacher');
 
 function readToken(req) {
@@ -94,6 +95,25 @@ function createPlatformRouter(registry) {
     const result = game.server.validateResult(body(req), old);
     const updated = progress.recordResult(student.id, game, result, { attemptId });
     return { progress: updated, result: { levelId: result.levelId, stars: result.stars, score: result.score, points: result.pointsDelta || 0 } };
+  }));
+
+  // ---------------- 🔀 Modo Dinâmico ----------------
+  // A configuração da criança (jogos e intervalo) e a próxima fase depois de
+  // concluir uma (src/platform/dynamic.js).
+  router.get('/dinamico', handle((req) => {
+    const student = requireStudent(req);
+    return { settings: dynamic.publicSettings(dynamic.getSettings(registry, student.id)), catalog: dynamic.catalog(registry), interval: dynamic.INTERVAL };
+  }));
+
+  router.post('/dinamico', handle((req) => {
+    const student = requireStudent(req);
+    return { settings: dynamic.publicSettings(dynamic.saveSettings(registry, student.id, body(req))) };
+  }));
+
+  router.post('/dinamico/proxima', handle((req) => {
+    const student = requireStudent(req);
+    const { gameId, levelId, stars, noKeyboard } = body(req);
+    return dynamic.next(registry, student.id, { gameId: String(gameId || ''), levelId: String(levelId || ''), stars, noKeyboard: noKeyboard === true });
   }));
 
   // ---------------- 🏅 pontos e ranking ----------------

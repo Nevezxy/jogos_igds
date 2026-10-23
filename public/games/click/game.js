@@ -121,8 +121,9 @@
     }
 
     // ---------------- antes da fase ----------------
-    function openIntro(level) {
+    function openIntro(level, dynamic = false) {
       current = level;
+      if (window.Dinamico) window.Dinamico.markIntro($('#ck-intro-title'), dynamic);
       const world = Levels.getWorld(level.world);
       $('#ck-intro-world').textContent = `${world.icon} ${world.name} · fase ${level.indexInWorld + 1} de ${world.levels.length}`;
       $('#ck-intro-title').textContent = level.fullTitle;
@@ -722,6 +723,16 @@
     $('#ck-quit').addEventListener('click', quit);
 
     // ---------------- resultado ----------------
+    // 🔀 Modo Dinâmico (js/shared/dynamic.js): com o resultado já no servidor,
+    // o "Próxima fase" pode virar uma fase de outro jogo
+    async function dynamicAfter(r, stars) {
+      if (comp || !window.Dinamico || !(await r.saved) || round !== r) return;
+      window.Dinamico.after(ctx, {
+        gameId: 'click', levelId: r.level.id, stars, button: $('#ck-next'),
+        message: (t) => { $('#ck-result-msg').textContent = t; },
+      });
+    }
+
     async function finish() {
       const r = round;
       cancelAnimationFrame(r.raf);
@@ -740,14 +751,18 @@
       b.textContent = `Você revelou ${r.picture.name}!`;
       arena.appendChild(b);
       setTimeout(() => b.remove(), 1300);
-      setTimeout(() => { if (round === r && !destroyed) { showResult({ stars, accuracy, best }); if (comp) window.Competicao.waiting($('#ck-record')); } }, 1500);
+      let resolveSaved;
+      r.saved = new Promise((ok) => { resolveSaved = ok; });
+      setTimeout(() => { if (round === r && !destroyed) { showResult({ stars, accuracy, best }); if (comp) window.Competicao.waiting($('#ck-record')); dynamicAfter(r, stars); } }, 1500);
       try {
         const res = await window.Competicao.send(ctx, '/progress/click/results', {
           levelId: r.level.id, seed: r.seed, timer: r.timer, lost: r.lost, wrong: r.wrong, wrongBy: r.wrongBy,
           durationMs, score: r.board.score, bestStreak: r.board.bestStreak,
         });
         progress = res.progress || progress;
+        resolveSaved(true);
       } catch (e) {
+        resolveSaved(false);
         // sem internet: o resultado fica guardado e vai sozinho quando ela voltar
         if (e.queued) ui.toast(e.message, 'info', 6000);
         else ui.toast('Não consegui salvar o seu resultado 😵 Confira a internet.', 'error', 5000);
@@ -794,6 +809,7 @@
         });
       }
       const next = comp ? null : Levels.LEVELS[r.level.index + 1];
+      if (window.Dinamico) window.Dinamico.reset(container);
       $('#ck-next').hidden = !next;
       if (stars >= 1) { fx.confetti({ amount: 40 + stars * 50 }); sound.play(stars === 3 ? 'fanfare' : 'tada'); }
       setTimeout(() => $(stars >= 1 && next ? '#ck-next' : '#ck-retry').focus(), 80);
@@ -834,6 +850,9 @@
       if (destroyed) return;
       show('map');
       renderMap();
+      // link com a fase (Modo Dinâmico): direto na tela "antes da fase"
+      const asked = window.Dinamico && Levels.getLevel(window.Dinamico.levelFromParams(ctx) || '');
+      if (asked) openIntro(asked, window.Dinamico.fromDynamic(ctx));
     }
 
     function destroy() {
