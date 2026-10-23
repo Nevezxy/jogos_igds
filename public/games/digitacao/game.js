@@ -114,9 +114,10 @@
 
     // ---------------- antes da fase ----------------
 
-    function openIntro(level) {
+    function openIntro(level, dynamic = false) {
       const world = Levels.getWorld(level.world);
       current = { level, title: level.title };
+      if (window.Dinamico) window.Dinamico.markIntro($('#tm-intro-title'), dynamic);
       $('#tm-intro-world').textContent = `${world.icon} Mundo ${level.worldIndex + 1} · ${world.name} · Fase ${level.indexInWorld + 1}`;
       $('#tm-intro-title').textContent = level.title;
       // a explicação do mundo aparece na primeira fase de cada mundo
@@ -321,6 +322,7 @@
       keyboard.highlight(null);
       hands.highlight([]);
       input.blur();
+      const thisRun = run;
       const result = run.result();
       const { level } = current;
       const stars = level ? Levels.starsFor(level.id, result.accuracy, result.wpm) : 0;
@@ -340,6 +342,13 @@
         progress = res.progress || progress;
         if (comp) { window.Competicao.waiting($('#tm-record')); return; }
         renderNextButton();
+        // 🔀 Modo Dinâmico (js/shared/dynamic.js): o "Próxima fase" pode virar uma fase de outro jogo
+        if (window.Dinamico && run === thisRun && current.level === level) {
+          window.Dinamico.after(ctx, {
+            gameId: 'digitacao', levelId: level.id, stars, button: $('#tm-next'),
+            message: (t) => { $('#tm-result-msg').textContent = t; },
+          });
+        }
       } catch (e) {
         // sem internet: o resultado fica guardado e vai sozinho quando ela voltar
         if (e.queued) ui.toast(e.message, 'info', 6000);
@@ -382,6 +391,7 @@
       });
 
       if (stars >= 1 || practice) { fx.confetti({ amount: 40 + stars * 50 }); sound.play(stars === 3 ? 'fanfare' : 'tada'); }
+      if (window.Dinamico) window.Dinamico.reset(container);
       renderNextButton();
       setTimeout(() => $(stars >= 1 && !practice ? '#tm-next' : '#tm-retry').focus(), 80);
     }
@@ -457,6 +467,9 @@
       if (destroyed) return;
       show('map');
       renderMap();
+      // link com a fase (Modo Dinâmico): direto na tela "antes da fase"
+      const asked = window.Dinamico && Levels.getLevel(window.Dinamico.levelFromParams(ctx) || '');
+      if (asked && Levels.isUnlocked(progress, asked.id)) openIntro(asked, window.Dinamico.fromDynamic(ctx));
     }
 
     function destroy() {

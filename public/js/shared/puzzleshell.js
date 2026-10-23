@@ -18,6 +18,8 @@
 //   fase (body vai para POST /progress/<id>/results); seed: semente da rodada.
 // 🏃 Disputa (ctx.competition, ver js/shared/competition.js): abre direto na
 // fase da rodada, com a semente dela, e o resultado vai para a maratona.
+// 🔀 Modo Dinâmico (js/shared/dynamic.js): ?fase=<id> abre direto na fase e,
+// ligado, o "Próxima fase" do resultado leva a uma fase de outro jogo.
 
 (function () {
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -38,6 +40,7 @@
 
       <section class="pz-screen" data-pz="intro" hidden>
         <div class="pz-card">
+          <p class="dyn-badge" data-pz-dyn hidden>🔀 Desafio dinâmico</p>
           <p class="pz-intro-world" data-pz-intro-world></p>
           <h3 class="pz-intro-title" data-pz-intro-title></h3>
           <p class="pz-intro-text" data-pz-intro-text></p>
@@ -123,8 +126,9 @@
       if (cfg.mapExtra) cfg.mapExtra($('[data-pz-extra]'), progress);
     }
 
-    function openIntro(level) {
+    function openIntro(level, { dynamic = false } = {}) {
       current = level;
+      $('[data-pz-dyn]').hidden = !dynamic;
       const world = Levels.getWorld(level.world);
       $('[data-pz-intro-world]').textContent = `${world.icon} ${world.name} · fase ${level.indexInWorld + 1} de ${world.levels.length}`;
       $('[data-pz-intro-title]').textContent = level.title;
@@ -214,13 +218,27 @@
       r.ended = true;
       const prevBest = bestOf(r.level.id);
       setTimeout(() => { if (run === r) showResult(r, res, prevBest); }, res.delay != null ? res.delay : 700);
+      let resolveSaved;
+      r.saved = new Promise((ok) => { resolveSaved = ok; });
       try {
         const out = await window.Competicao.send(ctx, `/progress/${cfg.id}/results`, { levelId: r.level.id, seed: r.seed, durationMs: Date.now() - r.startedAt, ...res.body });
         progress = out.progress || progress;
+        resolveSaved(true);
       } catch (e) {
+        resolveSaved(false);
         if (e.queued) ui.toast(e.message, 'info', 6000);
         else ui.toast('Não consegui salvar o seu resultado 😵 Confira a internet.', 'error', 5000);
       }
+    }
+
+    // 🔀 Modo Dinâmico: depois de o resultado chegar ao servidor
+    async function dynamicNext(r, stars) {
+      if (comp || !window.Dinamico || stars < 1) return;
+      if (!(await r.saved) || run !== r || screen !== 'result') return;
+      window.Dinamico.after(ctx, {
+        gameId: cfg.id, levelId: r.level.id, stars, button: $('[data-pz-next]'),
+        message: (t) => { $('[data-pz-result-msg]').textContent = t; },
+      });
     }
 
     function showResult(r, res, prevBest) {
@@ -240,7 +258,9 @@
         ? (prevBest != null ? `🏆 Novo recorde: ${value} ${cfg.record.label} (antes: ${prevBest})` : '🏆 Primeiro recorde desta fase!')
         : prevBest != null ? `Seu recorde nesta fase: ${prevBest} ${cfg.record.label}` : '';
       const next = comp ? null : Levels.LEVELS[r.level.index + 1];
+      if (window.Dinamico) window.Dinamico.reset(root);
       $('[data-pz-next]').hidden = !next;
+      dynamicNext(r, stars);
       if (comp) window.Competicao.waiting($('[data-pz-record]'));
       if (stars >= 1) { fx.confetti({ amount: 40 + stars * 50 }); sound.play(stars === 3 ? 'fanfare' : 'tada'); }
       if (!comp) setTimeout(() => $(stars >= 1 && next ? '[data-pz-next]' : '[data-pz-retry]').focus(), 80);
@@ -291,6 +311,9 @@
       if (destroyed) return;
       show('map');
       renderMap();
+      // link com a fase (Modo Dinâmico): direto na tela "antes da fase"
+      const asked = window.Dinamico && Levels.getLevel(window.Dinamico.levelFromParams(ctx) || '');
+      if (asked) openIntro(asked, { dynamic: window.Dinamico.fromDynamic(ctx) });
     }
 
     function destroy() {

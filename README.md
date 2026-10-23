@@ -36,6 +36,9 @@ E em todos os jogos: **🏅 pontos e ranking**. Cada fase com estrela vale
 pontos (estrelas × 10 × dificuldade de 1 a 4), e o ranking por turma e por
 jogo é aberto a quem está logado.
 
+E o **🔀 Modo Dinâmico**: com ele ligado, ao terminar uma fase a criança vai
+para **outro jogo**, de dificuldade parecida, numa fase que ainda não jogou.
+
 A plataforma foi feita para receber **novos jogos** sem mexer no núcleo
 (veja a seção 5).
 
@@ -588,6 +591,25 @@ já fez.
   caixa de saída, duplo clique) é reconhecido e não grava de novo.
 - Juntar contas refaz os pontos; o professor pode recalcular tudo.
 
+### 🔀 Modo Dinâmico
+- Botão **🔀 Modo Dinâmico** no topo do painel: a criança liga ou desliga,
+  escolhe os jogos que entram (pelo menos 2; os 18 jogos individuais com
+  fases) e o **intervalo**: trocar de jogo a cada 1, 2, 3, 4 ou 5 fases
+  concluídas. A configuração fica no servidor (vale em qualquer computador).
+- Ao **concluir** uma fase (≥ 1 ⭐) em qualquer jogo, o botão "Próxima fase"
+  vira **"🔀 Próximo desafio: 🚗 Carrinhos · Fase 12"**. Com 0 ⭐ ela fica no
+  mesmo jogo, e "jogar de novo" a mesma fase não conta para o intervalo.
+- **Quem escolhe é o servidor** (`src/platform/dynamic.js`): outro jogo da
+  escolha, com a mesma dificuldade (`tier` de 1 a 4) e, se não houver, a
+  vizinha (para baixo com 1 ⭐, para cima com 3 ⭐); dentro do jogo, a primeira
+  fase dessa dificuldade **que ela nunca jogou** (no modo livre, na Maratona
+  ou aqui); os 3 últimos jogos perdem a vez. Acabou tudo: sugere as fases
+  com menos de 3 ⭐.
+- O link da fase (`/jogos/<id>?fase=<fase>&dinamico=1`) abre o jogo direto
+  na tela "antes da fase", com o selo 🔀. No tablet (sem teclado de
+  verdade) não sugere jogos de digitação. Sem internet, fica o "Próxima
+  fase" de sempre. Planejamento em `PLANO_MODO_DINAMICO.md`.
+
 ### 🏃 Maratona
 - **Professor** (`/professor/maratona`): escolhe os jogos (o catálogo diz
   quantas fases cada um tem no nível; jogo sem fase aparece desabilitado com
@@ -655,6 +677,7 @@ jogos_igds/
 │   │   ├── progress.js       # Progresso genérico por educando e jogo (game_progress, game_results)
 │   │   ├── teacher.js        # Área do professor: PIN, turma, juntar contas, liberar fases, cadastro em lote
 │   │   ├── settings.js       # Configurações da plataforma (ex.: autocadastro)
+│   │   ├── dynamic.js        # 🔀 Modo Dinâmico: configuração da criança e a escolha da próxima fase
 │   │   ├── routes.js         # /api/auth, /api/progress, /api/teacher
 │   │   ├── idGenerator.js    # Códigos, IDs e tokens
 │   │   └── avatars.js        # Bichinhos permitidos e filtro de nomes impróprios
@@ -762,6 +785,7 @@ preciso.
 | `GET /api/progress` | Resumos de progresso para os cartões do painel |
 | `GET /api/progress/<jogo>` · `POST /api/progress/<jogo>/results` | Progresso de um jogo e gravação de uma rodada (validada pelo jogo) |
 | `GET /api/ranking` · `/api/me/points` · `/api/me/history` | 🏅 Ranking (turma e jogo), meus pontos e meu histórico |
+| `GET /api/dinamico` · `POST /api/dinamico` · `POST /api/dinamico/proxima` | 🔀 Modo Dinâmico: configuração da criança e a próxima fase depois de concluir uma |
 | `GET /api/maratona/<código>` | Estado (ou resultado final) de uma maratona |
 | `/api/teacher/...` | Área do professor (token no cabeçalho `X-Teacher-Token`), incluindo o catálogo e o histórico da Maratona |
 | Socket.IO `mt:*` | A Maratona ao vivo (`src/marathon/socketHandlers.js`) |
@@ -883,6 +907,7 @@ npm test
 | `test/integration.test.js` | Partida completa de bingo: entrada só com conta, mesma conta em dois aparelhos, sorteio, marcação, vitória, expulsão, nova partida, reconexão, encerramento. |
 | `test/correcoes.test.js` | As correções da revisão dos jogos (`RELATORIO_REVISAO_JOGOS.md`): variante inválida, dicas de matemática, Memória, Dinheiro, en passant, abandono, bingo. |
 | `test/pontos.test.js` | 🏅 Pontos e ranking: estrelas × 10 × dificuldade, repetir sem melhorar não soma, reenvio não duplica, ranking por turma e jogo, juntar contas, recálculo. |
+| `test/dinamico.test.js` | 🔀 Modo Dinâmico: jogos que entram, outro jogo da mesma dificuldade (e o vizinho), nunca fase já jogada, intervalo, "jogar de novo" não conta, jogos recentes, sem teclado, tudo completo, configuração validada e as rotas com resultados de verdade. |
 | `test/maratona-catalogo.test.js` | Maratona: dificuldade de toda fase, fases por nível, assuntos, tempo da rodada, duelos só no nível certo, nota de desempenho. |
 | `test/maratona-competicao.test.js` | Maratona: os 15 jogos de corrida aceitos com a fase e a semente do servidor (e não com outra), texto do Teclado pela semente, duelos com prazo. |
 | `test/maratona-nucleo.test.js` | Maratona sem rede: equipes, pareamentos, rotação, votação, pontuação, desempates, rodadas, prazos, ausentes, professor, pausa, fim e retomada do banco. |

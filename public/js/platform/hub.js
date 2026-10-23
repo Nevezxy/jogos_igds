@@ -159,6 +159,7 @@
     document.getElementById('hub-speech').textContent = GREETINGS[Math.floor(Math.random() * GREETINGS.length)];
     showScreen('screen-hub');
     if (window.PlataformaRanking) window.PlataformaRanking.refreshBadge();
+    if (window.PlataformaDinamico) window.PlataformaDinamico.refresh().then((cfg) => { if (cfg && cfg.on) dynamicChanged(cfg); });
     return renderGames();
   }
 
@@ -194,5 +195,11 @@
   document.getElementById('game-back').addEventListener('click', () => go('/jogos'));
   document.getElementById('link-teacher').addEventListener('click', () => go('/professor'));
 
-  window.PlataformaHub = { show };
+  // 🔀 Modo Dinâmico ligado: o mascote avisa
+  function dynamicChanged(cfg) {
+    if (!cfg || !cfg.on) return;
+    document.getElementById('hub-speech').textContent = '🔀 Modo Dinâmico ligado! Escolha um jogo para começar.';
+  }
+
+  window.PlataformaHub = { show, dynamicChanged, SUBJECTS };
 })();

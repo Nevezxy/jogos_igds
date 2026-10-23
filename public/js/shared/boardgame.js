@@ -16,6 +16,8 @@
 //   👫 contra um amigo: pela rede (src/platform/match.js), com código de sala
 //      ou pareamento automático; o servidor confere cada lance; se a conexão
 //      cair, a partida é retomada sozinha (até 60 s)
+// 🔀 Modo Dinâmico (js/shared/dynamic.js): ?fase=<id> começa direto contra
+// aquele robô e, ligado, o resultado leva a uma fase de outro jogo.
 
 (function () {
   const MIN_THINK_MS = 450; // o robô "pensa" pelo menos isso (fica mais natural)
@@ -178,6 +180,7 @@
     let board = null; // desenho do tabuleiro (do jogo)
     let game = null; // partida atual
     let gamesStarted = 0;
+    let dynamicStart = false; // a próxima partida foi aberta pelo Modo Dinâmico
     let hintsOn = false;
     try { hintsOn = localStorage.getItem(`bg_hints_${cfg.id}`) === '1'; } catch (e) { /* ignore */ }
 
@@ -274,7 +277,8 @@
       const human = { name: me().firstName, firstName: me().firstName, avatar: me().avatar };
       game.players[mySeat] = human;
       game.players[1 - mySeat] = bot;
-      $('[data-bgm-play-title]').textContent = `${cfg.icon} ${level.fullTitle}`;
+      $('[data-bgm-play-title]').textContent = `${dynamicStart ? '🔀 ' : ''}${cfg.icon} ${level.fullTitle}`;
+      dynamicStart = false;
       $('[data-bgm-result]').hidden = true;
       show('play');
       ui.toast(mySeat === 0 ? `Você começa! ${level.tip}` : `O robô começa. ${level.tip}`, 'info', 3500);
@@ -344,16 +348,30 @@
       const myMoves = g.moves.filter((_, i) => i % 2 === (g.mySeat === Rules.initial(g.level.variant).turn ? 0 : 1)).length;
       const stars = Levels.starsFor(g.level.id, outcome, g.undos, myMoves);
       render();
+      let resolveSaved;
+      g.saved = new Promise((ok) => { resolveSaved = ok; });
       setTimeout(() => { if (game === g) showResult({ outcome, stars, resigned }); }, g.state.result && g.state.result.line && g.state.result.line.length ? 900 : 300);
       try {
         const res = await ctx.api.post(`/progress/${cfg.id}/results`, {
           levelId: g.level.id, seat: g.mySeat, moves: g.moves, undos: g.undos, durationMs: Date.now() - g.startedAt, resigned,
         });
         progress = res.progress;
+        resolveSaved(true);
       } catch (e) {
+        resolveSaved(false);
         if (e.queued) ui.toast(e.message, 'info', 6000);
         else ui.toast('Não consegui salvar o resultado 😵 Confira a internet.', 'error', 5000);
       }
+    }
+
+    // 🔀 Modo Dinâmico: depois de o resultado chegar ao servidor
+    async function dynamicNext(g, stars) {
+      if (comp || !window.Dinamico || g.mode !== 'bot' || !(stars >= 1)) return;
+      if (!(await g.saved) || game !== g || $('[data-bgm-result]').hidden) return;
+      window.Dinamico.after(ctx, {
+        gameId: cfg.id, levelId: g.level.id, stars, button: $('[data-bgm-next]'),
+        message: (t) => { $('[data-bgm-result-msg]').textContent = t; },
+      });
     }
 
     // ---------------- 👫 contra um amigo (pela rede) ----------------
@@ -495,7 +513,9 @@
       } else msg = outcome === 'win' ? 'Mandou bem! 🎉' : outcome === 'draw' ? 'Ninguém ganhou desta vez.' : 'Peça uma revanche!';
       $('[data-bgm-result-msg]').textContent = msg;
       const next = g.mode === 'bot' ? Levels.LEVELS[g.level.index + 1] : null;
+      if (window.Dinamico) window.Dinamico.reset(root);
       $('[data-bgm-next]').hidden = !(next && stars >= 2);
+      dynamicNext(g, stars);
       $('[data-bgm-again]').textContent = g.mode === 'bot' ? '🔁 Jogar de novo' : '👫 Nova partida';
       if (outcome === 'win' || drawWin) { fx.confetti({ amount: 120 }); sound.play('fanfare'); } else if (outcome === 'draw') sound.play('tada'); else sound.play('bonk');
     }
@@ -570,11 +590,16 @@
       const sala = new URLSearchParams(location.search).get('sala');
       let saved = null;
       try { saved = JSON.parse(sessionStorage.getItem(MATCH_KEY) || 'null'); } catch (e) { /* ignore */ }
+      const asked = window.Dinamico && Levels.getLevel(window.Dinamico.levelFromParams(ctx) || '');
       if (sala) {
         history.replaceState(null, '', location.pathname);
         joinRoom(sala.toUpperCase());
       } else if (saved && saved.game === cfg.id) {
         rejoin(saved.matchId);
+      } else if (asked) {
+        // link com a fase (Modo Dinâmico): direto contra esse robô
+        dynamicStart = window.Dinamico.fromDynamic(ctx);
+        startBot(asked);
       }
     }
     // duelo da maratona: entra direto na partida criada pelo servidor

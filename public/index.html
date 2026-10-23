@@ -84,6 +84,7 @@
       <button type="button" class="avatar-badge user-avatar" id="hub-avatar" aria-label="Trocar meu bichinho" title="Trocar meu bichinho">🐼</button>
       <span>Oi, <strong id="hub-first-name">amigo(a)</strong>!</span>
       <button type="button" class="btn-mini hub-points" id="hub-points" title="Ver o ranking">🏅 Ranking</button>
+      <button type="button" class="btn-mini hub-dynamic" id="hub-dynamic" aria-pressed="false" aria-haspopup="dialog">🔀 Modo Dinâmico</button>
       <button type="button" class="btn-mini user-logout" id="btn-logout">Não sou eu / Sair</button>
     </div>
   </header>
@@ -205,6 +206,30 @@
   </div>
 </div>
 
+<!-- ======================= 🔀 Modo Dinâmico ======================= -->
+<div id="dynamic-modal" class="modal-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="dynamic-modal-title">
+  <div class="modal-box dyn-box">
+    <h3 id="dynamic-modal-title">🔀 Modo Dinâmico</h3>
+    <p class="dyn-intro">Terminou uma fase? Você vai para <b>outro jogo</b>, do mesmo nível, numa fase que <b>ainda não jogou</b>.</p>
+    <button type="button" class="dyn-switch" id="dynamic-on" role="switch" aria-checked="false">
+      <span class="dyn-switch-track" aria-hidden="true"><i></i></span>
+      <span data-label>Desligado</span>
+    </button>
+    <div class="dyn-body">
+      <h4 class="dyn-label">Trocar de jogo a cada</h4>
+      <div class="dyn-intervals" id="dynamic-interval" role="radiogroup" aria-label="Trocar de jogo a cada quantas fases"></div>
+      <p class="dyn-hint" id="dynamic-interval-text"></p>
+      <h4 class="dyn-label">Jogos que entram <small id="dynamic-count"></small></h4>
+      <div class="dyn-list" id="dynamic-games"></div>
+    </div>
+    <p class="form-error" id="dynamic-error" role="alert"></p>
+    <div class="modal-actions">
+      <button id="dynamic-cancel" class="btn btn-ghost" type="button">Cancelar</button>
+      <button id="dynamic-save" class="btn btn-success" type="button">Salvar</button>
+    </div>
+  </div>
+</div>
+
 <!-- ======================= janela da área do professor ======================= -->
 <div id="teacher-modal" class="modal-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="teacher-modal-title">
   <form class="modal-box teacher-modal-box" id="teacher-modal-form" novalidate>
@@ -242,11 +267,13 @@
 <script src="/js/shared/falling.js"></script>
 <script src="/js/shared/cadentes.js"></script>
 <script src="/js/shared/competition.js"></script>
+<script src="/js/shared/dynamic.js"></script>
 <!-- núcleo da plataforma -->
 <script src="/js/platform/api.js"></script>
 <script src="/js/platform/auth.js"></script>
 <script src="/js/platform/games.js"></script>
 <script src="/js/platform/hub.js"></script>
+<script src="/js/platform/dinamico.js"></script>
 <script src="/js/platform/teacher.js"></script>
 <script src="/js/platform/ranking.js"></script>
 <script src="/js/platform/router.js"></script>

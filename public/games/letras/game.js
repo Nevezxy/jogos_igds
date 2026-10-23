@@ -94,8 +94,9 @@
     }
 
     // ---------------- antes da fase ----------------
-    function openIntro(level) {
+    function openIntro(level, dynamic = false) {
       current = level;
+      if (window.Dinamico) window.Dinamico.markIntro($('#lc-intro-title'), dynamic);
       const world = Levels.getWorld(level.world);
       $('#lc-intro-world').textContent = `${world.icon} ${world.name} · fase ${level.indexInWorld + 1} de ${world.levels.length}`;
       $('#lc-intro-title').textContent = level.fullTitle;
@@ -410,6 +411,16 @@
     $('#lc-quit').addEventListener('click', quit);
 
     // ---------------- resultado ----------------
+    // 🔀 Modo Dinâmico (js/shared/dynamic.js): com o resultado já no servidor,
+    // o "Próxima fase" pode virar uma fase de outro jogo
+    function dynamicAfter(r, stars) {
+      if (comp || !window.Dinamico || round !== r) return;
+      window.Dinamico.after(ctx, {
+        gameId: 'letras', levelId: r.level.id, stars, button: $('#lc-next'),
+        message: (t) => { $('#lc-result-msg').textContent = t; },
+      });
+    }
+
     async function finish() {
       const r = round;
       input.blur();
@@ -425,6 +436,7 @@
           levelId: r.level.id, seed: r.seed, lost: r.lost, wrong: r.wrong, durationMs, errorsByChar: r.errors, score: r.scorer.score,
         });
         progress = res.progress || progress;
+        dynamicAfter(r, stars);
       } catch (e) {
         // sem internet: o resultado fica guardado e vai sozinho quando ela voltar
         if (e.queued) ui.toast(e.message, 'info', 6000);
@@ -459,6 +471,7 @@
       $('#lc-lost-list').innerHTML = '';
       lost.forEach((it) => $('#lc-lost-list').appendChild(Object.assign(document.createElement('span'), { className: 'lc-chip', textContent: it })));
       const next = comp ? null : Levels.LEVELS[r.level.index + 1];
+      if (window.Dinamico) window.Dinamico.reset(container);
       $('#lc-next').hidden = !next;
       if (stars >= 1) { fx.confetti({ amount: 40 + stars * 50 }); sound.play(stars === 3 ? 'fanfare' : 'tada'); }
       setTimeout(() => $(stars >= 1 && next ? '#lc-next' : '#lc-retry').focus(), 80);
@@ -513,6 +526,9 @@
       if (destroyed) return;
       show('map');
       renderMap();
+      // link com a fase (Modo Dinâmico): direto na tela "antes da fase"
+      const asked = window.Dinamico && Levels.getLevel(window.Dinamico.levelFromParams(ctx) || '');
+      if (asked) openIntro(asked, window.Dinamico.fromDynamic(ctx));
     }
 
     function destroy() {
